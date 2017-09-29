@@ -24,6 +24,20 @@ The installation of hcashd requires Go 1.7 or newer.
 	go install $(glide nv)
     ```
 
+* Start running hcash full node service to synchrnoze blocks
+	```
+	hcashd
+	```
+
+* Start hcash solo mining
+	```
+	hcashctl setgenerate true x     # where x represents the number of CPU threads
+	```
+
+* Stop hcash solo mining
+	```
+	hcashctl setgenerate false
+	```
 
 ## License
 
