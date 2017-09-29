@@ -1,0 +1,13 @@
+[Unit]
+Description=Hypercash Full Node
+
+[Service]
+Type=simple
+User=hcashd
+Group=hcashd
+WorkingDirectory=/var/hcashd
+ExecStart=/opt/HcashOrg/bin/hcashd --appdata=/var/hcashd
+Restart=on-abnormal
+
+[Install]
+WantedBy=multi-user.target
