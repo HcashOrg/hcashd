@@ -1,5 +1,5 @@
-hash: 5ff55cbde58db9eecfef0a796b2513f910996d6aaa1244f31475852835e48efe
-updated: 2017-08-30T23:46:58.835362449Z
+hash: 35972bb3ced52491c2d8f9096bcc44899c77a3493419b507266928b02cf8f4df
+updated: 2017-09-30T14:28:40.4970642+08:00
 imports:
 - name: github.com/agl/ed25519
   version: 278e1ec8e8a6e017cd07577924d6766039146ced
@@ -47,15 +47,15 @@ imports:
 - name: github.com/HcashOrg/bitset
   version: 484b833245d5f9046e2893a6bd2e54b1df3a53a4
 - name: github.com/HcashOrg/hcashrpcclient
-  version: abc326aeb97b299c7eb6b13b81353fc375e9b95d
+  version: bde5ceb06ad47c461394da5e670af815d332470e
 - name: github.com/HcashOrg/hcashutil
-  version: 166211f0196be1d3be344ae64149e7c4f5ca36b0
+  version: b0144e1f9f6ed8ffb3493a5c33650e2b6b837f17
   subpackages:
   - base58
   - bloom
   - hdkeychain
 - name: github.com/jessevdk/go-flags
-  version: 48cf8722c3375517aba351d1f7577c40663a4407
+  version: 96dc06278ce32a0e9d957d590bb987c81ee66407
 - name: github.com/jrick/logrotate
   version: a93b200c26cbae3bb09dd0dc2c7c7fe1468a034a
   subpackages:
@@ -69,4 +69,5 @@ imports:
   version: bb24a47a89eac6c1227fbcb2ae37a8b9ed323366
   subpackages:
   - unix
+  - windows
 testImports: []
