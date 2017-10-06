@@ -2029,6 +2029,7 @@ func handleGetKeyBlockHash(s *rpcServer, cmd interface{}, closeChan <-chan struc
 	keyHeight := c.KeyHeight
 	bestKeyHeight := s.chain.BestSnapshot().KeyHeight
 	bestHeight := s.chain.BestSnapshot().Height
+
 	if keyHeight > bestKeyHeight{
 		return nil, &hcashjson.RPCError{
 			Code: hcashjson.ErrRPCOutOfRange,
@@ -2036,6 +2037,28 @@ func handleGetKeyBlockHash(s *rpcServer, cmd interface{}, closeChan <-chan struc
 				keyHeight),
 		}
 	}
+	if keyHeight == bestKeyHeight{
+		bestBlock, err := s.chain.BlockByHeight(bestHeight)
+		if err != nil {
+			return nil, &hcashjson.RPCError{
+				Code: hcashjson.ErrRPCOutOfRange,
+				Message: fmt.Sprintf("Key Height out of range: %v",
+					keyHeight),
+			}
+		}
+		if blockchain.HashToBig(bestBlock.Hash()).Cmp(blockchain.CompactToBig(bestBlock.MsgBlock().Header.Bits)) > 0{
+			return nil, &hcashjson.RPCError{
+				Code: hcashjson.ErrRPCOutOfRange,
+				Message: fmt.Sprintf("Key Height out of range: %v",
+					keyHeight),
+			}
+		} else{
+			return bestBlock.Hash().String(), nil
+		}
+	}
+
+
+
 	start := int64(0)
 	end := bestHeight
 	result := int64(0)
@@ -2072,9 +2095,22 @@ func handleGetKeyBlockHash(s *rpcServer, cmd interface{}, closeChan <-chan struc
 		}
 		result = target
 		break
-
 	}
-
+	for {
+		result++
+		k, err := s.chain.KeyHeightByHeight(result, nil)
+		if err != nil{
+			return nil, &hcashjson.RPCError{
+				Code: hcashjson.ErrRPCOutOfRange,
+				Message: fmt.Sprintf("Key Height not found: %v",
+					keyHeight),
+			}
+		}
+		if k > keyHeight{
+			result--
+			break
+		}
+	}
 
 
 
