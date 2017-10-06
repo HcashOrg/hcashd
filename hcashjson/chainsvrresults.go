@@ -65,6 +65,7 @@ type GetBlockVerboseResult struct {
 	ExtraData     string        `json:"extradata"`
 	StakeVersion  uint32        `json:"stakeversion"`
 	PreviousHash  string        `json:"previousblockhash"`
+	PreviousKeyHash string      `json:"previouskeyblockhash"`
 	NextHash      string        `json:"nextblockhash,omitempty"`
 }
 

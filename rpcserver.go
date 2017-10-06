@@ -1932,6 +1932,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		MerkleRoot:    blockHeader.MerkleRoot.String(),
 		StakeRoot:     blockHeader.StakeRoot.String(),
 		PreviousHash:  blockHeader.PrevBlock.String(),
+		PreviousKeyHash: blockHeader.PrevKeyBlock.String(),
 		Nonce:         blockHeader.Nonce,
 		VoteBits:      blockHeader.VoteBits,
 		FinalState:    hex.EncodeToString(blockHeader.FinalState[:]),
