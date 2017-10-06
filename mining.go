@@ -391,6 +391,8 @@ type BlockTemplate struct {
 	// NewBlockTemplate for details on which this can be useful to generate
 	// templates without a coinbase payment address.
 	ValidPayAddress bool
+
+	GenerateKey bool
 }
 
 // mergeUtxoView adds all of the entries in view to viewA.  The result is that
@@ -931,6 +933,7 @@ func deepCopyBlockTemplate(blockTemplate *BlockTemplate) *BlockTemplate {
 		SigOpCounts:     sigOps,
 		Height:          blockTemplate.Height,
 		ValidPayAddress: blockTemplate.ValidPayAddress,
+		GenerateKey:     false,
 	}
 }
 
@@ -1042,7 +1045,7 @@ func handleTooFewVoters(subsidyCache *blockchain.SubsidyCache,
 					return nil, miningRuleError(ErrCheckConnectBlock,
 						err.Error())
 				}
-
+				cptCopy.GenerateKey = true
 				return cptCopy, nil
 			}
 
@@ -1069,7 +1072,6 @@ func handleTooFewVoters(subsidyCache *blockchain.SubsidyCache,
 				}
 
 
-				//fmt.Printf("top block: %v\n", topBlock.Hash())
 				btMsgBlock := new(wire.MsgBlock)
 				rand, err := wire.RandomUint64()
 				if err != nil {
@@ -1147,6 +1149,7 @@ func handleTooFewVoters(subsidyCache *blockchain.SubsidyCache,
 					SigOpCounts:     []int64{0},
 					Height:          int64(topKeyBlock.MsgBlock().Header.Height),
 					ValidPayAddress: miningAddress != nil,
+					GenerateKey:     false,
 				}
 
 				// Recalculate the merkle roots. Use a temporary 'immutable'
@@ -1180,7 +1183,7 @@ func handleTooFewVoters(subsidyCache *blockchain.SubsidyCache,
 
 				// Make a copy to return.
 				cptCopy := deepCopyBlockTemplate(bt)
-
+				cptCopy.GenerateKey = true
 				return cptCopy, nil
 			}
 		}
@@ -1423,6 +1426,7 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 			if eligibleParents[0] != *prevKeyHash {
 				for _, newHead := range eligibleParents {
 					err := blockManager.ForceReorganization(*prevHash, newHead)
+
 					if err != nil {
 						minrLog.Errorf("failed to reorganize to new parent: %v", err)
 						continue
@@ -2433,6 +2437,7 @@ mempoolLoop:
 		SigOpCounts:     txSigOpCounts,
 		Height:          nextBlockHeight,
 		ValidPayAddress: payToAddress != nil,
+		GenerateKey:     false,
 	}
 
 	return handleCreatedBlockTemplate(blockTemplate, server.blockManager)

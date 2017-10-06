@@ -208,8 +208,9 @@ func (m *CPUMiner) submitBlock(block *hcashutil.Block) bool {
 // This function will return early with false when conditions that trigger a
 // stale block such as a new block showing up or periodically when there are
 // new transactions and enough time has elapsed without finding a solution.
-func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, ticker *time.Ticker,
+func (m *CPUMiner) solveBlock(template *BlockTemplate, ticker *time.Ticker,
 	quit chan struct{}) bool {
+	msgBlock := template.Block
 	chain := m.server.blockManager.chain
 	blockHeight := int64(msgBlock.Header.Height)
 	blockKeyHeight := uint32(msgBlock.Header.KeyHeight)
@@ -240,7 +241,9 @@ func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, ticker *time.Ticker,
 	heightDiff := header.Height - uint32(prevKeyBlockHeight)
 
 	hardTargetDifficulty := blockchain.CompactToBig(header.Bits)
-	if heightDiff <= activeNetParams.MaxMicroPerKey && blockHeight > activeNetParams.MicroBlockValidationHeight{
+
+	if heightDiff <= activeNetParams.MaxMicroPerKey && blockHeight > activeNetParams.MicroBlockValidationHeight &&
+		msgBlock.Transactions[1].TxOut[1].Value > 0 && !template.GenerateKey{
 		targetDifficulty.Mul(targetDifficulty, big.NewInt(int64(activeNetParams.DifficultyRate)))
 	}
 
@@ -310,7 +313,6 @@ func (m *CPUMiner) solveBlock(msgBlock *wire.MsgBlock, ticker *time.Ticker,
 			// Update the nonce and hash the block header.
 			header.Nonce = i
 			hash := header.BlockHash()
-			//fmt.Println(i, targetDifficulty)
 			hashesCompleted++
 
 			// The block is solved when the new block hash is less
@@ -423,7 +425,7 @@ out:
 		// with false when conditions that trigger a stale block, so
 		// a new block template can be generated.  When the return is
 		// true a solution was found, so submit the solved block.
-		if m.solveBlock(template.Block, ticker, quit) {
+		if m.solveBlock(template, ticker, quit) {
 			block := hcashutil.NewBlock(template.Block)
 			m.submitBlock(block)
 			m.minedOnParents[template.Block.Header.PrevBlock]++
@@ -691,7 +693,7 @@ func (m *CPUMiner) GenerateNBlocks(n uint32) ([]*chainhash.Hash, error) {
 		// with false when conditions that trigger a stale block, so
 		// a new block template can be generated.  When the return is
 		// true a solution was found, so submit the solved block.
-		if m.solveBlock(template.Block, ticker, nil) {
+		if m.solveBlock(template, ticker, nil) {
 			block := hcashutil.NewBlock(template.Block)
 			m.submitBlock(block)
 			blockHashes[i] = block.Hash()

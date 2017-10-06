@@ -3354,45 +3354,32 @@ func handleGetNetworkHashPS(s *rpcServer, cmd interface{}, closeChan <-chan stru
 		endHeight = best.Height
 	}
 
-	// Calculate the number of blocks per retarget interval based on the
-	// chain parameters.
-	blocksPerRetarget := int64(s.server.chainParams.TargetTimespan /
-		s.server.chainParams.TargetTimePerBlock)
-
-	// Calculate the starting block height based on the passed number of
-	// blocks.  When the passed value is negative, use the last block the
-	// difficulty changed as the starting height.  Also make sure the
-	// starting height is not before the beginning of the chain.
 
 	numBlocks := int64(120)
 	if c.Blocks != nil {
 		numBlocks = int64(*c.Blocks)
 	}
+	endKeyHeight, err := s.chain.KeyHeightByHeight(endHeight, nil)
+	if err != nil{
+		return nil, rpcInternalError(err.Error(), "Failed to fetch keyheight of height")
+	}
+	if numBlocks > endKeyHeight{
+		numBlocks = endKeyHeight
+	}
 
-	var startHeight int64
-	if numBlocks <= 0 {
-		startHeight = endHeight - ((endHeight % blocksPerRetarget) + 1)
-	} else {
-		startHeight = endHeight - numBlocks
-	}
-	if startHeight < 0 {
-		startHeight = 0
-	}
-	rpcsLog.Debugf("Calculating network hashes per second from %d to %d",
-		startHeight, endHeight)
+	rpcsLog.Debugf("Calculating network hashes per second from %v through %v keyblocks",
+		endHeight, numBlocks)
 
 	// Find the min and max block timestamps as well as calculate the total
 	// amount of work that happened between the start and end blocks.
 	var minTimestamp, maxTimestamp time.Time
 	totalWork := big.NewInt(0)
-	for curHeight := startHeight; curHeight <= endHeight; curHeight++ {
-		hash, err := s.chain.BlockHashByHeight(curHeight)
-		if err != nil {
-			context := "Failed to fetch block hash"
-			return nil, rpcInternalError(err.Error(), context)
-		}
+	hash, err := s.chain.BlockHashByHeight(endHeight)
+	if err != nil{
+		return nil, rpcInternalError(err.Error(), "Failed to fetch block hash")
+	}
 
-		// Load the raw header bytes.
+	for i := int64(0); i < numBlocks + 1; i++ {
 		var headerBytes []byte
 		err = s.server.db.View(func(dbTx database.Tx) error {
 			var err error
@@ -3400,24 +3387,28 @@ func handleGetNetworkHashPS(s *rpcServer, cmd interface{}, closeChan <-chan stru
 			return err
 		})
 		if err != nil {
-			context := "Failed to fetch block header"
-			return nil, rpcInternalError(err.Error(), context)
+			return nil, rpcInternalError(err.Error(), "Failed to fetch block header")
 		}
 
 		// Deserialize the header.
 		var header wire.BlockHeader
 		err = header.Deserialize(bytes.NewReader(headerBytes))
 		if err != nil {
-			context := "Failed to deserialize block header"
-			return nil, rpcInternalError(err.Error(), context)
+			return nil, rpcInternalError(err.Error(), "Failed to deserialize block header")
+		}
+		hash = &header.PrevKeyBlock
+		if i == 0{
+			continue
 		}
 
-		if curHeight == startHeight {
-			minTimestamp = header.Timestamp
-			maxTimestamp = minTimestamp
-		} else {
+		if i == 1{
 			totalWork.Add(totalWork, blockchain.CalcWork(header.Bits))
-
+			minTimestamp = header.Timestamp
+			maxTimestamp = header.Timestamp
+		}else{
+			if i != numBlocks{
+				totalWork.Add(totalWork, blockchain.CalcWork(header.Bits))
+			}
 			if minTimestamp.After(header.Timestamp) {
 				minTimestamp = header.Timestamp
 			}
@@ -3425,6 +3416,7 @@ func handleGetNetworkHashPS(s *rpcServer, cmd interface{}, closeChan <-chan stru
 				maxTimestamp = header.Timestamp
 			}
 		}
+
 	}
 
 	// Calculate the difference in seconds between the min and max block
@@ -3435,8 +3427,10 @@ func handleGetNetworkHashPS(s *rpcServer, cmd interface{}, closeChan <-chan stru
 		return int64(0), nil
 	}
 
+
 	hashesPerSec := new(big.Int).Div(totalWork, big.NewInt(timeDiff))
 	return hashesPerSec.Int64(), nil
+
 }
 
 // handleGetPeerInfo implements the getpeerinfo command.

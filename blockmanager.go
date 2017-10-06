@@ -2051,7 +2051,6 @@ out:
 							int64(msg.block.MsgBlock().Header.Height),
 							int64(msg.block.MsgBlock().Header.KeyHeight),
 							winningTickets}
-						fmt.Println("calling winning tickets 2")
 						r.ntfnMgr.NotifyWinningTickets(ntfnData)
 						b.lotteryDataBroadcastMutex.Lock()
 						b.lotteryDataBroadcast[*msg.block.Hash()] = struct{}{}
