@@ -200,6 +200,7 @@ var rpcHandlersBeforeInit = map[string]commandHandler{
 	"getblock":              handleGetBlock,
 	"getblockcount":         handleGetBlockCount,
 	"getblockhash":          handleGetBlockHash,
+	"getkeyblockhash":		 handleGetKeyBlockHash,
 	"getblockheader":        handleGetBlockHeader,
 	"getblockkeyheight":	 handleGetBlockKeyHeight,
 	"getblocksubsidy":       handleGetBlockSubsidy,
@@ -1942,6 +1943,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		StakeVersion:  blockHeader.StakeVersion,
 		Confirmations: confirmations,
 		Height:        int64(blockHeader.Height),
+		KeyHeight:     int64(blockHeader.KeyHeight),
 		Size:          int32(blk.MsgBlock().Header.Size),
 		Bits:          strconv.FormatInt(int64(blockHeader.Bits), 16),
 		SBits:         sbitsFloat,
@@ -2016,6 +2018,73 @@ func handleGetBlockHash(s *rpcServer, cmd interface{}, closeChan <-chan struct{}
 			Code: hcashjson.ErrRPCOutOfRange,
 			Message: fmt.Sprintf("Block number out of range: %v",
 				c.Index),
+		}
+	}
+
+	return hash.String(), nil
+}
+
+func handleGetKeyBlockHash(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
+	c := cmd.(*hcashjson.GetKeyBlockHashCmd)
+	keyHeight := c.KeyHeight
+	bestKeyHeight := s.chain.BestSnapshot().KeyHeight
+	bestHeight := s.chain.BestSnapshot().Height
+	if keyHeight > bestKeyHeight{
+		return nil, &hcashjson.RPCError{
+			Code: hcashjson.ErrRPCOutOfRange,
+			Message: fmt.Sprintf("Key Height out of range: %v",
+				keyHeight),
+		}
+	}
+	start := int64(0)
+	end := bestHeight
+	result := int64(0)
+
+	for {
+		if start == end {
+			k, err := s.chain.KeyHeightByHeight(start, nil)
+			if err != nil || k != keyHeight{
+				return nil, &hcashjson.RPCError{
+					Code: hcashjson.ErrRPCOutOfRange,
+					Message: fmt.Sprintf("Key Height not found: %v",
+						keyHeight),
+				}
+			}
+			result = start
+			break
+		}
+		target := (start + end) / 2
+		k, err := s.chain.KeyHeightByHeight(target, nil)
+		if err != nil{
+			return nil, &hcashjson.RPCError{
+				Code: hcashjson.ErrRPCOutOfRange,
+				Message: fmt.Sprintf("Key Height not found: %v",
+					keyHeight),
+			}
+		}
+		if k < keyHeight {
+			start = target
+			continue
+		}
+		if k > keyHeight {
+			end = target
+			continue
+		}
+		result = target
+		break
+
+	}
+
+
+
+
+
+	hash, err := s.chain.BlockHashByHeight(result)
+	if err != nil {
+		return nil, &hcashjson.RPCError{
+		Code: hcashjson.ErrRPCOutOfRange,
+			Message: fmt.Sprintf("Key Height not found: %v: %v",
+				keyHeight),
 		}
 	}
 

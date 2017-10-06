@@ -211,12 +211,23 @@ func NewGetBlockHeaderCmd(hash string, verbose *bool) *GetBlockHeaderCmd {
 type GetBlockKeyHeightCmd struct {
 	Height int64
 }
+// GetKeyBlockHash defines the getkeyblockhash JSON-RPC command
+type GetKeyBlockHashCmd struct{
+	KeyHeight int64
+}
+
 
 // NewGetBlockKeyHeightCmd returns a new instance which can be used to issue a
 // getblockkeyheight JSON-RPC command
 func NewGetBlockKeyHeightCmd(height int64) *GetBlockKeyHeightCmd {
 	return &GetBlockKeyHeightCmd {
 		Height: height,
+	}
+}
+
+func NewGetKeyBlockHashCmd(keyHeight int64) *GetKeyBlockHashCmd {
+	return &GetKeyBlockHashCmd {
+		KeyHeight: keyHeight,
 	}
 }
 
@@ -749,6 +760,7 @@ func init() {
 	MustRegisterCmd("getblockhash", (*GetBlockHashCmd)(nil), flags)
 	MustRegisterCmd("getblockheader", (*GetBlockHeaderCmd)(nil), flags)
 	MustRegisterCmd("getblockkeyheight", (*GetBlockKeyHeightCmd)(nil), flags)
+	MustRegisterCmd("getkeyblockhash", (*GetKeyBlockHashCmd)(nil), flags)
 	MustRegisterCmd("getblocksubsidy", (*GetBlockSubsidyCmd)(nil), flags)
 	MustRegisterCmd("getblocktemplate", (*GetBlockTemplateCmd)(nil), flags)
 	MustRegisterCmd("getchaintips", (*GetChainTipsCmd)(nil), flags)
