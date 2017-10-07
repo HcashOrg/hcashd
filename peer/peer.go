@@ -1432,6 +1432,23 @@ out:
 
 		// Handle each supported message type.
 		p.stallControl <- stallControlMsg{sccHandlerStart, rmsg}
+		/*
+		info := ""
+		info += fmt.Sprintf("[IN]: %s, [%s]", p.Addr(), rmsg.Command())
+		if rmsg.Command() == "block" {
+			info += fmt.Sprintf(" height: %v, hash: %v\n", rmsg.(*wire.MsgBlock).Header.Height, rmsg.(*wire.MsgBlock).Header.BlockHash())
+		} else if rmsg.Command() == "inv"{
+			info += fmt.Sprintf(" invlength: %v\n", len(rmsg.(*wire.MsgInv).InvList))
+			for _, inv := range rmsg.(*wire.MsgInv).InvList {
+				info += fmt.Sprintf("invtype: %v, invhash: %v\n", inv.Type, inv.Hash)
+			}
+		} else if rmsg.Command() == "tx" {
+			info += fmt.Sprintf("txid: %v, type: %v\n", rmsg.(*wire.MsgTx).TxHash(), rmsg.(*wire.MsgTx).SerType)
+		} else{
+			info += "\n"
+		}
+		fmt.Printf(info)
+		*/
 		switch msg := rmsg.(type) {
 		case *wire.MsgVersion:
 			p.PushRejectMsg(msg.Command(), wire.RejectDuplicate,
@@ -1754,6 +1771,24 @@ out:
 	for {
 		select {
 		case msg := <-p.sendQueue:
+			/*
+			rmsg := msg.msg
+			info := ""
+			info += fmt.Sprintf("[OUT]: %s, [%s]", p.Addr(), rmsg.Command())
+			if rmsg.Command() == "block" {
+				info += fmt.Sprintf(" height: %v, hash: %v\n", rmsg.(*wire.MsgBlock).Header.Height, rmsg.(*wire.MsgBlock).Header.BlockHash())
+			} else if rmsg.Command() == "inv"{
+				info += fmt.Sprintf(" invlength: %v\n", len(rmsg.(*wire.MsgInv).InvList))
+				for _, inv := range rmsg.(*wire.MsgInv).InvList {
+					info += fmt.Sprintf("invtype: %v, invhash: %v\n", inv.Type, inv.Hash)
+				}
+			} else if rmsg.Command() == "tx" {
+				info += fmt.Sprintf("txid: %v, type: %v\n", rmsg.(*wire.MsgTx).TxHash(), rmsg.(*wire.MsgTx).SerType)
+			} else{
+				info += "\n"
+			}
+			fmt.Printf(info)
+			*/
 			switch m := msg.msg.(type) {
 			case *wire.MsgPing:
 				// Setup ping statistics.

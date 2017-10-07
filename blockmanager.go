@@ -834,11 +834,17 @@ func (b *blockManager) current() bool {
 	//if b.chain.BestSnapshot().Height < b.syncPeer.LastBlock() {
 	//	return false
 	//}
+	best := b.chain.BestSnapshot()
+	realKeyHeight := best.KeyHeight
+	if blockchain.HashToBig(best.Hash).Cmp(blockchain.CompactToBig(best.Bits)) <= 0{
+		realKeyHeight++
+	}
 
-	if b.chain.BestSnapshot().KeyHeight < b.syncPeer.LastKeyBlock() {
+	if realKeyHeight < b.syncPeer.LastKeyBlock() {
 		return false
 	}
-	if b.chain.BestSnapshot().KeyHeight == b.syncPeer.LastKeyBlock() && b.chain.BestSnapshot().Height < b.syncPeer.LastBlock() {
+
+	if realKeyHeight == b.syncPeer.LastKeyBlock() && best.Height < b.syncPeer.LastBlock() {
 		return false
 	}
 
@@ -1677,6 +1683,12 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	// Ignore invs from peers that aren't the sync if we are not current.
 	// Helps prevent fetching a mass of orphans.
 	if imsg.peer != b.syncPeer && !b.current() {
+		/*
+		fmt.Println("Oh my god. ~_~ ")
+		fmt.Printf("my syncpeer is %s, ignore %s\n", b.syncPeer.Addr(), imsg.peer.Addr())
+		fmt.Printf("my syncpeer height: %v, keyheight %v, my height %v, keyheight %v",
+			b.syncPeer.LastBlock(), b.syncPeer.LastKeyBlock(), b.chain.BestSnapshot().Height, b.chain.BestSnapshot().KeyHeight)
+		*/
 		return
 	}
 
