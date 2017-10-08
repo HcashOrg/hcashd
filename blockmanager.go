@@ -193,6 +193,11 @@ type getMatchedDescendantsResponse struct {
 	err    error
 }
 
+type getDescendantsResponse struct {
+	hashes []chainhash.Hash
+	err    error
+}
+
 // getGenerationMsg is a message type to be sent across the message
 // channel for requesting the required the entire generation of a
 // block node.
@@ -214,6 +219,10 @@ type getMatchedDescendantsMsg struct {
 	reply chan getMatchedDescendantsResponse
 }
 
+type getDescendantsMsg struct {
+	hash  chainhash.Hash
+	reply chan getDescendantsResponse
+}
 
 
 // forceReorganizationResponse is a response sent to the reply channel of a
@@ -1998,6 +2007,12 @@ out:
 					hashes: g,
 					err:  err,
 				}
+			case getDescendantsMsg:
+				g, err := b.chain.GetDescendants(msg.hash)
+				msg.reply <- getDescendantsResponse{
+					hashes: g,
+					err: err,
+				}
 
 			case getTopBlockMsg:
 				b, err := b.chain.GetTopBlock()
@@ -2799,6 +2814,13 @@ func (b *blockManager) GetKeyGeneration(h chainhash.Hash) ([]chainhash.Hash, err
 func (b *blockManager) GetMatchedDescendants(h chainhash.Hash, v uint16) ([]chainhash.Hash, error) {
 	reply := make(chan getMatchedDescendantsResponse)
 	b.msgChan <- getMatchedDescendantsMsg{hash: h, voteResult: v, reply: reply}
+	response := <-reply
+	return response.hashes, response.err
+}
+
+func (b *blockManager) GetDescendants(h chainhash.Hash) ([]chainhash.Hash, error) {
+	reply := make(chan getDescendantsResponse)
+	b.msgChan <- getDescendantsMsg{hash: h, reply: reply}
 	response := <-reply
 	return response.hashes, response.err
 }

@@ -804,7 +804,7 @@ func (b *BlockChain) getMatchedDescendants(h chainhash.Hash, v uint16) ([]chainh
 		if len(processNode.children) == 0 {
 			matchedDescendants = append(matchedDescendants, processNode)
 		} else{
-			for child := range processNode.children {
+			for _, child := range processNode.children {
 				processNodes.PushBack(child)
 			}
 		}
@@ -818,6 +818,42 @@ func (b *BlockChain) getMatchedDescendants(h chainhash.Hash, v uint16) ([]chainh
 	return sortedDescendants, nil
 }
 
+func (b *BlockChain) getDescendants(h chainhash.Hash) ([]chainhash.Hash, error) {
+	node, err := b.findNode(&h, maxSearchDepth)
+
+	// This typically happens because the main chain has recently
+	// reorganized and the block the miner is looking at is on
+	// a fork.  Usually it corrects itself after failure.
+	if err != nil {
+		return nil, fmt.Errorf("couldn't find block node in best chain: %v",
+			err.Error())
+	}
+	var descendants []*blockNode
+	processNodes := list.New()
+	processNodes.PushBack(node)
+	for processNodes.Len() > 0 {
+		firstElement := processNodes.Remove(processNodes.Front())
+		processNode := firstElement.(*blockNode)
+		if len(processNode.children) == 0 {
+			descendants = append(descendants, processNode)
+		} else{
+			for _, child := range processNode.children {
+				processNodes.PushBack(child)
+			}
+		}
+	}
+	sort.Sort(sort.Reverse(byHeight(descendants)))
+	sortedDescendants := make([]chainhash.Hash, 0, len(descendants))
+	for _, desc := range descendants {
+		sortedDescendants = append(sortedDescendants, desc.hash)
+	}
+
+	return sortedDescendants, nil
+}
+
+
+
+
 // GetGeneration is the exported version of getGeneration.
 func (b *BlockChain) GetGeneration(hash chainhash.Hash) ([]chainhash.Hash, error) {
 	return b.getGeneration(hash)
@@ -829,6 +865,10 @@ func (b *BlockChain) GetKeyGeneration(hash chainhash.Hash) ([]chainhash.Hash, er
 // GetFinalDescendant is the exported version of getFinalDescendant.
 func (b *BlockChain) GetMatchedDescendants(hash chainhash.Hash, voteResult uint16) ([]chainhash.Hash, error) {
 	return b.getMatchedDescendants(hash, voteResult)
+}
+
+func (b *BlockChain) GetDescendants(hash chainhash.Hash) ([]chainhash.Hash, error) {
+	return b.getDescendants(hash)
 }
 
 // loadBlockNode loads the block identified by hash from the block database,

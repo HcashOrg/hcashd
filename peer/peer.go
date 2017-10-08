@@ -1784,10 +1784,23 @@ out:
 				}
 			} else if rmsg.Command() == "tx" {
 				info += fmt.Sprintf("txid: %v, type: %v\n", rmsg.(*wire.MsgTx).TxHash(), rmsg.(*wire.MsgTx).SerType)
+			} else if rmsg.Command() == "miningstate" {
+				info += fmt.Sprintf("mining info\n")
+				info += fmt.Sprintf("height: %v\n", rmsg.(*wire.MsgMiningState).Height)
+				info += fmt.Sprintf("descendants: %v\n", len(rmsg.(*wire.MsgMiningState).BlockHashes))
+				for _, b:= range rmsg.(*wire.MsgMiningState).BlockHashes{
+					info += fmt.Sprintf("%v\n", b)
+				}
+				info += fmt.Sprintf("votes :%v\n", len(rmsg.(*wire.MsgMiningState).VoteHashes))
+				for _, b := range rmsg.(*wire.MsgMiningState).VoteHashes {
+					info += fmt.Sprintf("%v\n", b)
+				}
 			} else{
 				info += "\n"
 			}
-			fmt.Printf(info)
+			if rmsg.Command() == "miningstate"{
+				fmt.Printf(info)
+			}
 			*/
 			switch m := msg.msg.(type) {
 			case *wire.MsgPing:

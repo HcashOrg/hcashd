@@ -470,33 +470,54 @@ func (sp *serverPeer) OnGetMiningState(p *peer.Peer, msg *wire.MsgGetMiningState
 
 		return
 	}
-
 	// Obtain the entire generation of blocks stemming from the parent of
 	// the current tip.
-	children, err := bm.GetGeneration(*newest)
+
+	curPrevKey := bm.chainState.curPrevKeyHash
+	if blockchain.HashToBig(bm.chainState.newestHash).Cmp(blockchain.CompactToBig(bm.chainState.newestBits)) <= 0{
+		curPrevKey = *(bm.chainState.newestHash)
+	}
+
+
+	keyChildren, err := bm.GetKeyGeneration(curPrevKey)
 	if err != nil {
-		peerLog.Warnf("failed to access block manager to get the generation "+
+		peerLog.Warnf("failed to access block manager to get the keygeneration "+
 			"for a mining state request (block: %v): %v", newest, err)
 		return
 	}
-
+	//children, err := bm.GetGeneration(*newest)
 	// Get the list of blocks of blocks that are eligible to built on and
 	// limit the list to the maximum number of allowed eligible block hashes
 	// per mining state message.  There is nothing to send when there are no
 	// eligible blocks.
-	blockHashes := SortParentsByVotes(mp, *newest, children,
+	keyBlockHashes := SortParentsByVotes(mp, curPrevKey, keyChildren,
 		bm.server.chainParams)
-	numBlocks := len(blockHashes)
-	if numBlocks == 0 {
+	if len(keyBlockHashes) == 0{
 		return
 	}
-	if numBlocks > wire.MaxMSBlocksAtHeadPerMsg {
-		blockHashes = blockHashes[:wire.MaxMSBlocksAtHeadPerMsg]
+	var allDescendants []chainhash.Hash
+
+	for _, keyBlockHash := range keyBlockHashes{
+		descendants, err := bm.GetDescendants(keyBlockHash)
+		if err != nil{
+			peerLog.Warnf("failed to access block manager to get the descendants "+
+				"for a the keyblock (block: %v): %v", keyBlockHash, err)
+			return
+		}
+		allDescendants = append(allDescendants, descendants...)
 	}
+	if len(allDescendants) == 0{
+		return
+	}
+	if len(allDescendants) > wire.MaxMSBlocksAtHeadPerMsg {
+		allDescendants = allDescendants[:wire.MaxMSBlocksAtHeadPerMsg]
+	}
+
+
 
 	// Construct the set of votes to send.
 	voteHashes := make([]chainhash.Hash, 0, wire.MaxMSVotesAtHeadPerMsg)
-	for _, bh := range blockHashes {
+	for _, bh := range keyBlockHashes {
 		// Fetch the vote hashes themselves and append them.
 		vhsForBlock := mp.VoteHashesForBlock(bh)
 		if len(vhsForBlock) == 0 {
@@ -507,8 +528,7 @@ func (sp *serverPeer) OnGetMiningState(p *peer.Peer, msg *wire.MsgGetMiningState
 		}
 		voteHashes = append(voteHashes, vhsForBlock...)
 	}
-
-	err = sp.pushMiningStateMsg(uint32(height), blockHashes, voteHashes)
+	err = sp.pushMiningStateMsg(uint32(height), allDescendants, voteHashes)
 	if err != nil {
 		peerLog.Warnf("unexpected error while pushing data for "+
 			"mining state request: %v", err.Error())
