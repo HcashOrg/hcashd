@@ -280,6 +280,7 @@ var rpcAskWallet = map[string]struct{}{
 	"listreceivedbyaddress":   {},
 	"listsinceblock":          {},
 	"listtransactions":        {},
+	"listtxs":                 {},
 	"listunspent":             {},
 	"lockunspent":             {},
 	"rescanwallet":            {},

@@ -88,6 +88,15 @@ const (
 	// LTTTRegular indicates a regular transaction.
 	LTTTRegular ListTransactionsTxType = "regular"
 
+	// LTTTRegular indicates a regular send transaction.
+	LTTTSend ListTransactionsTxType = "send"
+
+	// LTTTRegular indicates a regular receive transaction.
+	LTTTReceive ListTransactionsTxType = "receive"
+
+	// LTTTRegular indicates a coinbase transaction.
+	LTTTCoinbase ListTransactionsTxType = "coinbase"
+
 	// LTTTTicket indicates a ticket.
 	LTTTTicket ListTransactionsTxType = "ticket"
 
@@ -119,6 +128,31 @@ type ListTransactionsResult struct {
 	WalletConflicts   []string                `json:"walletconflicts"`
 	Comment           string                  `json:"comment,omitempty"`
 	OtherAccount      string                  `json:"otheraccount,omitempty"`
+}
+
+// ListTxsResult models the data from the listtxs command.
+type ListTxsResult struct {
+	Account           string                  `json:"account"`
+	Amount            float64                 `json:"amount"`
+	Fee               float64                 `json:"fee,omitempty"`
+	Confirmations     int64                   `json:"confirmations"`
+	BlockHash         string                  `json:"blockhash"`
+	BlockHeight       int64                   `json:"blockheight"`
+	BlockKeyHeight    int64				  	  `json:"keyblockheight"`
+	BlockIndex        *int64                  `json:"blockindex,omitempty"`
+	BlockTime         int64                   `json:"blocktime,omitempty"`
+	TxID              string                  `json:"txid"`
+	WalletConflicts   []string                `json:"walletconflicts"`
+	TimeReceived      int64                   `json:"timereceived"`
+	InvolvesWatchOnly bool                    `json:"involveswatchonly,omitempty"`
+	Comment           string                  `json:"comment,omitempty"`
+	OtherAccount      string                  `json:"otheraccount,omitempty"`
+	TxType            *ListTransactionsTxType `json:"txtype,omitempty"`
+	StakeDiff         float64                 `json:"stakediff,omitempty"`
+	Source			  []string				  `json:"source,omitempty"`
+	Dest			  []string				  `json:"dest,omitempty"`
+
+
 }
 
 // ListReceivedByAccountResult models the data from the listreceivedbyaccount

@@ -337,6 +337,15 @@ func NewListSinceBlockCmd(blockHash *string, targetConfirms *int, includeWatchOn
 	}
 }
 
+// ListTxsCmd defines the listtxs JSON-RPC command.
+type ListTxsCmd struct {
+	Account          *string
+	TxType			 *int  `jsonrpcdefault:"0"`
+	Count            *int  `jsonrpcdefault:"10"`
+	From             *int  `jsonrpcdefault:"0"`
+	IncludeWatchOnly *bool `jsonrpcdefault:"false"`
+}
+
 // ListTransactionsCmd defines the listtransactions JSON-RPC command.
 type ListTransactionsCmd struct {
 	Account          *string
@@ -353,6 +362,21 @@ type ListTransactionsCmd struct {
 func NewListTransactionsCmd(account *string, count, from *int, includeWatchOnly *bool) *ListTransactionsCmd {
 	return &ListTransactionsCmd{
 		Account:          account,
+		Count:            count,
+		From:             from,
+		IncludeWatchOnly: includeWatchOnly,
+	}
+}
+
+// NewListTxsCmd returns a new instance which can be used to issue a
+// listtxs JSON-RPC command.
+//
+// The parameters which are pointers indicate they are optional.  Passing nil
+// for optional parameters will use the default value.
+func NewListTxsCmd(account *string, txType, count, from *int, includeWatchOnly *bool) *ListTxsCmd {
+	return &ListTxsCmd{
+		Account:          account,
+		TxType:			  txType,
 		Count:            count,
 		From:             from,
 		IncludeWatchOnly: includeWatchOnly,
@@ -424,6 +448,7 @@ func NewSendFromCmd(fromAccount, toAddress string, amount float64, minConf *int,
 type SendManyCmd struct {
 	FromAccount string
 	Amounts     map[string]float64 `jsonrpcusage:"{\"address\":amount,...}"` // In HCASH
+	NotSend     *int               `jsonrpcdefault:"0"`
 	MinConf     *int               `jsonrpcdefault:"1"`
 	Comment     *string
 }
@@ -589,6 +614,7 @@ func init() {
 	MustRegisterCmd("listreceivedbyaddress", (*ListReceivedByAddressCmd)(nil), flags)
 	MustRegisterCmd("listsinceblock", (*ListSinceBlockCmd)(nil), flags)
 	MustRegisterCmd("listtransactions", (*ListTransactionsCmd)(nil), flags)
+	MustRegisterCmd("listtxs", (*ListTxsCmd)(nil), flags)
 	MustRegisterCmd("listunspent", (*ListUnspentCmd)(nil), flags)
 	MustRegisterCmd("lockunspent", (*LockUnspentCmd)(nil), flags)
 	MustRegisterCmd("sendfrom", (*SendFromCmd)(nil), flags)
