@@ -30,6 +30,7 @@ import:
 - package: github.com/dchest/blake256
 - package: github.com/HcashOrg/bitset
 - package: github.com/HcashOrg/hcashrpcclient
+  version: dev
 - package: github.com/HcashOrg/hcashutil
   subpackages:
   - bloom

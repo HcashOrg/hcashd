@@ -1,8 +1,8 @@
-hash: 35972bb3ced52491c2d8f9096bcc44899c77a3493419b507266928b02cf8f4df
-updated: 2017-09-30T14:28:40.4970642+08:00
+hash: 3fe26999c70f23eb7bb53e335279a49a269860f9ea7b50d12ce1af5b3966338f
+updated: 2017-10-10T03:29:34.255656161Z
 imports:
 - name: github.com/agl/ed25519
-  version: 278e1ec8e8a6e017cd07577924d6766039146ced
+  version: 5312a61534124124185d41f09206b9fef1d88403
   subpackages:
   - edwards25519
 - name: github.com/btcsuite/btclog
@@ -39,15 +39,15 @@ imports:
   - svc
   - winapi
 - name: github.com/davecgh/go-spew
-  version: adab96458c51a58dc1783b3335dcce5461522e75
+  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
   subpackages:
   - spew
 - name: github.com/dchest/blake256
   version: dee3fe6eb0e98dc774a94fc231f85baf7c29d360
 - name: github.com/HcashOrg/bitset
-  version: 484b833245d5f9046e2893a6bd2e54b1df3a53a4
+  version: 3b5f0c752dfbeeda856fd6af60e997257ca399fc
 - name: github.com/HcashOrg/hcashrpcclient
-  version: bde5ceb06ad47c461394da5e670af815d332470e
+  version: 6fa250370b6e0a5af9640e7d0adaede9426d643a
 - name: github.com/HcashOrg/hcashutil
   version: b0144e1f9f6ed8ffb3493a5c33650e2b6b837f17
   subpackages:
@@ -61,12 +61,12 @@ imports:
   subpackages:
   - rotator
 - name: golang.org/x/crypto
-  version: 81e90905daefcd6fd217b62423c0908922eadb30
+  version: 9419663f5a44be8b34ca85f08abc5fe1be11f8a3
   subpackages:
   - ripemd160
   - ssh/terminal
 - name: golang.org/x/sys
-  version: bb24a47a89eac6c1227fbcb2ae37a8b9ed323366
+  version: 314a259e304ff91bd6985da2a7149bbf91237993
   subpackages:
   - unix
   - windows
