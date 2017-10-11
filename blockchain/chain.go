@@ -1175,7 +1175,7 @@ func (b *BlockChain) ancestorKeyNode(node *blockNode, keyheight int64) (*blockNo
 	// Iterate backwards until the requested height is reached.
 	iterNode := node
 	ok := true
-	for iterNode != nil && (iterNode.keyHeight + 1 > keyheight || iterNode.isKeyBlock){
+	for iterNode != nil && (iterNode.keyHeight + 1 > keyheight || !iterNode.isKeyBlock){
 		var err error
 		nextNode := iterNode
 		if nextNode, ok = b.index[iterNode.header.PrevBlock]; !ok {
