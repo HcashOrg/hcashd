@@ -197,6 +197,7 @@ func NewGetSeedCmd() *GetSeedCmd {
 // GetStakeInfoCmd is a type handling custom marshaling and
 // unmarshaling of getstakeinfo JSON wallet extension commands.
 type GetStakeInfoCmd struct {
+	IsLiveTicketDetails  *bool 	`jsonrpcdefault:"false"`
 }
 
 // NewGetStakeInfoCmd creates a new GetStakeInfoCmd.

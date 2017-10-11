@@ -423,6 +423,7 @@ type SendFromCmd struct {
 	FromAccount string
 	ToAddress   string
 	Amount      float64 // In HCASH
+	NotSend		*int	`jsonrpcdefault:"0"`
 	MinConf     *int    `jsonrpcdefault:"1"`
 	Comment     *string
 	CommentTo   *string
@@ -433,11 +434,12 @@ type SendFromCmd struct {
 //
 // The parameters which are pointers indicate they are optional.  Passing nil
 // for optional parameters will use the default value.
-func NewSendFromCmd(fromAccount, toAddress string, amount float64, minConf *int, comment, commentTo *string) *SendFromCmd {
+func NewSendFromCmd(fromAccount, toAddress string, amount float64, notSend ,minConf *int, comment, commentTo *string) *SendFromCmd {
 	return &SendFromCmd{
 		FromAccount: fromAccount,
 		ToAddress:   toAddress,
 		Amount:      amount,
+		NotSend:     notSend,
 		MinConf:     minConf,
 		Comment:     comment,
 		CommentTo:   commentTo,
@@ -471,6 +473,7 @@ func NewSendManyCmd(fromAccount string, amounts map[string]float64, minConf *int
 type SendToAddressCmd struct {
 	Address   string
 	Amount    float64
+	NotSend   *int		`jsonrpcdefault:"0"`
 	Comment   *string
 	CommentTo *string
 }
@@ -480,10 +483,11 @@ type SendToAddressCmd struct {
 //
 // The parameters which are pointers indicate they are optional.  Passing nil
 // for optional parameters will use the default value.
-func NewSendToAddressCmd(address string, amount float64, comment, commentTo *string) *SendToAddressCmd {
+func NewSendToAddressCmd(address string, amount float64, notSend int, comment, commentTo *string) *SendToAddressCmd {
 	return &SendToAddressCmd{
 		Address:   address,
 		Amount:    amount,
+		NotSend:   &notSend,
 		Comment:   comment,
 		CommentTo: commentTo,
 	}

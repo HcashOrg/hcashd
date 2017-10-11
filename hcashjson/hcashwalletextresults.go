@@ -22,23 +22,35 @@ type GetMultisigOutInfoResult struct {
 	Amount       float64  `json:"amount"`
 }
 
+// LiveTicket models the data for a live ticket in the  GetStakeInfoResult
+// command.
+type LiveTicket struct {
+	TxHash       	  string   		`json:"txhash"`
+	Stakediff    	  float64   	`json:"stakediff"`
+	BlockHash    	  string   		`json:"blockhash"`
+	BlockHeight  	  int64    		`json:"blockheight"`
+	BlockKeyHeight    int64			`json:"blockkeyheight"`
+	ReceivedTime      int64         `json:"receivedTime"`
+}
+
 // GetStakeInfoResult models the data returned from the getstakeinfo
 // command.
 type GetStakeInfoResult struct {
-	BlockHeight      int64   `json:"blockheight"`
-	PoolSize         uint32  `json:"poolsize"`
-	Difficulty       float64 `json:"difficulty"`
-	AllMempoolTix    uint32  `json:"allmempooltix"`
-	OwnMempoolTix    uint32  `json:"ownmempooltix"`
-	Immature         uint32  `json:"immature"`
-	Live             uint32  `json:"live"`
-	ProportionLive   float64 `json:"proportionlive"`
-	Voted            uint32  `json:"voted"`
-	TotalSubsidy     float64 `json:"totalsubsidy"`
-	Missed           uint32  `json:"missed"`
-	ProportionMissed float64 `json:"proportionmissed"`
-	Revoked          uint32  `json:"revoked"`
-	Expired          uint32  `json:"expired"`
+	BlockHeight      	int64   		`json:"blockheight"`
+	PoolSize         	uint32  		`json:"poolsize"`
+	Difficulty       	float64 		`json:"difficulty"`
+	AllMempoolTix    	uint32  		`json:"allmempooltix"`
+	OwnMempoolTix    	uint32  		`json:"ownmempooltix"`
+	Immature         	uint32  		`json:"immature"`
+	Live             	uint32  		`json:"live"`
+	ProportionLive   	float64 		`json:"proportionlive"`
+	Voted            	uint32  		`json:"voted"`
+	TotalSubsidy     	float64 		`json:"totalsubsidy"`
+	Missed           	uint32  		`json:"missed"`
+	ProportionMissed 	float64 		`json:"proportionmissed"`
+	Revoked          	uint32  		`json:"revoked"`
+	Expired          	uint32  		`json:"expired"`
+	LiveTicketDetails   []LiveTicket 	`json:"liveticketdetails,omitempty"`
 }
 
 // GetTicketsResult models the data returned from the gettickets
