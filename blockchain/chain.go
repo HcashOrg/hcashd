@@ -1175,12 +1175,13 @@ func (b *BlockChain) ancestorKeyNode(node *blockNode, keyheight int64) (*blockNo
 	// Iterate backwards until the requested height is reached.
 	iterNode := node
 	ok := true
-	for iterNode != nil && iterNode.keyHeight + 1 > keyheight {
+	for iterNode != nil && (iterNode.keyHeight + 1 > keyheight || iterNode.isKeyBlock){
 		var err error
-		if iterNode, ok = b.index[iterNode.header.PrevKeyBlock]; !ok {
+		nextNode := iterNode
+		if nextNode, ok = b.index[iterNode.header.PrevBlock]; !ok {
 			err = b.db.View(func(dbTx database.Tx) error {
 				var err error
-				iterNode, err = b.loadBlockNode(dbTx, &node.header.PrevKeyBlock)
+				nextNode, err = b.loadBlockNode(dbTx, &iterNode.header.PrevBlock)
 				return err
 			})
 		}
@@ -1188,6 +1189,7 @@ func (b *BlockChain) ancestorKeyNode(node *blockNode, keyheight int64) (*blockNo
 			log.Errorf("getPrevKeyNodeFromNode: %v", err)
 			return nil, err
 		}
+		iterNode = nextNode
 	}
 
 	return iterNode, nil
@@ -2649,6 +2651,16 @@ func (b *BlockChain) BestSnapshot() *BestState {
 	snapshot := b.stateSnapshot
 	b.stateLock.RUnlock()
 	return snapshot
+}
+
+func (b *BlockChain) BestRealKeyHeight() int64{
+	b.chainLock.Lock()
+	keyHeight := b.bestNode.keyHeight
+	if b.bestNode.isKeyBlock{
+		keyHeight++
+	}
+	b.chainLock.Unlock()
+	return keyHeight
 }
 
 // MaximumBlockSize returns the maximum permitted block size for the block

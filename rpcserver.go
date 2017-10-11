@@ -3563,6 +3563,7 @@ func handleGetPeerInfo(s *rpcServer, cmd interface{}, closeChan <-chan struct{})
 			Inbound:        statsSnap.Inbound,
 			StartingHeight: statsSnap.StartingHeight,
 			CurrentHeight:  statsSnap.LastBlock,
+			CurrentRealKeyHeight: statsSnap.LastKeyBlock,
 			BanScore:       int32(p.banScore.Int()),
 			SyncNode:       p == syncPeer,
 		}
@@ -3745,7 +3746,12 @@ func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan str
 
 		blkHeader = &header
 		blkHashStr = blkHash.String()
-		confirmations = 1 + s.chain.BestSnapshot().Height - blkHeight
+		blkKeyHeight, err := s.chain.KeyHeightByHeight(blkHeight, nil)
+		if err != nil {
+			context := "Failed to get the key height of tx"
+			return nil, rpcInternalError(err.Error(), context)
+		}
+		confirmations = s.chain.BestRealKeyHeight() - blkKeyHeight
 	}
 
 	rawTxn, err := createTxRawResult(s.server.chainParams, mtx,
@@ -4129,7 +4135,17 @@ func handleGetTxOut(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 
 		best := s.chain.BestSnapshot()
 		bestBlockHash = best.Hash.String()
-		confirmations = 1 + best.Height - entry.BlockHeight()
+		//confirmations = 1 + best.Height - entry.BlockHeight()
+		entryHeight := entry.BlockHeight()
+		entryKeyHeight, err := s.chain.KeyHeightByHeight(entryHeight, nil)
+		if err != nil{
+			return nil, rpcInternalError("can not get key height of tx", "")
+		}
+		confirmations = best.KeyHeight - entryKeyHeight
+		if blockchain.HashToBig(best.Hash).Cmp(blockchain.CompactToBig(best.Bits)) <= 0{
+			confirmations++
+		}
+
 		txVersion = entry.TxVersion()
 		value = entry.AmountByIndex(c.Vout)
 		scriptVersion = entry.ScriptVersionByIndex(c.Vout)
