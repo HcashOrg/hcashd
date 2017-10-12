@@ -297,6 +297,7 @@ var helpDescsEnUS = map[string]string{
 	"getblockverboseresult-finalstate":        "The block's finalstate",
 	"getblockverboseresult-extradata":         "Extra data field for the requested block",
 	"getblockverboseresult-stakeversion":      "Stake Version of the block",
+	"getblockverboseresult-reward":      	   "Reward of the block",
 
 	// GetBlockCountCmd help.
 	"getblockcount--synopsis": "Returns the number of blocks in the longest block chain.",

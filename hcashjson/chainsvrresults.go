@@ -47,27 +47,28 @@ type GetBlockVerboseResult struct {
 	IsKeyBlock    bool          `json:"iskeyblock"`
 	Version       int32         `json:"version"`
 	MerkleRoot    string        `json:"merkleroot"`
-	StakeRoot     string        `json:"stakeroot"`
+	StakeRoot     string        `json:"stakeroot,omitempty"`
 	Tx            []string      `json:"tx,omitempty"`
 	RawTx         []TxRawResult `json:"rawtx,omitempty"`
-	STx           []string      `json:"stx,omitempty"`
-	RawSTx        []TxRawResult `json:"rawstx,omitempty"`
+	STx           []string      `json:"stx,omitempty,omitempty"`
+	RawSTx        []TxRawResult `json:"rawstx,omitempty,omitempty"`
 	Time          int64         `json:"time"`
 	Nonce         uint32        `json:"nonce"`
 	VoteBits      uint16        `json:"votebits"`
 	FinalState    string        `json:"finalstate"`
-	Voters        uint16        `json:"voters"`
-	FreshStake    uint8         `json:"freshstake"`
-	Revocations   uint8         `json:"revocations"`
+	Voters        uint16        `json:"voters,omitempty"`
+	FreshStake    uint8         `json:"freshstake,omitempty"`
+	Revocations   uint8         `json:"revocations,omitempty"`
 	PoolSize      uint32        `json:"poolsize"`
 	Bits          string        `json:"bits"`
-	SBits         float64       `json:"sbits"`
+	SBits         float64       `json:"sbits,omitempty"`
 	Difficulty    float64       `json:"difficulty"`
 	ExtraData     string        `json:"extradata"`
 	StakeVersion  uint32        `json:"stakeversion"`
 	PreviousHash  string        `json:"previousblockhash"`
 	PreviousKeyHash string      `json:"previouskeyblockhash"`
 	NextHash      string        `json:"nextblockhash,omitempty"`
+	Reward        float64       `json:"reward,omitempty"`
 }
 
 // CreateMultiSigResult models the data returned from the createmultisig

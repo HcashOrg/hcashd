@@ -1935,20 +1935,16 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		isKeyBlock = true
 	}
 
-	sbitsFloat := float64(blockHeader.SBits) / hcashutil.AtomsPerCoin
+
 	blockReply := hcashjson.GetBlockVerboseResult{
 		Hash:          c.Hash,
 		Version:       blockHeader.Version,
 		MerkleRoot:    blockHeader.MerkleRoot.String(),
-		StakeRoot:     blockHeader.StakeRoot.String(),
 		PreviousHash:  blockHeader.PrevBlock.String(),
 		PreviousKeyHash: blockHeader.PrevKeyBlock.String(),
 		Nonce:         blockHeader.Nonce,
 		VoteBits:      blockHeader.VoteBits,
 		FinalState:    hex.EncodeToString(blockHeader.FinalState[:]),
-		Voters:        blockHeader.Voters,
-		FreshStake:    blockHeader.FreshStake,
-		Revocations:   blockHeader.Revocations,
 		PoolSize:      blockHeader.PoolSize,
 		Time:          blockHeader.Timestamp.Unix(),
 		StakeVersion:  blockHeader.StakeVersion,
@@ -1958,17 +1954,31 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		IsKeyBlock:    isKeyBlock,
 		Size:          int32(blk.MsgBlock().Header.Size),
 		Bits:          strconv.FormatInt(int64(blockHeader.Bits), 16),
-		SBits:         sbitsFloat,
 		Difficulty:    getDifficultyRatio(blockHeader.Bits),
 		ExtraData:     hex.EncodeToString(blockHeader.ExtraData[:]),
 		NextHash:      nextHashString,
 	}
+
+	if isKeyBlock {
+		sbitsFloat := float64(blockHeader.SBits) / hcashutil.AtomsPerCoin
+		blockReply.StakeRoot = blockHeader.StakeRoot.String()
+		blockReply.Voters = blockHeader.Voters
+		blockReply.FreshStake = blockHeader.FreshStake
+		blockReply.Revocations = blockHeader.Revocations
+		blockReply.SBits = sbitsFloat
+	}
+
+	var rewardF64 float64
 
 	if c.VerboseTx == nil || !*c.VerboseTx {
 		transactions := blk.Transactions()
 		txNames := make([]string, len(transactions))
 		for i, tx := range transactions {
 			txNames[i] = tx.Hash().String()
+			if isCoinbase := blockchain.IsCoinBaseTx(tx.MsgTx()); isCoinbase && isKeyBlock{
+				fmt.Println("wcc-i/m inside iscoinbase")
+				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
+			}
 		}
 
 		blockReply.Tx = txNames
@@ -1977,6 +1987,10 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		stxNames := make([]string, len(stransactions))
 		for i, tx := range stransactions {
 			stxNames[i] = tx.Hash().String()
+			if isSSGen, _ := stake.IsSSGen(tx.MsgTx()); isSSGen && isKeyBlock {
+				fmt.Println("wcc-i/m inside isssgen")
+				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
+			}
 		}
 
 		blockReply.STx = stxNames
@@ -1993,6 +2007,10 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 					"Could not create transaction")
 			}
 			rawTxns[i] = *rawTxn
+			if isCoinbase := blockchain.IsCoinBaseTx(tx.MsgTx()); isCoinbase && isKeyBlock {
+				fmt.Println("wcc-i/m inside iscoinbase")
+				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
+			}
 		}
 		blockReply.RawTx = rawTxns
 
@@ -2008,10 +2026,15 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 					"Could not create stake transaction")
 			}
 			rawSTxns[i] = *rawSTxn
+			if isSSGen, _ := stake.IsSSGen(tx.MsgTx()); isSSGen && isKeyBlock {
+				fmt.Println("wcc-i/m inside isSSGEN")
+				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
+			}
 		}
 		blockReply.RawSTx = rawSTxns
 	}
 
+	blockReply.Reward = rewardF64
 	return blockReply, nil
 }
 
