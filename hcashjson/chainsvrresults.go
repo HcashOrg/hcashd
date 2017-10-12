@@ -44,6 +44,7 @@ type GetBlockVerboseResult struct {
 	Size          int32         `json:"size"`
 	Height        int64         `json:"height"`
 	KeyHeight     int64         `json:"keyheight"`
+	IsKeyBlock    bool          `json:"iskeyblock"`
 	Version       int32         `json:"version"`
 	MerkleRoot    string        `json:"merkleroot"`
 	StakeRoot     string        `json:"stakeroot"`

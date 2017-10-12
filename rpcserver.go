@@ -1923,7 +1923,16 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 			}
 			nextHashString = nextHash.String()
 		}
-		confirmations = 1 + best.Height - int64(blockHeader.Height)
+		//confirmations = 1 + best.Height - int64(blockHeader.Height)
+		confirmations = best.KeyHeight - int64(blockHeader.KeyHeight)
+		if blockchain.HashToBig(best.Hash).Cmp(blockchain.CompactToBig(best.Bits)) <= 0{
+			confirmations++
+		}
+	}
+
+	isKeyBlock := false
+	if blockchain.HashToBig(blk.Hash()).Cmp(blockchain.CompactToBig(blockHeader.Bits)) <= 0{
+		isKeyBlock = true
 	}
 
 	sbitsFloat := float64(blockHeader.SBits) / hcashutil.AtomsPerCoin
@@ -1946,6 +1955,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		Confirmations: confirmations,
 		Height:        int64(blockHeader.Height),
 		KeyHeight:     int64(blockHeader.KeyHeight),
+		IsKeyBlock:    isKeyBlock,
 		Size:          int32(blk.MsgBlock().Header.Size),
 		Bits:          strconv.FormatInt(int64(blockHeader.Bits), 16),
 		SBits:         sbitsFloat,
