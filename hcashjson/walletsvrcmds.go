@@ -340,7 +340,7 @@ func NewListSinceBlockCmd(blockHash *string, targetConfirms *int, includeWatchOn
 // ListTxsCmd defines the listtxs JSON-RPC command.
 type ListTxsCmd struct {
 	Account          *string
-	TxType			 *int  `jsonrpcdefault:"0"`
+	TxType			 *int  `jsonrpcdefault:"63"`
 	Count            *int  `jsonrpcdefault:"10"`
 	From             *int  `jsonrpcdefault:"0"`
 	IncludeWatchOnly *bool `jsonrpcdefault:"false"`
