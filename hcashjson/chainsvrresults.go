@@ -475,6 +475,7 @@ type TxRawResult struct {
 	TxType        string  `json:"txtype"`
 	Fee           float64 `json:"fee,omitempty"`
 	Size          int     `json:"size"`
+	VotePassed    bool	  `json:"votepassed,omitempty"`
 }
 
 // SearchRawTransactionsResult models the data from the searchrawtransaction

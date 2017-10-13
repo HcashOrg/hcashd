@@ -1373,6 +1373,11 @@ func createTxRawResult(chainParams *chaincfg.Params, mtx *wire.MsgTx, txHash str
 		txReply.Confirmations = confirmations
 	}
 
+	if isSSGen, _ := stake.IsSSGen(mtx); isSSGen {
+		vb := stake.SSGenVoteBits(mtx)
+		txReply.VotePassed = hcashutil.IsFlagSet16(vb, hcashutil.BlockValid)
+	}
+
 	return txReply, nil
 }
 
