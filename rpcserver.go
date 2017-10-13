@@ -1348,6 +1348,7 @@ func createTxRawResult(chainParams *chaincfg.Params, mtx *wire.MsgTx, txHash str
 		return nil, rpcInvalidError("Tx hash does not match: got %v "+
 			"expected %v", txHash, mtx.TxHash())
 	}
+	serializedTxSize := mtx.SerializeSize()
 
 	txReply := &hcashjson.TxRawResult{
 		Hex:         mtxHex,
@@ -1359,6 +1360,9 @@ func createTxRawResult(chainParams *chaincfg.Params, mtx *wire.MsgTx, txHash str
 		Expiry:      mtx.Expiry,
 		BlockHeight: blkHeight,
 		BlockIndex:  blkIdx,
+		Size:		 serializedTxSize,
+		Fee:		 calcFee(mtx),
+		TxType:		 string(getTxType(mtx)),
 	}
 
 	if blkHeader != nil {
@@ -1370,6 +1374,38 @@ func createTxRawResult(chainParams *chaincfg.Params, mtx *wire.MsgTx, txHash str
 	}
 
 	return txReply, nil
+}
+
+func getTxType(tx *wire.MsgTx) hcashjson.ListTransactionsTxType {
+	if is := blockchain.IsCoinBaseTx(tx); is{
+		return hcashjson.LTTTCoinbase
+	}
+	if is, _ := stake.IsSStx(tx); is {
+		return hcashjson.LTTTTicket
+	}
+	if is, _ := stake.IsSSGen(tx); is {
+		return hcashjson.LTTTVote
+	}
+	if is, _ := stake.IsSSRtx(tx); is {
+		return hcashjson.LTTTRevocation
+	}
+	return hcashjson.LTTTRegular
+}
+
+func calcFee(tx *wire.MsgTx) float64 {
+	var outputTotal hcashutil.Amount
+	for _, output := range tx.TxOut {
+		outputTotal += hcashutil.Amount(output.Value)
+	}
+	var inputTotal hcashutil.Amount
+	for _, input := range tx.TxIn {
+		inputTotal += hcashutil.Amount(input.ValueIn)
+	}
+	fee64 := (inputTotal - outputTotal).ToCoin()
+	if fee64 < 0 {
+		fee64 = 0
+	}
+	return fee64
 }
 
 // handleDecodeRawTransaction handles decoderawtransaction commands.
@@ -1976,7 +2012,6 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		for i, tx := range transactions {
 			txNames[i] = tx.Hash().String()
 			if isCoinbase := blockchain.IsCoinBaseTx(tx.MsgTx()); isCoinbase && isKeyBlock{
-				fmt.Println("wcc-i/m inside iscoinbase")
 				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
 			}
 		}
@@ -1988,7 +2023,6 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 		for i, tx := range stransactions {
 			stxNames[i] = tx.Hash().String()
 			if isSSGen, _ := stake.IsSSGen(tx.MsgTx()); isSSGen && isKeyBlock {
-				fmt.Println("wcc-i/m inside isssgen")
 				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
 			}
 		}
@@ -2008,7 +2042,6 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 			}
 			rawTxns[i] = *rawTxn
 			if isCoinbase := blockchain.IsCoinBaseTx(tx.MsgTx()); isCoinbase && isKeyBlock {
-				fmt.Println("wcc-i/m inside iscoinbase")
 				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
 			}
 		}
@@ -2027,7 +2060,6 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 			}
 			rawSTxns[i] = *rawSTxn
 			if isSSGen, _ := stake.IsSSGen(tx.MsgTx()); isSSGen && isKeyBlock {
-				fmt.Println("wcc-i/m inside isSSGEN")
 				rewardF64 += hcashutil.Amount(tx.MsgTx().TxIn[0].ValueIn).ToCoin()
 			}
 		}

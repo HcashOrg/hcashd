@@ -459,19 +459,22 @@ type NetworksResult struct {
 
 // TxRawResult models the data from the getrawtransaction command.
 type TxRawResult struct {
-	Hex           string `json:"hex"`
-	Txid          string `json:"txid"`
-	Version       int32  `json:"version"`
-	LockTime      uint32 `json:"locktime"`
-	Expiry        uint32 `json:"expiry"`
-	Vin           []Vin  `json:"vin"`
-	Vout          []Vout `json:"vout"`
-	BlockHash     string `json:"blockhash,omitempty"`
-	BlockHeight   int64  `json:"blockheight"`
-	BlockIndex    uint32 `json:"blockindex,omitempty"`
-	Confirmations int64  `json:"confirmations,omitempty"`
-	Time          int64  `json:"time,omitempty"`
-	Blocktime     int64  `json:"blocktime,omitempty"`
+	Hex           string  `json:"hex"`
+	Txid          string  `json:"txid"`
+	Version       int32   `json:"version"`
+	LockTime      uint32  `json:"locktime"`
+	Expiry        uint32  `json:"expiry"`
+	Vin           []Vin   `json:"vin"`
+	Vout          []Vout  `json:"vout"`
+	BlockHash     string  `json:"blockhash,omitempty"`
+	BlockHeight   int64   `json:"blockheight"`
+	BlockIndex    uint32  `json:"blockindex,omitempty"`
+	Confirmations int64   `json:"confirmations,omitempty"`
+	Time          int64   `json:"time,omitempty"`
+	Blocktime     int64   `json:"blocktime,omitempty"`
+	TxType        string  `json:"txType"`
+	Fee           float64 `json:"fee,omitempty"`
+	Size          int     `json:"size"`
 }
 
 // SearchRawTransactionsResult models the data from the searchrawtransaction
