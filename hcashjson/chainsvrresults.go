@@ -472,7 +472,7 @@ type TxRawResult struct {
 	Confirmations int64   `json:"confirmations,omitempty"`
 	Time          int64   `json:"time,omitempty"`
 	Blocktime     int64   `json:"blocktime,omitempty"`
-	TxType        string  `json:"txType"`
+	TxType        string  `json:"txtype"`
 	Fee           float64 `json:"fee,omitempty"`
 	Size          int     `json:"size"`
 }
