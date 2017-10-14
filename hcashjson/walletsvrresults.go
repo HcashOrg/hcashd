@@ -132,6 +132,11 @@ type ListTransactionsResult struct {
 
 // ListTxsResult models the data from the listtxs command.
 type ListTxsResult struct {
+	TotalNum          int64                   `json:"totalnum"`
+	Transactions      *[]ListTxsElem           `json:"tranactions"`
+}
+
+type ListTxsElem struct {
 	Account           string                  `json:"account"`
 	Amount            float64                 `json:"amount"`
 	Fee               float64                 `json:"fee,omitempty"`
@@ -151,7 +156,6 @@ type ListTxsResult struct {
 	StakeDiff         float64                 `json:"stakediff,omitempty"`
 	Source			  []string				  `json:"source,omitempty"`
 	Dest			  []string				  `json:"dest,omitempty"`
-	TotalNum          int64                   `json:"totalNum,omitempty"`
 }
 
 // ListReceivedByAccountResult models the data from the listreceivedbyaccount
