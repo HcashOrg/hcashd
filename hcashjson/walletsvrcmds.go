@@ -340,10 +340,10 @@ func NewListSinceBlockCmd(blockHash *string, targetConfirms *int, includeWatchOn
 // ListTxsCmd defines the listtxs JSON-RPC command.
 type ListTxsCmd struct {
 	Account          *string
-	TxType			 *int  `jsonrpcdefault:"63"`
-	Count            *int  `jsonrpcdefault:"10"`
-	From             *int  `jsonrpcdefault:"0"`
-	IncludeWatchOnly *bool `jsonrpcdefault:"false"`
+	TxType			 *int    `jsonrpcdefault:"63"`
+	Count            *int64  `jsonrpcdefault:"10"`
+	From             *int64  `jsonrpcdefault:"0"`
+	IncludeWatchOnly *bool   `jsonrpcdefault:"false"`
 }
 
 // ListTransactionsCmd defines the listtransactions JSON-RPC command.
@@ -373,7 +373,7 @@ func NewListTransactionsCmd(account *string, count, from *int, includeWatchOnly 
 //
 // The parameters which are pointers indicate they are optional.  Passing nil
 // for optional parameters will use the default value.
-func NewListTxsCmd(account *string, txType, count, from *int, includeWatchOnly *bool) *ListTxsCmd {
+func NewListTxsCmd(account *string, txType *int, count, from *int64, includeWatchOnly *bool) *ListTxsCmd {
 	return &ListTxsCmd{
 		Account:          account,
 		TxType:			  txType,

@@ -151,6 +151,7 @@ type ListTxsResult struct {
 	StakeDiff         float64                 `json:"stakediff,omitempty"`
 	Source			  []string				  `json:"source,omitempty"`
 	Dest			  []string				  `json:"dest,omitempty"`
+	TotalNum          int64                   `json:"totalNum,omitempty"`
 }
 
 // ListReceivedByAccountResult models the data from the listreceivedbyaccount
