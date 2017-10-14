@@ -1331,7 +1331,7 @@ func (b *BlockChain) pruneBlockNodes() error {
 	for node := newRootNode.parent; node != nil; node = node.parent {
 		deleteNodes.PushFront(node)
 	}
-	fmt.Println("panchen is doing an experiment")
+
 	// Loop through each node to prune, unlink its children, remove it from
 	// the dependency index, and remove it from the node index.
 	for e := deleteNodes.Front(); e != nil; e = e.Next() {
