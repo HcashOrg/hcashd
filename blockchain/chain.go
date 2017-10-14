@@ -1331,20 +1331,20 @@ func (b *BlockChain) pruneBlockNodes() error {
 	for node := newRootNode.parent; node != nil; node = node.parent {
 		deleteNodes.PushFront(node)
 	}
-
+	fmt.Println("panchen is doing an experiment")
 	// Loop through each node to prune, unlink its children, remove it from
 	// the dependency index, and remove it from the node index.
 	for e := deleteNodes.Front(); e != nil; e = e.Next() {
 		node := e.Value.(*blockNode)
 		// Do not attempt to prune if the node should already have been pruned,
 		// for example if you're adding an old side chain block.
-		if node.keyHeight > b.bestNode.keyHeight-minMemoryNodes {
-			err := b.removeBlockNode(node)
-			if err != nil {
-				return err
-			}
+		//if node.keyHeight > b.bestNode.keyHeight-minMemoryNodes + 1{
+		err := b.removeBlockNode(node)
+		if err != nil {
+			return err
 		}
 	}
+
 
 	return nil
 }
