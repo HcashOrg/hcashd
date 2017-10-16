@@ -349,7 +349,7 @@ type ListTxsCmd struct {
 type CalcPowSubsidyCmd struct {
 	Account          *string
 	From             *int  `jsonrpcdefault:"0"`
-	Count            *int  `jsonrpcdefault:"10"`
+	Count            *int  `jsonrpcdefault:"0"`
 	IncludeWatchOnly *bool `jsonrpcdefault:"false"`
 }
 
