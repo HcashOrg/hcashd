@@ -346,6 +346,13 @@ type ListTxsCmd struct {
 	IncludeWatchOnly *bool   `jsonrpcdefault:"false"`
 }
 
+type CalcPowSubsidyCmd struct {
+	Account          *string
+	From             *int  `jsonrpcdefault:"0"`
+	Count            *int  `jsonrpcdefault:"10"`
+	IncludeWatchOnly *bool `jsonrpcdefault:"false"`
+}
+
 // ListTransactionsCmd defines the listtransactions JSON-RPC command.
 type ListTransactionsCmd struct {
 	Account          *string
@@ -377,6 +384,20 @@ func NewListTxsCmd(account *string, txType *int, count, from *int64, includeWatc
 	return &ListTxsCmd{
 		Account:          account,
 		TxType:			  txType,
+		Count:            count,
+		From:             from,
+		IncludeWatchOnly: includeWatchOnly,
+	}
+}
+
+// NewListTxsCmd returns a new instance which can be used to issue a
+// listtxs JSON-RPC command.
+//
+// The parameters which are pointers indicate they are optional.  Passing nil
+// for optional parameters will use the default value.
+func NewCalcPowSubsidyCmd(account *string, count, from *int, includeWatchOnly *bool) *CalcPowSubsidyCmd {
+	return &CalcPowSubsidyCmd{
+		Account:          account,
 		Count:            count,
 		From:             from,
 		IncludeWatchOnly: includeWatchOnly,
@@ -619,6 +640,7 @@ func init() {
 	MustRegisterCmd("listsinceblock", (*ListSinceBlockCmd)(nil), flags)
 	MustRegisterCmd("listtransactions", (*ListTransactionsCmd)(nil), flags)
 	MustRegisterCmd("listtxs", (*ListTxsCmd)(nil), flags)
+	MustRegisterCmd("calcpowsubsidy", (*CalcPowSubsidyCmd)(nil), flags)
 	MustRegisterCmd("listunspent", (*ListUnspentCmd)(nil), flags)
 	MustRegisterCmd("lockunspent", (*LockUnspentCmd)(nil), flags)
 	MustRegisterCmd("sendfrom", (*SendFromCmd)(nil), flags)

@@ -585,12 +585,12 @@ var MainNetParams = Params{
 
 	// Address encoding magics
 	NetworkAddressPrefix: "H",
-	PubKeyAddrID:         [2]byte{0x09, 0x6f}, // starts with Hk
+	PubKeyAddrID:         [2]byte{0x19, 0xa4}, // starts with Hk
 	PubKeyHashAddrID:     [2]byte{0x09, 0x7f}, // starts with Hs
 	PKHEdwardsAddrID:     [2]byte{0x09, 0x60}, // starts with He
 	PKHSchnorrAddrID:     [2]byte{0x09, 0x41}, // starts with HS
 	ScriptHashAddrID:     [2]byte{0x09, 0x5a}, // starts with Hc
-	PrivateKeyID:         [2]byte{0x09, 0x70}, // starts with Hm
+	PrivateKeyID:         [2]byte{0x19, 0xab}, // starts with Hm
 
 	// BIP32 hierarchical deterministic extended key magics
 	HDPrivateKeyID: [4]byte{0x02, 0xfd, 0xa4, 0xe8}, // starts with dprv
