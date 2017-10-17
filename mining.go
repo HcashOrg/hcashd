@@ -1078,7 +1078,7 @@ func handleTooFewVoters(subsidyCache *blockchain.SubsidyCache,
 					return nil, err
 				}
 				opReturnPkScript, err :=
-					standardCoinbaseOpReturn(topKeyBlock.MsgBlock().Header.Height,
+					standardCoinbaseOpReturn(topKeyBlock.MsgBlock().Header.KeyHeight,
 						[]uint64{0, 0, 0, rand})
 				if err != nil {
 					return nil, err
@@ -1098,7 +1098,7 @@ func handleTooFewVoters(subsidyCache *blockchain.SubsidyCache,
 				btMsgBlock.AddTransaction(extraCoinbaseTx.MsgTx())
 
 				opReturnExtraPkScript, err :=
-					standardExtraCoinbaseOpReturn(topKeyBlock.MsgBlock().Header.KeyHeight, extraCoinbaseTx.MsgTx().TxHashFull())
+					standardExtraCoinbaseOpReturn(topKeyBlock.MsgBlock().Header.Height, extraCoinbaseTx.MsgTx().TxHashFull())
 				if err != nil {
 					return nil, err
 				}
@@ -1357,6 +1357,7 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	nextBlockHeight := chainState.newestHeight + 1
 	nextBlockKeyHeight := chainState.newestKeyHeight
 	targetDifficulty := blockchain.CompactToBig(chainState.newestBits)
+
 	if blockchain.HashToBig(prevHash).Cmp(targetDifficulty) <= 0 {
 		prevKeyHash = prevHash
 		nextBlockKeyHeight += 1
@@ -2074,7 +2075,7 @@ mempoolLoop:
 	if err != nil {
 		return nil, err
 	}
-	opReturnPkScript, err := standardCoinbaseOpReturn(uint32(nextBlockHeight),
+	opReturnPkScript, err := standardCoinbaseOpReturn(uint32(nextBlockKeyHeight),
 		[]uint64{0, 0, 0, rand})
 	if err != nil {
 		return nil, err
@@ -2095,6 +2096,7 @@ mempoolLoop:
 	if err != nil {
 		return nil, err
 	}
+
 	numCoinbaseSigOps := int64(blockchain.CountSigOps(extraCoinbaseTx, true, false))
 	blockSize += uint32(extraCoinbaseTx.MsgTx().SerializeSize())
 	blockSigOps += numCoinbaseSigOps
@@ -2108,7 +2110,7 @@ mempoolLoop:
 	blockTxnsRegular = append(blockTxnsRegular, extraCoinbaseTx)
 
 
-	opExtraReturnPkScript, err := standardExtraCoinbaseOpReturn(uint32(nextBlockKeyHeight), extraCoinbaseTx.MsgTx().TxHashFull())
+	opExtraReturnPkScript, err := standardExtraCoinbaseOpReturn(uint32(nextBlockHeight), extraCoinbaseTx.MsgTx().TxHashFull())
 	coinbaseTx, err := createCoinbaseTx(coinbaseScript,
 		opExtraReturnPkScript,
 		payToAddress)

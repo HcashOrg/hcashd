@@ -4502,21 +4502,47 @@ func handleGetWorkSubmission(s *rpcServer, hexData string) (interface{}, error) 
 	msgBlock := tempBlock.MsgBlock()
 	msgBlock.Header = submittedHeader
 	if msgBlock.Header.Height > 1 {
-		targetDifficulty := blockchain.CompactToBig(msgBlock.Header.Bits)
-		isKeyBlock := false
-		hash := msgBlock.Header.BlockHash()
-		if blockchain.HashToBig(&hash).Cmp(targetDifficulty) <= 0 {
-			isKeyBlock = true
-		}
+		//targetDifficulty := blockchain.CompactToBig(msgBlock.Header.Bits)
+		//isKeyBlock := false
+		//hash := msgBlock.Header.BlockHash()
+		//if blockchain.HashToBig(&hash).Cmp(targetDifficulty) <= 0 {
+		//	isKeyBlock = true
+		//}
 		pkScriptCopy := make([]byte, len(blockInfo.pkScript))
 		copy(pkScriptCopy, blockInfo.pkScript)
 		msgBlock.Transactions[0].TxOut[1].PkScript = blockInfo.pkScript
-		merkles := blockchain.BuildMerkleTreeStore(tempBlock.Transactions(), !isKeyBlock)
+		//merkles := blockchain.BuildMerkleTreeStore(tempBlock.Transactions(), !isKeyBlock)
+		merkles := blockchain.BuildMerkleTreeStore(tempBlock.Transactions(), false)
 		msgBlock.Header.MerkleRoot = *merkles[len(merkles)-1]
 	}
 
 	// The real block to submit, with a proper nonce and extraNonce.
 	block := hcashutil.NewBlockDeepCopyCoinbase(msgBlock)
+
+
+	//delete
+	hash := block.MsgBlock().Header.BlockHash()
+	hardTargetDifficulty := blockchain.CompactToBig(block.MsgBlock().Header.Bits)
+	targetDifficulty := big.NewInt(0)
+	targetDifficulty.Mul(hardTargetDifficulty, big.NewInt(int64(activeNetParams.DifficultyRate)))
+
+	if blockchain.HashToBig(&hash).Cmp(targetDifficulty) <= 0 {
+		if blockchain.HashToBig(&hash).Cmp(hardTargetDifficulty) > 0 {
+			//Microblock delete extracoinbase
+			transactions := make([]*wire.MsgTx, len(msgBlock.Transactions) - 1)
+			for i, tx := range msgBlock.Transactions {
+				if i == 0 {
+					continue
+				}
+				transactions[i - 1] = tx
+			}
+
+			block.MsgBlock().Transactions = transactions
+			stransactions := make([]*wire.MsgTx, 0)
+			block.MsgBlock().STransactions = stransactions
+		}
+	}
+
 
 	// Ensure the submitted block hash is less than the target difficulty.
 	err = blockchain.CheckProofOfWork(s.chain, block, activeNetParams.PowLimit, activeNetParams.DifficultyRate, uint32(activeNetParams.MicroBlockValidationHeight))

@@ -15,12 +15,12 @@ import (
 )
 
 // MaxBlockHeaderPayload is the maximum number of bytes a block header can be.
-// Version 4 bytes + PrevBlock 32 bytes + MerkleRoot 32 bytes + StakeRoot 32
+// Version 4 bytes + PrevBlock 32 bytes + PrevKeyBlock 32 bytes + MerkleRoot 32 bytes + StakeRoot 32
 // bytes + VoteBits 2 bytes + FinalState 6 bytes + Voters 2 bytes + FreshStake 1
 // byte + Revocations 1 bytes + PoolSize 4 bytes + Bits 4 bytes + SBits 8 bytes
-// + Height 4 bytes + Size 4 bytes + Timestamp 4 bytes + Nonce 4 bytes +
+// + Height 4 bytes + keyHeight 4 bytes + Size 4 bytes + Timestamp 4 bytes + Nonce 4 bytes +
 // ExtraData 32 bytes + StakeVersion 4 bytes.
-// --> Total 180 bytes.
+// --> Total 216 bytes.
 const MaxBlockHeaderPayload = 84 + 4 + (chainhash.HashSize * 4)
 
 // BlockHeader defines information about a block and is used in the hypercash
