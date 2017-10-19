@@ -224,11 +224,16 @@ func (b *BlockChain) thresholdState(version uint32, prevNode *blockNode, checker
 	confirmationWindow := int64(checker.RuleChangeActivationInterval())
 	svh := checker.StakeValidationHeight()
 	if !prevNode.isKeyBlock{
-		stateprev, ok := cache.Lookup((prevNode).header.PrevKeyBlock)
-		if !ok{
-			return newThresholdState(ThresholdFailed, invalidChoice),nil
+		// stateprev, ok := cache.Lookup((prevNode).header.PrevKeyBlock)
+		// if !ok{
+		// 	return newThresholdState(ThresholdFailed, invalidChoice),nil
+		// }
+		// return stateprev, nil
+		var err error
+		prevNode,err = b.getPrevKeyNodeFromNode(prevNode)
+		if(err != nil) {
+			return newThresholdState(ThresholdFailed, invalidChoice), err
 		}
-		return stateprev, nil
 	}
 	if prevNode == nil || prevNode.keyHeight+2 < svh+confirmationWindow {
 		return newThresholdState(ThresholdDefined, invalidChoice), nil
