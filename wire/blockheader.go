@@ -202,7 +202,7 @@ func readBlockHeader(r io.Reader, pver uint32, bh *BlockHeader) error {
 		&bh.StakeRoot, &bh.VoteBits, &bh.FinalState, &bh.Voters,
 		&bh.FreshStake, &bh.Revocations, &bh.PoolSize, &bh.Bits,
 		&bh.SBits, &bh.Height, &bh.KeyHeight, &bh.Size, (*uint32Time)(&bh.Timestamp),
-		&bh.Nonce, &bh.ExtraData, &bh.StakeVersion)
+		&bh.ExtraData, &bh.Nonce, &bh.StakeVersion)
 }
 
 // writeBlockHeader writes a hypercash block header to w.  See Serialize for
@@ -213,6 +213,6 @@ func writeBlockHeader(w io.Writer, pver uint32, bh *BlockHeader) error {
 	return writeElements(w, bh.Version, &bh.PrevBlock, &bh.PrevKeyBlock, &bh.MerkleRoot,
 		&bh.StakeRoot, bh.VoteBits, bh.FinalState, bh.Voters,
 		bh.FreshStake, bh.Revocations, bh.PoolSize, bh.Bits, bh.SBits,
-		bh.Height, bh.KeyHeight, bh.Size, sec, bh.Nonce, bh.ExtraData,
+		bh.Height, bh.KeyHeight, bh.Size, sec, bh.ExtraData, bh.Nonce,
 		bh.StakeVersion)
 }
