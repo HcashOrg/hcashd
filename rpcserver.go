@@ -427,6 +427,7 @@ func rpcMiscError(message string) *hcashjson.RPCError {
 type workStateBlockInfo struct {
 	msgBlock *wire.MsgBlock
 	pkScript []byte
+	pkHash []byte
 }
 
 // workState houses state that is used in between multiple RPC invocations to
@@ -4424,7 +4425,8 @@ func handleGetWorkRequest(s *rpcServer) (interface{}, error) {
 	// information, along with the data that is included in a work
 	// submission, is used to rebuild the block before checking the
 	// submitted solution.
-	coinbaseTx := msgBlock.Transactions[0]
+	extracoinbaseTx := msgBlock.Transactions[0]
+	coinbaseTx := msgBlock.Transactions[1]
 
 	// Create the new merkleRootPair key which is MerkleRoot + StakeRoot
 	var merkleRootPair [merkleRootPairSize]byte
@@ -4434,7 +4436,8 @@ func handleGetWorkRequest(s *rpcServer) (interface{}, error) {
 	if msgBlock.Header.Height > 1 {
 		s.templatePool[merkleRootPair] = &workStateBlockInfo{
 			msgBlock: msgBlock,
-			pkScript: coinbaseTx.TxOut[1].PkScript,
+			pkScript: extracoinbaseTx.TxOut[1].PkScript,
+			pkHash: coinbaseTx.TxOut[0].PkScript,
 		}
 	} else {
 		s.templatePool[merkleRootPair] = &workStateBlockInfo{
@@ -4542,7 +4545,12 @@ func handleGetWorkSubmission(s *rpcServer, hexData string) (interface{}, error) 
 		//}
 		pkScriptCopy := make([]byte, len(blockInfo.pkScript))
 		copy(pkScriptCopy, blockInfo.pkScript)
-		msgBlock.Transactions[0].TxOut[1].PkScript = blockInfo.pkScript
+		pkHashCopy := make([]byte, len(blockInfo.pkHash))
+		copy(pkHashCopy, blockInfo.pkHash)
+
+		msgBlock.Transactions[0].TxOut[1].PkScript = pkScriptCopy
+		msgBlock.Transactions[1].TxOut[0].PkScript = pkHashCopy
+
 		//merkles := blockchain.BuildMerkleTreeStore(tempBlock.Transactions(), !isKeyBlock)
 		merkles := blockchain.BuildMerkleTreeStore(tempBlock.Transactions(), false)
 		msgBlock.Header.MerkleRoot = *merkles[len(merkles)-1]

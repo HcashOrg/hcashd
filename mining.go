@@ -2110,9 +2110,9 @@ mempoolLoop:
 	blockTxnsRegular = append(blockTxnsRegular, extraCoinbaseTx)
 
 
-	opExtraReturnPkScript, err := standardExtraCoinbaseOpReturn(uint32(nextBlockHeight), extraCoinbaseTx.MsgTx().TxHashFull())
+	//opExtraReturnPkScript, err := standardExtraCoinbaseOpReturn(uint32(nextBlockHeight), extraCoinbaseTx.MsgTx().TxHashFull())
 	coinbaseTx, err := createCoinbaseTx(coinbaseScript,
-		opExtraReturnPkScript,
+		nil,
 		payToAddress)
 
 	if err != nil {
@@ -2238,6 +2238,7 @@ mempoolLoop:
 		txoutValue += txout.Value
 	}
 
+
 	// Now that the actual transactions have been selected, update the
 	// block size for the real transaction count and coinbase value with
 	// the total fees accordingly.
@@ -2250,6 +2251,10 @@ mempoolLoop:
 
 		txFees[0] = -totalFees
 	}
+
+	opExtraReturnPkScript, err := standardExtraCoinbaseOpReturn(uint32(nextBlockHeight), extraCoinbaseTx.MsgTx().TxHashFull())
+
+	coinbaseTx.MsgTx().TxOut[0].PkScript = opExtraReturnPkScript
 
 	// Calculate the required difficulty for the block.  The timestamp
 	// is potentially adjusted to ensure it comes after the median time of
