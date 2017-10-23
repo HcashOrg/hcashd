@@ -30,7 +30,7 @@ const (
 	// release, it will require a hard fork and associated vote agenda to
 	// change it.  The original max block size for the protocol was 1MiB,
 	// so that is what this is based on.
-	MaxSigOpsPerBlock = 1000000 / 200
+	MaxSigOpsPerBlock = 3000000
 
 	// MaxTimeOffsetSeconds is the maximum number of seconds a block time
 	// is allowed to be ahead of the current time.  This is currently 2
@@ -2373,12 +2373,22 @@ func (b *BlockChain) checkTransactionsAndConnect(subsidyCache *SubsidyCache, inp
 	// caught by checkTransactionSanity.
 	if txTree { //TxTreeRegular
 		// Apply penalty to fees if we're at stake validation height.
+		//modify node.height->node.keyHeight+1
 
-		totalFees = totalFees * 6 / 10
 		prevFees, err := b.GetTotalFeesByHash(&node.parent.hash)
 		if err != nil {
 			return err
 		}
+
+		if node.keyHeight+1 >= b.chainParams.StakeValidationHeight {
+			totalFees *= int64(node.header.Voters)
+			totalFees /= int64(b.chainParams.TicketsPerBlock)
+
+			prevFees *= int64(node.header.Voters)
+			prevFees /= int64(b.chainParams.TicketsPerBlock)
+		}
+
+		totalFees = totalFees * 6 / 10
 		totalFees = totalFees + (prevFees * 3 / 10)
 
 		var totalAtomOutRegular int64
@@ -2423,12 +2433,15 @@ func (b *BlockChain) checkTransactionsAndConnect(subsidyCache *SubsidyCache, inp
 					extraFees += extraFee
 					curHash = b.GetPrevHashByHash(curHash)
 				}
-				totalFees = totalFees + extraFees / 10
+
 				//modify node.height->node.keyHeight+1
 				if node.keyHeight+1 >= b.chainParams.StakeValidationHeight {
-					totalFees *= int64(node.header.Voters)
-					totalFees /= int64(b.chainParams.TicketsPerBlock)
+					extraFees *= int64(node.header.Voters)
+					extraFees /= int64(b.chainParams.TicketsPerBlock)
 				}
+
+				totalFees = totalFees + extraFees / 10
+
 
 				totalFees += int64(inputFees)
 

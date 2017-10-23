@@ -1917,6 +1917,36 @@ func getDifficultyRatio(bits uint32) float64 {
 	return diff
 }
 
+// getDifficultyRatio returns the proof-of-work difficulty as a multiple of the
+// minimum difficulty using the passed bits field from the header of a block.
+func getDifficultyRatioAndHashCount(bits uint32) (float64, float64) {
+	// The minimum difficulty is the max possible proof-of-work limit bits
+	// converted back to a number.  Note this is not the same as the proof
+	// of work limit directly because the block difficulty is encoded in a
+	// block with the compact form which loses precision.
+	max := blockchain.CompactToBig(activeNetParams.PowLimitBits)
+	target := blockchain.CompactToBig(bits)
+
+	difficulty := new(big.Rat).SetFrac(max, target)
+	outString := difficulty.FloatString(8)
+	diff, err := strconv.ParseFloat(outString, 64)
+	if err != nil {
+		rpcsLog.Errorf("Cannot get difficulty: %v", err)
+		return 0,0
+	}
+
+	limit,_ := new(big.Int).SetString("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",16)
+	count := new(big.Rat).SetFrac(limit, target)
+	hashcountString := count.FloatString(8)
+	hashcount, error := strconv.ParseFloat(hashcountString, 64)
+	if error != nil {
+		rpcsLog.Errorf("Cannot get hashcount: %v", err)
+		return 0,0
+	}
+
+	return diff,hashcount
+}
+
 // handleGetBlock implements the getblock command.
 func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	c := cmd.(*hcashjson.GetBlockCmd)
@@ -3422,6 +3452,7 @@ func handleGetHeaders(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) 
 // that are not related to wallet functionality.
 func handleGetInfo(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	best := s.chain.BestSnapshot()
+	difficulty, hashcount := getDifficultyRatioAndHashCount(best.Bits)
 	ret := &hcashjson.InfoChainResult{
 		Version: int32(1000000*appMajor + 10000*appMinor +
 			100*appPatch),
@@ -3431,9 +3462,10 @@ func handleGetInfo(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (in
 		TimeOffset:      int64(s.server.timeSource.Offset().Seconds()),
 		Connections:     s.server.ConnectedCount(),
 		Proxy:           cfg.Proxy,
-		Difficulty:      getDifficultyRatio(best.Bits),
+		Difficulty:      difficulty,
 		TestNet:         cfg.TestNet,
 		RelayFee:        cfg.minRelayTxFee.ToCoin(),
+		HashCount:		 hashcount,
 	}
 
 	return ret, nil
