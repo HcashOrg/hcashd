@@ -1058,7 +1058,7 @@ func (m *wsNotificationManager) notifyForNewTx(clients map[chan struct{}]*wsClie
 
 			net := m.server.server.chainParams
 			rawTx, err := createTxRawResult(net, mtx, txHashStr,
-				wire.NullBlockIndex, nil, "", 0, 0)
+				wire.NullBlockIndex, nil, "", 0, 0, 0)
 			if err != nil {
 				return
 			}

@@ -1340,7 +1340,7 @@ func createVoutList(mtx *wire.MsgTx, chainParams *chaincfg.Params, filterAddrMap
 
 // createTxRawResult converts the passed transaction and associated parameters
 // to a raw transaction JSON object.
-func createTxRawResult(chainParams *chaincfg.Params, mtx *wire.MsgTx, txHash string, blkIdx uint32, blkHeader *wire.BlockHeader, blkHash string, blkHeight int64, confirmations int64) (*hcashjson.TxRawResult, error) {
+func createTxRawResult(chainParams *chaincfg.Params, mtx *wire.MsgTx, txHash string, blkIdx uint32, blkHeader *wire.BlockHeader, blkHash string, blkHeight int64, blkKeyHeight int64, confirmations int64) (*hcashjson.TxRawResult, error) {
 	mtxHex, err := messageToHex(mtx)
 	if err != nil {
 		return nil, err
@@ -1361,6 +1361,7 @@ func createTxRawResult(chainParams *chaincfg.Params, mtx *wire.MsgTx, txHash str
 		LockTime:    mtx.LockTime,
 		Expiry:      mtx.Expiry,
 		BlockHeight: blkHeight,
+		BlockKeyHeight: blkKeyHeight,
 		BlockIndex:  blkIdx,
 		Size:		 serializedTxSize,
 		Fee:		 calcFee(mtx),
@@ -2072,7 +2073,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 			rawTxn, err := createTxRawResult(s.server.chainParams,
 				tx.MsgTx(), tx.Hash().String(), uint32(i),
 				blockHeader, blk.Hash().String(),
-				int64(blockHeader.Height), confirmations)
+				int64(blockHeader.Height), int64(blockHeader.KeyHeight), confirmations)
 			if err != nil {
 				return nil, rpcInternalError(err.Error(),
 					"Could not create transaction")
@@ -2090,7 +2091,7 @@ func handleGetBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (i
 			rawSTxn, err := createTxRawResult(s.server.chainParams,
 				tx.MsgTx(), tx.Hash().String(), uint32(i),
 				blockHeader, blk.Hash().String(),
-				int64(blockHeader.Height), confirmations)
+				int64(blockHeader.Height), int64(blockHeader.KeyHeight), confirmations)
 			if err != nil {
 				return nil, rpcInternalError(err.Error(),
 					"Could not create stake transaction")
@@ -3732,7 +3733,6 @@ func handleGetRawMempool(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 // handleGetRawTransaction implements the getrawtransaction command.
 func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
 	c := cmd.(*hcashjson.GetRawTransactionCmd)
-
 	// Convert the provided transaction hash hex to a Hash.
 	txHash, err := chainhash.NewHashFromStr(c.Txid)
 	if err != nil {
@@ -3749,6 +3749,7 @@ func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan str
 	var mtx *wire.MsgTx
 	var blkHash *chainhash.Hash
 	var blkHeight int64
+	var blkKeyHeight int64
 	tx, err := s.server.txMemPool.FetchTransaction(txHash, true)
 	if err != nil {
 		txIndex := s.server.txIndex
@@ -3850,7 +3851,7 @@ func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan str
 
 		blkHeader = &header
 		blkHashStr = blkHash.String()
-		blkKeyHeight, err := s.chain.KeyHeightByHeight(blkHeight, nil)
+		blkKeyHeight, err = s.chain.KeyHeightByHeight(blkHeight, nil)
 		if err != nil {
 			context := "Failed to get the key height of tx"
 			return nil, rpcInternalError(err.Error(), context)
@@ -3859,7 +3860,7 @@ func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan str
 	}
 
 	rawTxn, err := createTxRawResult(s.server.chainParams, mtx,
-		txHash.String(), 0, blkHeader, blkHashStr, blkHeight,
+		txHash.String(), 0, blkHeader, blkHashStr, blkHeight, blkKeyHeight,
 		confirmations)
 	if err != nil {
 		return nil, err
