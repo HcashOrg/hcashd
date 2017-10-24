@@ -827,7 +827,7 @@ func (b *BlockChain) getDescendants(h chainhash.Hash) ([]chainhash.Hash, error) 
 	if !exists{
 		return nil, fmt.Errorf("couldn't find block node in node index")
 	}
-	fmt.Println("Find It")
+	
 	var descendants []*blockNode
 	processNodes := list.New()
 	processNodes.PushBack(node)
