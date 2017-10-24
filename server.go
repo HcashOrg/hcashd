@@ -501,8 +501,8 @@ func (sp *serverPeer) OnGetMiningState(p *peer.Peer, msg *wire.MsgGetMiningState
 		descendants, err := bm.GetDescendants(keyBlockHash)
 		if err != nil{
 			peerLog.Warnf("failed to access block manager to get the descendants "+
-				"for a the keyblock (block: %v): %v", keyBlockHash, err)
-			return
+				"for the keyblock (block: %v): %v", keyBlockHash, err)
+			continue
 		}
 		allDescendants = append(allDescendants, descendants...)
 	}
