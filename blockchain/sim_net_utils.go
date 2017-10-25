@@ -2,37 +2,38 @@
 // Copyright (c) 2015-2017 The Decred developers
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
-
-package blockchain_test
+package blockchain
 
 import (
-	"compress/bzip2"
-	"encoding/binary"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
-	"strings"
+	"sort"
+	"time"
 
-	"github.com/HcashOrg/hcashd/blockchain"
 	"github.com/HcashOrg/hcashd/chaincfg"
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashd/database"
-	_ "github.com/HcashOrg/hcashd/database/ffldb"
 	"github.com/HcashOrg/hcashd/txscript"
 	"github.com/HcashOrg/hcashd/wire"
+	"github.com/HcashOrg/hcashutil"
+
+	_ "github.com/HcashOrg/hcashd/database/ffldb"
 )
 
-const (
-	// testDbType is the database backend type to use for the tests.
-	testDbType = "ffldb"
+// recalculateMsgBlockMerkleRootsSize recalculates the merkle roots for a msgBlock,
+// then stores them in the msgBlock's header. It also updates the block size.
+func recalculateMsgBlockMerkleRootsSize(msgBlock *wire.MsgBlock) {
+	tempBlock := hcashutil.NewBlock(msgBlock)
 
-	// testDbRoot is the root directory used to create all test databases.
-	testDbRoot = "testdbs"
+	// adapt for new version
+	merkles := BuildMerkleTreeStore(tempBlock.Transactions(), false)
+	merklesStake := BuildMerkleTreeStore(tempBlock.STransactions(), false)
 
-	// blockDataNet is the expected network in the test block data.
-	blockDataNet = wire.MainNet
-)
+	msgBlock.Header.MerkleRoot = *merkles[len(merkles)-1]
+	msgBlock.Header.StakeRoot = *merklesStake[len(merklesStake)-1]
+	msgBlock.Header.Size = uint32(msgBlock.SerializeSize())
+}
 
 // filesExists returns whether or not the named file or directory exists.
 func fileExists(name string) bool {
@@ -57,10 +58,10 @@ func isSupportedDbType(dbType string) bool {
 	return false
 }
 
-// chainSetup is used to create a new db and chain instance with the genesis
+//  SetupTestChain is used to create a new db and chain instance with the genesis
 // block already inserted.  In addition to the new chain instance, it returns
 // a teardown function the caller should invoke when done testing to clean up.
-func chainSetup(dbName string, params *chaincfg.Params) (*blockchain.BlockChain, func(), error) {
+func SetupTestChain(dbName string, params *chaincfg.Params) (*BlockChain, func(), error) {
 	if !isSupportedDbType(testDbType) {
 		return nil, nil, fmt.Errorf("unsupported db type %v", testDbType)
 	}
@@ -114,10 +115,10 @@ func chainSetup(dbName string, params *chaincfg.Params) (*blockchain.BlockChain,
 	paramsCopy := *params
 
 	// Create the main chain instance.
-	chain, err := blockchain.New(&blockchain.Config{
+	chain, err := New(&Config{
 		DB:          db,
 		ChainParams: &paramsCopy,
-		TimeSource:  blockchain.NewMedianTime(),
+		TimeSource:  NewMedianTime(),
 		SigCache:    txscript.NewSigCache(1000),
 	})
 
@@ -130,63 +131,50 @@ func chainSetup(dbName string, params *chaincfg.Params) (*blockchain.BlockChain,
 	return chain, teardown, nil
 }
 
-// loadUtxoView returns a utxo view loaded from a file.
-func loadUtxoView(filename string) (*blockchain.UtxoViewpoint, error) {
-	// The utxostore file format is:
-	// <tx hash><serialized utxo len><serialized utxo>
-	//
-	// The serialized utxo len is a little endian uint32 and the serialized
-	// utxo uses the format described in chainio.go.
-
-	filename = filepath.Join("testdata", filename)
-	fi, err := os.Open(filename)
-	if err != nil {
-		return nil, err
+// FakeBlock fakes a block of specific version, height and stake version
+func FakeBlock(blockVersion int32, height int64, stakeVersion uint32) *hcashutil.Block {
+	// Make up a header.
+	header := wire.BlockHeader{
+		Version:      blockVersion,
+		Height:       uint32(height),
+		Nonce:        0,
+		StakeVersion: stakeVersion,
 	}
 
-	// Choose read based on whether the file is compressed or not.
-	var r io.Reader
-	if strings.HasSuffix(filename, ".bz2") {
-		r = bzip2.NewReader(fi)
-	} else {
-		r = fi
-	}
-	defer fi.Close()
-
-	view := blockchain.NewUtxoViewpoint()
-	for {
-		// Hash of the utxo entry.
-		var hash chainhash.Hash
-		_, err := io.ReadAtLeast(r, hash[:], len(hash[:]))
-		if err != nil {
-			// Expected EOF at the right offset.
-			if err == io.EOF {
-				break
-			}
-			return nil, err
-		}
-
-		// Num of serialize utxo entry bytes.
-		var numBytes uint32
-		err = binary.Read(r, binary.LittleEndian, &numBytes)
-		if err != nil {
-			return nil, err
-		}
-
-		// Serialized utxo entry.
-		serialized := make([]byte, numBytes)
-		_, err = io.ReadAtLeast(r, serialized, int(numBytes))
-		if err != nil {
-			return nil, err
-		}
-
-		// Deserialize it and add it to the view.
-		utxoEntry, err := blockchain.TstDeserializeUtxoEntry(serialized)
-		if err != nil {
-			return nil, err
-		}
-		view.Entries()[hash] = utxoEntry
+	msgBlock := &wire.MsgBlock{
+		Header: header,
 	}
 
-	return view, nil
+	return hcashutil.NewBlock(msgBlock)
+}
+
+func FakeBlockFromHeader(header *wire.BlockHeader) *hcashutil.Block {
+	msgBlock := &wire.MsgBlock{
+		Header: *header,
+	}
+
+	return hcashutil.NewBlock(msgBlock)
+}
+
+// CheckBlockHeaderContextEx makes the internal checkBlockHeaderContext
+// function available to the test package.
+func (b *BlockChain) CheckBlockHeaderContextEx(header *wire.BlockHeader, prevNode *blockNode, flags BehaviorFlags) error {
+	return b.checkBlockHeaderContext(header, prevNode, flags)
+}
+
+// NewBlockNodeEx makes the internal newBlockNode function available to the
+// test package.
+func NewBlockNodeEx(blockHeader *wire.BlockHeader, ticketsSpent []chainhash.Hash, ticketsRevoked []chainhash.Hash, voteBits []VoteVersionTuple) *blockNode {
+	return newBlockNode(FakeBlockFromHeader(blockHeader), ticketsSpent, ticketsRevoked, voteBits)
+}
+
+// ToTimeSorter converts a timestamp array to a sortable type
+func ToTimeSorter(time_series []time.Time) sort.Interface {
+	return timeSorter(time_series)
+}
+
+// SetMaxMedianTimeEntries exports the ability to set the max number
+// of median time entries available to the blockchain_test package
+func SetMaxMedianTimeEntries(val int) {
+	maxMedianTimeEntries = val
 }

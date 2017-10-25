@@ -80,7 +80,6 @@ type blockNode struct {
 	// key height
 	keyHeight int64
 
-
 	// totalFees indicates the transaction fees in the block
 	totalFees int64
 
@@ -125,7 +124,7 @@ func newBlockNode(block *hcashutil.Block, ticketsSpent []chainhash.Hash, tickets
 	// collected.
 	blockHeader := block.MsgBlock().Header
 	blockHash := blockHeader.BlockHash()
-	blockHashBigInt:=HashToBig(&blockHash)
+	blockHashBigInt := HashToBig(&blockHash)
 	workSum := big.NewInt(0)
 	isKeyBlock := false
 	totalFees := int64(0)
@@ -140,7 +139,7 @@ func newBlockNode(block *hcashutil.Block, ticketsSpent []chainhash.Hash, tickets
 		if index < 1 {
 			continue
 		}
-		if isKeyBlock && index < 2{
+		if isKeyBlock && index < 2 {
 			continue
 		}
 
@@ -162,8 +161,8 @@ func newBlockNode(block *hcashutil.Block, ticketsSpent []chainhash.Hash, tickets
 		workSum:        workSum,
 		height:         int64(blockHeader.Height),
 		keyHeight:      int64(blockHeader.KeyHeight),
-		isKeyBlock:		isKeyBlock,
-		totalFees:		totalFees,
+		isKeyBlock:     isKeyBlock,
+		totalFees:      totalFees,
 		header:         blockHeader,
 		ticketsSpent:   ticketsSpent,
 		ticketsRevoked: ticketsRevoked,
@@ -360,7 +359,7 @@ type StakeVersions struct {
 func (b *BlockChain) GetBlockKeyHeight(height int64) (int64, error) {
 
 	keyHeight, err := b.KeyHeightByHeight(height, nil)
-	if err != nil{
+	if err != nil {
 		return -1, err
 	}
 	return keyHeight, nil
@@ -534,19 +533,19 @@ func (b *BlockChain) IsKnownOrphan(hash *chainhash.Hash) bool {
 }
 
 func (b *BlockChain) GetTotalFeesByHash(hash *chainhash.Hash) (int64, error) {
-	if hash.IsEqual(zeroHash){
+	if hash.IsEqual(zeroHash) {
 		return 0, nil
 	}
 	blockNode := b.index[*hash]
 	if blockNode == nil {
 		errmsg := fmt.Sprintf("Can not find such block hash %v", hash)
-		return 0,ruleError(ErrNoSuchBlockHash, errmsg)
+		return 0, ruleError(ErrNoSuchBlockHash, errmsg)
 	}
 	return blockNode.totalFees, nil
 }
 
 func (b *BlockChain) GetPrevHashByHash(hash *chainhash.Hash) *chainhash.Hash {
-	if hash.IsEqual(zeroHash){
+	if hash.IsEqual(zeroHash) {
 		return zeroHash
 	}
 	blockNode := b.index[*hash]
@@ -583,9 +582,9 @@ func (b *BlockChain) GetOrphanRoot(hash *chainhash.Hash) *chainhash.Hash {
 
 		// check block's PrevKeyHash
 		// TODO  : no test
-		validatePrevKeyHash, err := b.prevKeyHashExists(prevHash,&orphan.block.MsgBlock().Header.PrevKeyBlock)
-		if err != nil || !validatePrevKeyHash{
-			return  orphanRoot
+		validatePrevKeyHash, err := b.prevKeyHashExists(prevHash, &orphan.block.MsgBlock().Header.PrevKeyBlock)
+		if err != nil || !validatePrevKeyHash {
+			return orphanRoot
 		}
 
 		orphanRoot = prevHash
@@ -749,9 +748,9 @@ func (b *BlockChain) getKeyGeneration(h chainhash.Hash) ([]chainhash.Hash, error
 		processNode := firstElement.(*blockNode)
 		if processNode.isKeyBlock {
 			allKeyChildren = append(allKeyChildren, processNode.hash)
-		} else if len(processNode.children) == 0{
+		} else if len(processNode.children) == 0 {
 
-		} else{
+		} else {
 			for _, child := range processNode.children {
 				processNodes.PushBack(child)
 			}
@@ -760,8 +759,6 @@ func (b *BlockChain) getKeyGeneration(h chainhash.Hash) ([]chainhash.Hash, error
 
 	return allKeyChildren, nil
 }
-
-
 
 // getFinalDescendant
 type byHeight []*blockNode
@@ -778,7 +775,6 @@ func (b byHeight) Less(i, j int) bool {
 	return b[i].height < b[j].height
 }
 
-
 func (b *BlockChain) getMatchedDescendants(h chainhash.Hash, v uint16) ([]chainhash.Hash, error) {
 	node, err := b.findNode(&h, maxSearchDepth)
 
@@ -793,7 +789,7 @@ func (b *BlockChain) getMatchedDescendants(h chainhash.Hash, v uint16) ([]chainh
 	processNodes := list.New()
 	children := node.children
 	for _, child := range children {
-		if child.header.VoteBits & hcashutil.BlockValid == v {
+		if child.header.VoteBits&hcashutil.BlockValid == v {
 			processNodes.PushBack(child)
 		}
 	}
@@ -803,7 +799,7 @@ func (b *BlockChain) getMatchedDescendants(h chainhash.Hash, v uint16) ([]chainh
 		processNode := firstElement.(*blockNode)
 		if len(processNode.children) == 0 {
 			matchedDescendants = append(matchedDescendants, processNode)
-		} else{
+		} else {
 			for _, child := range processNode.children {
 				processNodes.PushBack(child)
 			}
@@ -824,10 +820,10 @@ func (b *BlockChain) getDescendants(h chainhash.Hash) ([]chainhash.Hash, error) 
 	// This typically happens because the main chain has recently
 	// reorganized and the block the miner is looking at is on
 	// a fork.  Usually it corrects itself after failure.
-	if !exists{
+	if !exists {
 		return nil, fmt.Errorf("couldn't find block node in node index")
 	}
-	
+
 	var descendants []*blockNode
 	processNodes := list.New()
 	processNodes.PushBack(node)
@@ -836,7 +832,7 @@ func (b *BlockChain) getDescendants(h chainhash.Hash) ([]chainhash.Hash, error) 
 		processNode := firstElement.(*blockNode)
 		if len(processNode.children) == 0 {
 			descendants = append(descendants, processNode)
-		} else{
+		} else {
 			for _, child := range processNode.children {
 				processNodes.PushBack(child)
 			}
@@ -850,9 +846,6 @@ func (b *BlockChain) getDescendants(h chainhash.Hash) ([]chainhash.Hash, error) 
 
 	return sortedDescendants, nil
 }
-
-
-
 
 // GetGeneration is the exported version of getGeneration.
 func (b *BlockChain) GetGeneration(hash chainhash.Hash) ([]chainhash.Hash, error) {
@@ -981,11 +974,11 @@ func (b *BlockChain) findNode(nodeHash *chainhash.Hash, searchDepth int) (*block
 
 				distance++
 			}
-			if nodeHash.IsEqual(b.chainParams.GenesisHash){
+			if nodeHash.IsEqual(b.chainParams.GenesisHash) {
 				genesisNode, err := b.loadBlockNode(dbTx, nodeHash)
-				if err != nil{
+				if err != nil {
 					return err
-				}else {
+				} else {
 					node = genesisNode
 					notFound = false
 					return nil
@@ -1019,11 +1012,11 @@ func (b *BlockChain) getPrevNodeFromBlock(block *hcashutil.Block) (*blockNode,
 	if prevHash.IsEqual(zeroHash) {
 		return nil, nil
 	}
-	if prevHash.IsEqual(b.chainParams.GenesisHash){
+	if prevHash.IsEqual(b.chainParams.GenesisHash) {
 		genesisNode, err := b.findNode(prevHash, maxSearchDepth)
 		if err != nil {
 			return nil, err
-		}else {
+		} else {
 			return genesisNode, nil
 		}
 	}
@@ -1074,6 +1067,7 @@ func (b *BlockChain) getPrevNodeFromNode(node *blockNode) (*blockNode, error) {
 	})
 	return prevBlockNode, err
 }
+
 //hcash
 func (b *BlockChain) getPrevKeyNodeFromNode(node *blockNode) (*blockNode, error) {
 	var err error
@@ -1083,8 +1077,8 @@ func (b *BlockChain) getPrevKeyNodeFromNode(node *blockNode) (*blockNode, error)
 	if node.hash.IsEqual(b.chainParams.GenesisHash) {
 		return nil, nil
 	}
-	if node.header.PrevKeyBlock.IsEqual(zeroHash){
-		return nil,nil
+	if node.header.PrevKeyBlock.IsEqual(zeroHash) {
+		return nil, nil
 	}
 	if prevKeyNode, ok = b.index[node.header.PrevKeyBlock]; !ok {
 		prevKeyNode = node
@@ -1100,6 +1094,7 @@ func (b *BlockChain) getPrevKeyNodeFromNode(node *blockNode) (*blockNode, error)
 		}
 	}
 
+	fmt.Println("error", err)
 	return prevKeyNode, err
 }
 
@@ -1125,7 +1120,6 @@ func (b *BlockChain) getPrevKeyNodeFromNode(node *blockNode) (*blockNode, error)
 	})
 	return prevKeyBlockNode, err
 }*/
-
 
 // ancestorNode returns the ancestor block node at the provided height by
 // following the chain backwards from the given node while dynamically loading
@@ -1158,24 +1152,25 @@ func (b *BlockChain) ancestorNode(node *blockNode, height int64) (*blockNode, er
 
 	return iterNode, nil
 }
+
 //hcash
 func (b *BlockChain) ancestorKeyNode(node *blockNode, keyheight int64) (*blockNode, error) {
 	// Nothing to do if the requested height is outside of the valid range.
-	if !node.isKeyBlock{
+	if !node.isKeyBlock {
 		var err error
 		node, err = b.getPrevKeyNodeFromNode(node)
-		if err != nil{
+		if err != nil {
 			return nil, err
 		}
 	}
-	if keyheight > node.keyHeight + 1 || keyheight < 0 {
+	if keyheight > node.keyHeight+1 || keyheight < 0 {
 		return nil, nil
 	}
 
 	// Iterate backwards until the requested height is reached.
 	iterNode := node
 	ok := true
-	for iterNode != nil && (iterNode.keyHeight + 1 > keyheight || !iterNode.isKeyBlock){
+	for iterNode != nil && (iterNode.keyHeight+1 > keyheight || !iterNode.isKeyBlock) {
 		var err error
 		nextNode := iterNode
 		if nextNode, ok = b.index[iterNode.header.PrevBlock]; !ok {
@@ -1194,6 +1189,7 @@ func (b *BlockChain) ancestorKeyNode(node *blockNode, keyheight int64) (*blockNo
 
 	return iterNode, nil
 }
+
 // fetchBlockFromHash searches the internal chain block stores and the database in
 // an attempt to find the block.  If it finds the block, it returns it.
 //
@@ -1307,14 +1303,14 @@ func (b *BlockChain) pruneBlockNodes() error {
 	// memory that can be pruned.
 	newRootNode := b.bestNode
 	i := int64(0)
-	for  i < minMemoryNodes-1 && newRootNode != nil {
+	for i < minMemoryNodes-1 && newRootNode != nil {
 		if newRootNode.isKeyBlock {
 			i++
 		}
 		newRootNode = newRootNode.parent
 
 	}
-	if newRootNode != nil && !newRootNode.isKeyBlock{
+	if newRootNode != nil && !newRootNode.isKeyBlock {
 		newRootNode, _ = b.getPrevKeyNodeFromNode(newRootNode)
 	}
 	// Nothing to do if there are not enough nodes.
@@ -1345,7 +1341,6 @@ func (b *BlockChain) pruneBlockNodes() error {
 		}
 	}
 
-
 	return nil
 }
 
@@ -1360,13 +1355,13 @@ func (b *BlockChain) pruneStakeNodes() {
 	// Find the height to prune to.
 	pruneToNode := b.bestNode
 	i := int64(0)
-	for  i < minMemoryStakeNodes-1 && pruneToNode != nil {
-		if pruneToNode.isKeyBlock{
+	for i < minMemoryStakeNodes-1 && pruneToNode != nil {
+		if pruneToNode.isKeyBlock {
 			i++
 		}
 		pruneToNode = pruneToNode.parent
 	}
-	if pruneToNode != nil && !pruneToNode.isKeyBlock{
+	if pruneToNode != nil && !pruneToNode.isKeyBlock {
 		pruneToNode, _ = b.getPrevKeyNodeFromNode(pruneToNode)
 	}
 	// Nothing to do if there are not enough nodes.
@@ -1578,7 +1573,7 @@ func (b *BlockChain) getForkKeyNodes(node *blockNode) (*list.List, *list.List, e
 	// later.
 	ancestor := node
 	for ; ancestor.parent != nil; ancestor = ancestor.parent {
-		if HashToBig(&(ancestor.hash)).Cmp(CompactToBig(ancestor.header.Bits)) > 0{
+		if HashToBig(&(ancestor.hash)).Cmp(CompactToBig(ancestor.header.Bits)) > 0 {
 			continue
 		}
 
@@ -1601,7 +1596,7 @@ func (b *BlockChain) getForkKeyNodes(node *blockNode) (*list.List, *list.List, e
 		if n.hash == ancestor.hash {
 			break
 		}
-		if HashToBig(&(n.hash)).Cmp(CompactToBig(n.header.Bits)) <= 0{
+		if HashToBig(&(n.hash)).Cmp(CompactToBig(n.header.Bits)) <= 0 {
 			detachNodes.PushBack(n)
 		}
 
@@ -1670,7 +1665,6 @@ func (b *BlockChain) connectBlock(node *blockNode, block *hcashutil.Block, view 
 	if err != nil {
 		return err
 	}
-
 
 	if len(stxos) != countSpentOutputs(block, parent) {
 		return AssertError("connectBlock called with inconsistent " +
@@ -2172,9 +2166,6 @@ func (b *BlockChain) reorganizeChain(detachNodes, attachNodes *list.List,
 
 		keyHeightCache[n.height] = n.keyHeight
 
-
-
-
 		// Notice the spent txout details are not requested here and
 		// thus will not be generated.  This is done because the state
 		// is not being immediately written to the database, so it is
@@ -2314,12 +2305,12 @@ func (b *BlockChain) forceHeadReorganization(formerBest chainhash.Hash, newBest 
 			"on wrong chain")
 	}
 	/*
-	var newBestNode *blockNode
-	for _, n := range formerBestNode.parent.children {
-		if n.hash.IsEqual(&newBest) {
-			newBestNode = n
+		var newBestNode *blockNode
+		for _, n := range formerBestNode.parent.children {
+			if n.hash.IsEqual(&newBest) {
+				newBestNode = n
+			}
 		}
-	}
 	*/
 	newBestNode, exists := b.index[newBest]
 	if !exists {
@@ -2340,52 +2331,52 @@ func (b *BlockChain) forceHeadReorganization(formerBest chainhash.Hash, newBest 
 
 	// Check to make sure our forced-in node validates correctly.
 	/*
-	view := NewUtxoViewpoint()
-	view.SetBestHash(&b.bestNode.header.PrevBlock)
-	view.SetStakeViewpoint(ViewpointPrevRegular)
+		view := NewUtxoViewpoint()
+		view.SetBestHash(&b.bestNode.header.PrevBlock)
+		view.SetStakeViewpoint(ViewpointPrevRegular)
 
-	formerBestBlock, err := b.fetchBlockFromHash(&formerBest)
-	if err != nil {
-		return err
-	}
-	commonParentBlock, err := b.fetchBlockFromHash(&formerBestNode.parent.hash)
-	if err != nil {
-		return err
-	}
-	var stxos []spentTxOut
-	err = b.db.View(func(dbTx database.Tx) error {
-		stxos, err = dbFetchSpendJournalEntry(dbTx, formerBestBlock,
-			commonParentBlock)
-		return err
-	})
-	if err != nil {
-		return err
-	}
+		formerBestBlock, err := b.fetchBlockFromHash(&formerBest)
+		if err != nil {
+			return err
+		}
+		commonParentBlock, err := b.fetchBlockFromHash(&formerBestNode.parent.hash)
+		if err != nil {
+			return err
+		}
+		var stxos []spentTxOut
+		err = b.db.View(func(dbTx database.Tx) error {
+			stxos, err = dbFetchSpendJournalEntry(dbTx, formerBestBlock,
+				commonParentBlock)
+			return err
+		})
+		if err != nil {
+			return err
+		}
 
-	// Quick sanity test.
-	if len(stxos) != countSpentOutputs(formerBestBlock, commonParentBlock) {
-		return AssertError(fmt.Sprintf("retrieved %v stxos when trying to "+
-			"disconnect block %v (height %v), yet counted %v "+
-			"many spent utxos when trying to force head reorg", len(stxos),
-			formerBestBlock.Hash(), formerBestBlock.Height(),
-			countSpentOutputs(formerBestBlock, commonParentBlock)))
-	}
+		// Quick sanity test.
+		if len(stxos) != countSpentOutputs(formerBestBlock, commonParentBlock) {
+			return AssertError(fmt.Sprintf("retrieved %v stxos when trying to "+
+				"disconnect block %v (height %v), yet counted %v "+
+				"many spent utxos when trying to force head reorg", len(stxos),
+				formerBestBlock.Hash(), formerBestBlock.Height(),
+				countSpentOutputs(formerBestBlock, commonParentBlock)))
+		}
 
-	err = b.disconnectTransactions(view, formerBestBlock, commonParentBlock,
-		stxos)
-	if err != nil {
-		return err
-	}
+		err = b.disconnectTransactions(view, formerBestBlock, commonParentBlock,
+			stxos)
+		if err != nil {
+			return err
+		}
 
-	err = checkBlockSanity(b, newBestBlock, b.timeSource, BFNone, b.chainParams)
-	if err != nil {
-		return err
-	}
+		err = checkBlockSanity(b, newBestBlock, b.timeSource, BFNone, b.chainParams)
+		if err != nil {
+			return err
+		}
 
-	err = b.checkConnectBlock(newBestNode, newBestBlock, view, nil, false)
-	if err != nil {
-		return err
-	}
+		err = b.checkConnectBlock(newBestNode, newBestBlock, view, nil, false)
+		if err != nil {
+			return err
+		}
 	*/
 	attach, detach, err := b.getReorganizeNodes(newBestNode)
 	if err != nil {
@@ -2425,14 +2416,14 @@ func (b *BlockChain) connectBestChain(node *blockNode, block *hcashutil.Block, f
 
 	// We are extending the main (best) chain with a new block.  This is the
 	// most common case.
-	blockPrevHash  := node.header.PrevBlock
+	blockPrevHash := node.header.PrevBlock
 	if blockPrevHash == b.bestNode.hash {
 
 		//Check prevKeyHash
 		blockPrevKeyHash := node.header.PrevKeyBlock
-		_,err := b.prevKeyHashExists(&blockPrevHash,&blockPrevKeyHash)
-		if err != nil{
-			return false,err
+		_, err := b.prevKeyHashExists(&blockPrevHash, &blockPrevKeyHash)
+		if err != nil {
+			return false, err
 		}
 
 		// Fetch the best block, now the parent, to be able to
@@ -2653,10 +2644,10 @@ func (b *BlockChain) BestSnapshot() *BestState {
 	return snapshot
 }
 
-func (b *BlockChain) BestRealKeyHeight() int64{
+func (b *BlockChain) BestRealKeyHeight() int64 {
 	b.chainLock.Lock()
 	keyHeight := b.bestNode.keyHeight
-	if b.bestNode.isKeyBlock{
+	if b.bestNode.isKeyBlock {
 		keyHeight++
 	}
 	b.chainLock.Unlock()

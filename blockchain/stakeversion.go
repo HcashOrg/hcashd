@@ -62,7 +62,7 @@ func (b *BlockChain) CalcWantHeight(interval, height int64) int64 {
 func (b *BlockChain) findStakeVersionPriorNode(prevNode *blockNode) (*blockNode, error) {
 	// Check to see if the blockchain is high enough to begin accounting
 	// stake versions.
-	if !prevNode.isKeyBlock{
+	if !prevNode.isKeyBlock {
 		prevNode, _ = b.getPrevKeyNodeFromNode(prevNode)
 	}
 	nextHeight := prevNode.keyHeight + 2
@@ -77,7 +77,7 @@ func (b *BlockChain) findStakeVersionPriorNode(prevNode *blockNode) (*blockNode,
 	// Walk backwards until we find an interval block and make sure we
 	// don't blow through the minimum height.
 	iterNode := prevNode
-	for iterNode.keyHeight > wantHeight - 1 {
+	for iterNode.keyHeight > wantHeight-1 {
 		var err error
 		iterNode, err = b.getPrevKeyNodeFromNode(iterNode)
 		if err != nil {
@@ -271,7 +271,7 @@ func (b *BlockChain) calcVoterVersionInterval(prevNode *blockNode) (uint32, erro
 	versions := make(map[uint32]int32) // [version][count]
 	totalVotesFound := int32(0)
 	iterNode := prevNode
-	if iterNode.isKeyBlock{
+	if iterNode.isKeyBlock {
 		iterNode, _ = b.getPrevKeyNodeFromNode(iterNode)
 	}
 	for i := int64(0); i < b.chainParams.StakeVersionInterval && iterNode != nil; i++ {
@@ -318,9 +318,12 @@ func (b *BlockChain) calcVoterVersionInterval(prevNode *blockNode) (uint32, erro
 // This function MUST be called with the chain state lock held (for writes).
 func (b *BlockChain) calcVoterVersion(prevNode *blockNode) (uint32, *blockNode) {
 	// Walk blockchain backwards to find interval.
-	if !prevNode.isKeyBlock{
+	fmt.Println("--hello0")
+	fmt.Printf("%+v\n", prevNode)
+	if !prevNode.isKeyBlock {
 		prevNode, _ = b.getPrevKeyNodeFromNode(prevNode)
 	}
+
 	node, err := b.findStakeVersionPriorNode(prevNode)
 	if err != nil {
 		return 0, nil
@@ -361,10 +364,10 @@ func (b *BlockChain) calcVoterVersion(prevNode *blockNode) (uint32, *blockNode) 
 //
 // This function MUST be called with the chain state lock held (for writes).
 func (b *BlockChain) calcStakeVersion(prevNode *blockNode) uint32 {
-	if prevNode.height <= 1{
+	if prevNode.height <= 1 {
 		return 0
 	}
-	if !prevNode.isKeyBlock{
+	if !prevNode.isKeyBlock {
 		prevNode, _ = b.getPrevKeyNodeFromNode(prevNode)
 	}
 	version, node := b.calcVoterVersion(prevNode)
@@ -382,9 +385,9 @@ func (b *BlockChain) calcStakeVersion(prevNode *blockNode) uint32 {
 	// period) Note that calcWantHeight returns the LAST height of the
 	// prior interval; hence the + 1.
 	startIntervalHeight := calcWantHeight(b.chainParams.StakeValidationHeight,
-		b.chainParams.StakeVersionInterval, node.keyHeight+ 1) + 1
+		b.chainParams.StakeVersionInterval, node.keyHeight+1) + 1
 	iterNode := node
-	for iterNode.keyHeight > startIntervalHeight - 1 {
+	for iterNode.keyHeight > startIntervalHeight-1 {
 		var err error
 		iterNode, err = b.getPrevKeyNodeFromNode(iterNode)
 		if err != nil || iterNode == nil {

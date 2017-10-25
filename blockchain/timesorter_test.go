@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HcashOrg/hcashd/blockchain"
+	bc "github.com/HcashOrg/hcashd/blockchain"
 )
 
 // TestTimeSorter tests the timeSorter implementation.
@@ -43,7 +43,7 @@ func TestTimeSorter(t *testing.T) {
 	for i, test := range tests {
 		result := make([]time.Time, len(test.in))
 		copy(result, test.in)
-		sort.Sort(blockchain.TstTimeSorter(result))
+		sort.Sort(bc.ToTimeSorter(result))
 		if !reflect.DeepEqual(result, test.want) {
 			t.Errorf("timeSorter #%d got %v want %v", i, result,
 				test.want)

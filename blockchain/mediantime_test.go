@@ -56,8 +56,10 @@ func TestMedianTime(t *testing.T) {
 	}
 
 	// Modify the max number of allowed median time entries for these tests.
-	blockchain.TstSetMaxMedianTimeEntries(10)
-	defer blockchain.TstSetMaxMedianTimeEntries(200)
+	//blockchain.TstSetMaxMedianTimeEntries(10)
+	//defer blockchain.TstSetMaxMedianTimeEntries(200)
+	blockchain.SetMaxMedianTimeEntries(10)
+	defer blockchain.SetMaxMedianTimeEntries(200)
 
 	for i, test := range tests {
 		filter := blockchain.NewMedianTime()

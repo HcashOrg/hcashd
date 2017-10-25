@@ -13,14 +13,7 @@ run.
 
 package blockchain
 
-import (
-	"sort"
-	"time"
-
-	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
-	"github.com/HcashOrg/hcashd/wire"
-)
-
+/*
 // TstTimeSorter makes the internal timeSorter type available to the test
 // package.
 func TstTimeSorter(times []time.Time) sort.Interface {
@@ -52,3 +45,4 @@ func (b *BlockChain) TstCheckBlockHeaderContext(header *wire.BlockHeader, prevNo
 func TstNewBlockNode(blockHeader *wire.BlockHeader, ticketsSpent []chainhash.Hash, ticketsRevoked []chainhash.Hash, voteBits []VoteVersionTuple) *blockNode {
 	return newBlockNode(blockHeader, ticketsSpent, ticketsRevoked, voteBits)
 }
+*/

@@ -21,8 +21,7 @@ import (
 // reorgTestLong does a single, large reorganization.
 func reorgTestLong(t *testing.T) {
 	// Create a new database and chain instance to run tests against.
-	chain, teardownFunc, err := chainSetup("reorgunittest",
-		simNetParams)
+	chain, teardownFunc, err := blockchain.SetupTestChain("reorgunittest", simNetParams)
 	if err != nil {
 		t.Errorf("Failed to setup chain instance: %v", err)
 		return
@@ -32,7 +31,7 @@ func reorgTestLong(t *testing.T) {
 	// The genesis block should fail to connect since it's already
 	// inserted.
 	genesisBlock := simNetParams.GenesisBlock
-	err = chain.CheckConnectBlock(hcashutil.NewBlock(genesisBlock))
+	err = chain.CheckConnectBlock(hcashutil.NewBlock(genesisBlock), false)
 	if err == nil {
 		t.Errorf("CheckConnectBlock: Did not receive expected error")
 	}
@@ -136,7 +135,7 @@ func reorgTestLong(t *testing.T) {
 // reorganizations.
 func reorgTestShort(t *testing.T) {
 	// Create a new database and chain instance to run tests against.
-	chain, teardownFunc, err := chainSetup("reorgunittest",
+	chain, teardownFunc, err := blockchain.SetupTestChain("reorgunittest",
 		simNetParams)
 	if err != nil {
 		t.Errorf("Failed to setup chain instance: %v", err)
@@ -147,7 +146,7 @@ func reorgTestShort(t *testing.T) {
 	// The genesis block should fail to connect since it's already
 	// inserted.
 	genesisBlock := simNetParams.GenesisBlock
-	err = chain.CheckConnectBlock(hcashutil.NewBlock(genesisBlock))
+	err = chain.CheckConnectBlock(hcashutil.NewBlock(genesisBlock), false)
 	if err == nil {
 		t.Errorf("CheckConnectBlock: Did not receive expected error")
 	}
@@ -256,8 +255,7 @@ func reorgTestShort(t *testing.T) {
 // reorgTestsForced tests a forced reorganization of a single block at HEAD.
 func reorgTestForced(t *testing.T) {
 	// Create a new database and chain instance to run tests against.
-	chain, teardownFunc, err := chainSetup("reorgunittest",
-		simNetParams)
+	chain, teardownFunc, err := blockchain.SetupTestChain("reorgunittest", simNetParams)
 	if err != nil {
 		t.Errorf("Failed to setup chain instance: %v", err)
 		return
@@ -267,7 +265,7 @@ func reorgTestForced(t *testing.T) {
 	// The genesis block should fail to connect since it's already
 	// inserted.
 	genesisBlock := simNetParams.GenesisBlock
-	err = chain.CheckConnectBlock(hcashutil.NewBlock(genesisBlock))
+	err = chain.CheckConnectBlock(hcashutil.NewBlock(genesisBlock), false)
 	if err == nil {
 		t.Errorf("CheckConnectBlock: Did not receive expected error")
 	}

@@ -12,8 +12,8 @@ import (
 
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashd/database"
-	"github.com/HcashOrg/hcashutil"
 	"github.com/HcashOrg/hcashd/wire"
+	"github.com/HcashOrg/hcashutil"
 )
 
 // BehaviorFlags is a bitmask defining tweaks to the normal behavior when
@@ -75,36 +75,36 @@ func (b *BlockChain) blockExistsV2(hash *chainhash.Hash) (bool, error) {
 // the main chain or any side chains.
 //
 // This function MUST be called with the chain state lock held (for reads).
-func (b *BlockChain)prevKeyHashExists(prevHash, keyHash *chainhash.Hash) (bool, error){
+func (b *BlockChain) prevKeyHashExists(prevHash, keyHash *chainhash.Hash) (bool, error) {
 	var block_prevKeyHash chainhash.Hash
 	var blockHeader wire.BlockHeader
 
 	prevBlockNode, ok := b.index[*prevHash]
 	if !ok {
-		prevBlock,err := b.fetchBlockFromHash(prevHash)
-		if err != nil{
+		prevBlock, err := b.fetchBlockFromHash(prevHash)
+		if err != nil {
 
-			return false, fmt.Errorf("prev blockNode : %v not exists" , *prevHash)
+			return false, fmt.Errorf("prev blockNode : %v not exists", *prevHash)
 		}
 		block_prevKeyHash = prevBlock.MsgBlock().Header.PrevKeyBlock
 		blockHeader = prevBlock.MsgBlock().Header
-	}else {
+	} else {
 		block_prevKeyHash = prevBlockNode.header.PrevKeyBlock
 		blockHeader = prevBlockNode.header
 	}
 
-	blockHashBigInt:=HashToBig(prevHash)
+	blockHashBigInt := HashToBig(prevHash)
 
 	if blockHashBigInt.Cmp(CompactToBig(blockHeader.Bits)) <= 0 {
 		if *prevHash != *keyHash {
-			return false ,fmt.Errorf("block : %v  has an wrong preKeyHash: %v" , *prevHash, keyHash)
+			return false, fmt.Errorf("block : %v  has an wrong preKeyHash: %v", *prevHash, keyHash)
 		}
-	}else {
+	} else {
 		if block_prevKeyHash != *keyHash {
-			return false ,fmt.Errorf("block : %v  has an wrong preKeyHash: %v" , prevHash, keyHash)
+			return false, fmt.Errorf("block : %v  has an wrong preKeyHash: %v", prevHash, keyHash)
 		}
 	}
-	return true,nil
+	return true, nil
 }
 
 // processOrphans determines if there are any orphans which depend on the passed
@@ -211,6 +211,7 @@ func (b *BlockChain) ProcessBlock(block *hcashutil.Block, flags BehaviorFlags) (
 
 	// Perform preliminary sanity checks on the block and its transactions.
 	err = checkBlockSanity(b, block, b.timeSource, flags, b.chainParams)
+	fmt.Println("err", err)
 	if err != nil {
 		return false, false, err
 	}
@@ -226,6 +227,7 @@ func (b *BlockChain) ProcessBlock(block *hcashutil.Block, flags BehaviorFlags) (
 	if err != nil {
 		return false, false, err
 	}
+
 	if checkpointBlock != nil {
 		// Ensure the block timestamp is after the checkpoint timestamp.
 		checkpointHeader := &checkpointBlock.MsgBlock().Header
@@ -245,6 +247,7 @@ func (b *BlockChain) ProcessBlock(block *hcashutil.Block, flags BehaviorFlags) (
 			// expected based on elapsed time since the last checkpoint and
 			// maximum adjustment allowed by the retarget rules.
 			duration := blockHeader.Timestamp.Sub(checkpointTime)
+
 			requiredTarget := CompactToBig(b.calcEasiestDifficulty(
 				checkpointHeader.Bits, duration))
 			currentTarget := CompactToBig(blockHeader.Bits)
@@ -275,9 +278,9 @@ func (b *BlockChain) ProcessBlock(block *hcashutil.Block, flags BehaviorFlags) (
 
 	//Check prevKeyHash
 	blockKeyHash := block.MsgBlock().Header.PrevKeyBlock
-	_,err = b.prevKeyHashExists(prevHash,&blockKeyHash)
-	if err != nil{
-		return false,false,err
+	_, err = b.prevKeyHashExists(prevHash, &blockKeyHash)
+	if err != nil {
+		return false, false, err
 	}
 
 	// The block has passed all context independent checks and appears sane

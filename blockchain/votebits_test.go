@@ -176,8 +176,14 @@ func TestNoQuorum(t *testing.T) {
 			StakeVersion: posVersion,
 			Timestamp:    currentTimestamp,
 		}
-		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		/*
+			hash := header.BlockHash()
+			node := newBlockNode(header, nil, nil, nil)
+		*/
+
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -185,7 +191,8 @@ func TestNoQuorum(t *testing.T) {
 		bc.bestNode = currentNode
 
 		// fake index
-		bc.index[hash] = node
+		//bc.index[hash] = node
+		bc.index[header.BlockHash()] = node
 
 		currentHeight++
 		currentTimestamp = currentTimestamp.Add(time.Second)
@@ -213,8 +220,12 @@ func TestNoQuorum(t *testing.T) {
 			StakeVersion: posVersion,
 			Timestamp:    currentTimestamp,
 		}
-		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		/*
+			hash := header.BlockHash()
+			node := newBlockNode(header, nil, nil, nil)
+		*/
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -229,7 +240,7 @@ func TestNoQuorum(t *testing.T) {
 		bc.bestNode = currentNode
 
 		// fake index
-		bc.index[hash] = node
+		bc.index[header.BlockHash()] = node
 
 		currentHeight++
 		currentTimestamp = currentTimestamp.Add(time.Second)
@@ -260,7 +271,12 @@ func TestNoQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		/*
+			node := newBlockNode(header, nil, nil, nil)
+		*/
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -312,7 +328,10 @@ func TestNoQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		//node := newBlockNode(header, nil, nil, nil)
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -374,7 +393,10 @@ func TestNoQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		//node := newBlockNode(header, nil, nil, nil)
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -447,7 +469,10 @@ func TestYesQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		//node := newBlockNode(header, nil, nil, nil)
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -484,7 +509,10 @@ func TestYesQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		//node := newBlockNode(header, nil, nil, nil)
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -530,7 +558,10 @@ func TestYesQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		//node := newBlockNode(header, nil, nil, nil)
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -582,7 +613,9 @@ func TestYesQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		//node := newBlockNode(header, nil, nil, nil)
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -644,7 +677,9 @@ func TestYesQuorum(t *testing.T) {
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		node := newBlockNode(header, nil, nil, nil)
+		//node := newBlockNode(header, nil, nil, nil)
+		// add by sammy at 2017-10-25
+		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -1849,8 +1884,10 @@ func TestVoting(t *testing.T) {
 					Timestamp:    currentTimestamp,
 				}
 				hash := header.BlockHash()
-				node := newBlockNode(header, nil, nil,
-					nil)
+				//node := newBlockNode(header, nil, nil, nil)
+				// add by sammy at 2017-10-25
+				node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 				node.height = int64(currentHeight)
 				node.parent = currentNode
 
@@ -2115,8 +2152,10 @@ func TestParallelVoting(t *testing.T) {
 					Timestamp:    currentTimestamp,
 				}
 				hash := header.BlockHash()
-				node := newBlockNode(header, nil, nil,
-					nil)
+				//node := newBlockNode(header, nil, nil, nil)
+				// add by sammy at 2017-10-25
+				node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+
 				node.height = int64(currentHeight)
 				node.parent = currentNode
 
