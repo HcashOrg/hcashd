@@ -819,15 +819,15 @@ func (b *BlockChain) getMatchedDescendants(h chainhash.Hash, v uint16) ([]chainh
 }
 
 func (b *BlockChain) getDescendants(h chainhash.Hash) ([]chainhash.Hash, error) {
-	node, err := b.findNode(&h, maxSearchDepth)
-
+	//node, err := b.findNode(&h, maxSearchDepth)
+	node, exists := b.index[h]
 	// This typically happens because the main chain has recently
 	// reorganized and the block the miner is looking at is on
 	// a fork.  Usually it corrects itself after failure.
-	if err != nil {
-		return nil, fmt.Errorf("couldn't find block node in best chain: %v",
-			err.Error())
+	if !exists{
+		return nil, fmt.Errorf("couldn't find block node in node index")
 	}
+	
 	var descendants []*blockNode
 	processNodes := list.New()
 	processNodes.PushBack(node)
