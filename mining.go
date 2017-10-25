@@ -33,7 +33,7 @@ const (
 	// will require changes to the generated block.  Using the wire constant
 	// for generated block version could allow creation of invalid blocks
 	// for the updated version.
-	generatedBlockVersion = 4
+	generatedBlockVersion = 1
 
 	// generatedBlockVersionTest is the version of the block being generated
 	// for networks other than the main network.
