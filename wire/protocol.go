@@ -17,23 +17,23 @@ const (
 	InitialProcotolVersion uint32 = 1
 
 	// ProtocolVersion is the latest protocol version this package supports.
-	ProtocolVersion uint32 = 5
+	ProtocolVersion uint32 = 1
 
 	// BIP0111Version is the protocol version which added the SFNodeBloom
 	// service flag.
-	BIP0111Version uint32 = 2
+	BIP0111Version uint32 = 1
 
 	// SendHeadersVersion is the protocol version which added a new
 	// sendheaders message.
-	SendHeadersVersion uint32 = 3
+	SendHeadersVersion uint32 = 1
 
 	// MaxBlockSizeVersion is the protocol version which increased the
 	// original blocksize.
-	MaxBlockSizeVersion uint32 = 4
+	MaxBlockSizeVersion uint32 = 1
 
 	// FeeFilterVersion is the protocol version which added a new
 	// feefilter message.
-	FeeFilterVersion uint32 = 5
+	FeeFilterVersion uint32 = 1
 )
 
 // ServiceFlag identifies services supported by a hypercash peer.
