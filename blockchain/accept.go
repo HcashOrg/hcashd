@@ -88,7 +88,7 @@ func checkCoinbaseUniqueHeight(blockHeight, blockKeyHeight int64, block *hcashut
 }
 
 // IsFinalizedTransaction determines whether or not a transaction is finalized.
-func IsFinalizedTransaction(tx *hcashutil.Tx, blockHeight int64,
+func IsFinalizedTransaction(tx *hcashutil.Tx, blockKeyHeight int64,
 	blockTime time.Time) bool {
 	msgTx := tx.MsgTx()
 
@@ -102,13 +102,13 @@ func IsFinalizedTransaction(tx *hcashutil.Tx, blockHeight int64,
 	// which the transaction is finalized or a timestamp depending on if the
 	// value is before the txscript.LockTimeThreshold.  When it is under the
 	// threshold it is a block height.
-	blockTimeOrHeight := int64(0)
+	blockTimeOrKeyHeight := int64(0)
 	if lockTime < txscript.LockTimeThreshold {
-		blockTimeOrHeight = blockHeight
+		blockTimeOrKeyHeight = blockKeyHeight
 	} else {
-		blockTimeOrHeight = blockTime.Unix()
+		blockTimeOrKeyHeight = blockTime.Unix()
 	}
-	if int64(lockTime) < blockTimeOrHeight {
+	if int64(lockTime) < blockTimeOrKeyHeight {
 		return true
 	}
 
@@ -165,11 +165,11 @@ func (b *BlockChain) checkBlockContext(block *hcashutil.Block, prevNode *blockNo
 		// The height of this block is one more than the referenced
 		// previous block.
 		blockHeight := prevNode.height + 1
-		blockKeyHeight := prevNode.keyHeight
+		blockKeyHeight := int64(block.MsgBlock().Header.KeyHeight)
 
 		// Ensure all transactions in the block are finalized.
 		for _, tx := range block.Transactions() {
-			if !IsFinalizedTransaction(tx, blockHeight,
+			if !IsFinalizedTransaction(tx, blockKeyHeight,
 				header.Timestamp) {
 
 				str := fmt.Sprintf("block contains unfinalized regular "+
@@ -178,7 +178,7 @@ func (b *BlockChain) checkBlockContext(block *hcashutil.Block, prevNode *blockNo
 			}
 		}
 		for _, stx := range block.STransactions() {
-			if !IsFinalizedTransaction(stx, blockHeight,
+			if !IsFinalizedTransaction(stx, blockKeyHeight,
 				header.Timestamp) {
 
 				str := fmt.Sprintf("block contains unfinalized stake "+

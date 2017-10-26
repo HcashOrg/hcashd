@@ -1276,8 +1276,8 @@ func (b *blockManager) handleBlockMsg(bmsg *blockMsg) {
 						nextStakeDiff,
 					})
 				b.server.txMemPool.PruneStakeTx(nextStakeDiff,
-					best.Height, int64(activeNetParams.MaxMicroPerKey))
-				b.server.txMemPool.PruneExpiredTx(best.Height)
+					b.chain.BestRealKeyHeight())
+				b.server.txMemPool.PruneExpiredTx(b.chain.BestRealKeyHeight())
 			}
 
 			winningTickets, poolSize, finalState, err :=
@@ -1344,8 +1344,8 @@ func (b *blockManager) handleBlockMsg(bmsg *blockMsg) {
 						nextStakeDiff,
 					})
 				b.server.txMemPool.PruneStakeTx(nextStakeDiff,
-					best.Height, int64(activeNetParams.MaxMicroPerKey))
-				b.server.txMemPool.PruneExpiredTx(best.Height)
+					b.chain.BestRealKeyHeight())
+				b.server.txMemPool.PruneExpiredTx(b.chain.BestRealKeyHeight())
 			}
 			winningTickets, poolSize, finalState, err :=
 				b.chain.LotteryDataForBlock(blockHash)
@@ -1957,8 +1957,8 @@ out:
 								nextStakeDiff,
 							})
 						b.server.txMemPool.PruneStakeTx(nextStakeDiff,
-							best.Height, int64(activeNetParams.MaxMicroPerKey))
-						b.server.txMemPool.PruneExpiredTx(best.Height)
+							b.chain.BestRealKeyHeight())
+						b.server.txMemPool.PruneExpiredTx(b.chain.BestRealKeyHeight())
 					}
 
 					missedTickets, err := b.chain.MissedTickets()
@@ -2113,9 +2113,9 @@ out:
 					}
 
 					b.server.txMemPool.PruneStakeTx(nextStakeDiff,
-						best.Height, int64(activeNetParams.MaxMicroPerKey))
+						b.chain.BestRealKeyHeight())
 					b.server.txMemPool.PruneExpiredTx(
-						best.Height)
+						b.chain.BestRealKeyHeight())
 
 					missedTickets, err := b.chain.MissedTickets()
 					if err != nil {
@@ -2165,9 +2165,9 @@ out:
 						}
 					}
 					b.server.txMemPool.PruneStakeTx(nextStakeDiff,
-						best.Height, int64(activeNetParams.MaxMicroPerKey))
+						b.chain.BestRealKeyHeight())
 					b.server.txMemPool.PruneExpiredTx(
-						best.Height)
+						b.chain.BestRealKeyHeight())
 
 					missedTickets, err := b.chain.MissedTickets()
 					if err != nil {

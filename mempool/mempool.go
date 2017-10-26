@@ -114,6 +114,13 @@ type Config struct {
 	// the current best chain.
 	BestKeyHeight func() int64
 
+	// BestKeyHeight defines the function to use to access the real keyblock height of
+	// the current best chain.
+	BestRealKeyHeight func() int64
+
+	// KeyHeightByHeight defines the function to get the responding keyheight by height
+	KeyHeightByHeight func(int64) int64
+
 	// SubsidyCache defines a subsidy cache to use.
 	SubsidyCache *blockchain.SubsidyCache
 
@@ -815,7 +822,8 @@ func (mp *TxPool) maybeAcceptTransaction(chain *blockchain.BlockChain, tx *hcash
 	bestHeight := mp.cfg.BestHeight()
 	nextBlockHeight := bestHeight + 1
 
-	nextBlockKeyHeight := mp.cfg.BestKeyHeight()
+	nextBlockKeyHeight := mp.cfg.BestRealKeyHeight()
+
 
 
 	// Determine what type of transaction we're dealing with (regular or stake).
@@ -831,7 +839,7 @@ func (mp *TxPool) maybeAcceptTransaction(chain *blockchain.BlockChain, tx *hcash
 	// Don't allow non-standard transactions if the network parameters
 	// forbid their relaying.
 	if !mp.cfg.Policy.RelayNonStd {
-		err := checkTransactionStandard(tx, txType, nextBlockHeight,
+		err := checkTransactionStandard(tx, txType, nextBlockKeyHeight,
 			mp.cfg.TimeSource, mp.cfg.Policy.MinRelayTxFee,
 			mp.cfg.Policy.MaxTxVersion)
 		if err != nil {
@@ -1285,18 +1293,22 @@ func (mp *TxPool) processOrphans(chain *blockchain.BlockChain, hash *chainhash.H
 // stake difficulty is below the current required stake difficulty should be
 // pruned from mempool since they will never be mined.  The same idea stands
 // for SSGen and SSRtx
-func (mp *TxPool) PruneStakeTx(requiredStakeDifficulty, height int64, maxMicroPerKey int64) {
+func (mp *TxPool) PruneStakeTx(requiredStakeDifficulty, realKeyHeight int64) {
 	// Protect concurrent access.
 	mp.mtx.Lock()
-	mp.pruneStakeTx(requiredStakeDifficulty, height, maxMicroPerKey)
+	mp.pruneStakeTx(requiredStakeDifficulty, realKeyHeight)
 	mp.mtx.Unlock()
 }
 
-func (mp *TxPool) pruneStakeTx(requiredStakeDifficulty, height int64, maxMicroPerKey int64) {
+func (mp *TxPool) pruneStakeTx(requiredStakeDifficulty, realKeyHeight int64) {
 	for _, tx := range mp.pool {
 		txType := stake.DetermineTxType(tx.Tx.MsgTx())
+		txKeyHeight := mp.cfg.KeyHeightByHeight(tx.Height)
+		if txKeyHeight < 0{
+			continue
+		}
 		if txType == stake.TxTypeSStx &&
-			tx.Height + int64(heightDiffToPruneTicket) * (maxMicroPerKey + 1) < height {
+			txKeyHeight + int64(heightDiffToPruneTicket) < realKeyHeight {
 			mp.removeTransaction(tx.Tx, true)
 		}
 		if txType == stake.TxTypeSStx &&
@@ -1304,7 +1316,7 @@ func (mp *TxPool) pruneStakeTx(requiredStakeDifficulty, height int64, maxMicroPe
 			mp.removeTransaction(tx.Tx, true)
 		}
 		if (txType == stake.TxTypeSSRtx || txType == stake.TxTypeSSGen) &&
-			tx.Height + int64(heightDiffToPruneVotes) * (maxMicroPerKey + 1) < height {
+			txKeyHeight + int64(heightDiffToPruneVotes) < realKeyHeight {
 			mp.removeTransaction(tx.Tx, true)
 		}
 	}
@@ -1312,17 +1324,17 @@ func (mp *TxPool) pruneStakeTx(requiredStakeDifficulty, height int64, maxMicroPe
 
 // PruneExpiredTx prunes expired transactions from the mempool that may no longer
 // be able to be included into a block.
-func (mp *TxPool) PruneExpiredTx(height int64) {
+func (mp *TxPool) PruneExpiredTx(realKeyHeight int64) {
 	// Protect concurrent access.
 	mp.mtx.Lock()
-	mp.pruneExpiredTx(height)
+	mp.pruneExpiredTx(realKeyHeight)
 	mp.mtx.Unlock()
 }
 
-func (mp *TxPool) pruneExpiredTx(height int64) {
+func (mp *TxPool) pruneExpiredTx(realKeyHeight int64) {
 	for _, tx := range mp.pool {
 		if tx.Tx.MsgTx().Expiry != 0 {
-			if height >= int64(tx.Tx.MsgTx().Expiry) {
+			if realKeyHeight > int64(tx.Tx.MsgTx().Expiry) {
 				log.Debugf("Pruning expired transaction %v "+
 					"from the mempool", tx.Tx.Hash())
 				mp.removeTransaction(tx.Tx, true)

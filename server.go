@@ -2467,6 +2467,23 @@ func newServer(listenAddrs []string, db database.DB, chainParams *chaincfg.Param
 		BestHash:        func() *chainhash.Hash { return bm.chain.BestSnapshot().Hash },
 		BestHeight:      func() int64 { return bm.chain.BestSnapshot().Height },
 		BestKeyHeight:   func() int64 { return bm.chain.BestSnapshot().KeyHeight },
+		BestRealKeyHeight: func() int64{
+			snapshot := bm.chain.BestSnapshot()
+			keyHeight := snapshot.KeyHeight
+			hash := snapshot.Hash
+			bits := snapshot.Bits
+			if blockchain.HashToBig(hash).Cmp(blockchain.CompactToBig(bits)) <= 0{
+				keyHeight++
+			}
+			return keyHeight
+		},
+		KeyHeightByHeight: func(height int64) int64{
+			keyHeight, err := bm.chain.KeyHeightByHeight(height, nil)
+			if err != nil{
+				return int64(-1)
+			}
+			return keyHeight
+		},
 		SubsidyCache:    bm.chain.FetchSubsidyCache(),
 		SigCache:        s.sigCache,
 		TimeSource:      s.timeSource,

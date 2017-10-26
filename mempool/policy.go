@@ -346,7 +346,7 @@ func isDust(txOut *wire.TxOut, minRelayTxFee hcashutil.Amount) bool {
 // finalized, conforming to more stringent size constraints, having scripts
 // of recognized forms, and not containing "dust" outputs (those that are
 // so small it costs more to process them than they are worth).
-func checkTransactionStandard(tx *hcashutil.Tx, txType stake.TxType, height int64,
+func checkTransactionStandard(tx *hcashutil.Tx, txType stake.TxType, keyHeight int64,
 	timeSource blockchain.MedianTimeSource, minRelayTxFee hcashutil.Amount,
 	maxTxVersion uint16) error {
 
@@ -367,7 +367,7 @@ func checkTransactionStandard(tx *hcashutil.Tx, txType stake.TxType, height int6
 	// The transaction must be finalized to be standard and therefore
 	// considered for inclusion in a block.
 	adjustedTime := timeSource.AdjustedTime()
-	if !blockchain.IsFinalizedTransaction(tx, height, adjustedTime) {
+	if !blockchain.IsFinalizedTransaction(tx, keyHeight, adjustedTime) {
 		return txRuleError(wire.RejectNonstandard,
 			"transaction is not finalized")
 	}
