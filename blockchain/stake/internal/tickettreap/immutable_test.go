@@ -554,8 +554,12 @@ func TestImmutableMemory(t *testing.T) {
 	// Populate.
 	for i := 0; i < numItems; i++ {
 		randomHash := randHash(randSource)
+
+		// add by sammy at 2017-10-26
+		randHeight := uint32(randSource.Int63())
+
 		testTreap = testTreap.Put(Key(*randomHash),
-			&Value{uint32(randSource.Int63()), false, true, false, true})
+			&Value{randHeight, randHeight - 1, false, true, false, true})
 	}
 	nodeTreaps[0] = testTreap
 
@@ -578,8 +582,10 @@ func TestImmutableMemory(t *testing.T) {
 		perBlock := int(chaincfg.MainNetParams.TicketsPerBlock)
 		for i := 0; i < perBlock; i++ {
 			randomHash := randHash(randSource)
+			// add by sammy at 2017-10-26
+			randHeight := uint32(randSource.Int63())
 			treapCopy = treapCopy.Put(Key(*randomHash),
-				&Value{uint32(randSource.Int63()), false, true, false, true})
+				&Value{randHeight, randHeight - 1, false, true, false, true})
 		}
 
 		runtime.ReadMemStats(memStats)

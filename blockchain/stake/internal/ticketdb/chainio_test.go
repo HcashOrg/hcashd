@@ -475,7 +475,7 @@ func TestLiveDatabase(t *testing.T) {
 		for k, v := range ticketMap {
 			h := chainhash.Hash(k)
 			err = DbPutTicket(dbTx, dbnamespace.LiveTicketsBucketName, &h,
-				v.Height, v.Missed, v.Revoked, v.Spent, v.Expired)
+				v.Height, v.Height, v.Missed, v.Revoked, v.Spent, v.Expired)
 			if err != nil {
 				return err
 			}
