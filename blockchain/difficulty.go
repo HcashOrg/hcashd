@@ -251,8 +251,15 @@ func (b *BlockChain) calcNextRequiredDifficulty(curNode *blockNode,					//tsy
 	if curNode == nil {
 		return b.chainParams.PowLimitBits, nil
 	}
+	if curNode.height == 0{
+		return curNode.header.Bits, nil
+	}
 
-	newCurNode, _ := b.getPrevKeyNodeFromNode(curNode)
+	newCurNode := curNode
+	if !curNode.isKeyBlock{
+		newCurNode, _ = b.getPrevKeyNodeFromNode(curNode)
+	}
+
 
 	if newCurNode == nil {
 		return b.chainParams.PowLimitBits, nil
