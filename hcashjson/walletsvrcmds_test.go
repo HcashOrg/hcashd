@@ -807,7 +807,9 @@ func TestWalletSvrCmds(t *testing.T) {
 				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5)
 			},
 			staticCmd: func() interface{} {
-				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, nil, nil)
+				// revised by sammy at 2017-10-27
+				//return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, nil, nil)
+				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, nil, nil, nil)
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5],"id":1}`,
 			unmarshalled: &hcashjson.SendFromCmd{
@@ -825,7 +827,9 @@ func TestWalletSvrCmds(t *testing.T) {
 				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 6)
 			},
 			staticCmd: func() interface{} {
-				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6), nil, nil)
+				// revised by sammy at 2017-10-27
+				//return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6), nil, nil)
+				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, hcashjson.Int(6), nil, nil)
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,6],"id":1}`,
 			unmarshalled: &hcashjson.SendFromCmd{
@@ -843,7 +847,9 @@ func TestWalletSvrCmds(t *testing.T) {
 				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 6, "comment")
 			},
 			staticCmd: func() interface{} {
-				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6),
+				// revised by sammy at 2017-10-27
+				//return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6),
+				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, hcashjson.Int(6),
 					hcashjson.String("comment"), nil)
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,6,"comment"],"id":1}`,
@@ -859,10 +865,13 @@ func TestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendfrom optional3",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 6, "comment", "commentto")
+				// revised by sammy at 2017-10-27
+				//return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 6, "comment", "commentto")
+				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, nil, 6, "comment", "commentto")
 			},
 			staticCmd: func() interface{} {
-				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6),
+				// revised by sammy at 2017-10-27
+				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6), hcashjson.Int(6),
 					hcashjson.String("comment"), hcashjson.String("commentto"))
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,6,"comment","commentto"],"id":1}`,
@@ -929,10 +938,14 @@ func TestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendtoaddress",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5)
+				// revised by sammy 2017-10-27
+				//return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5)
+				return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5, 0)
 			},
 			staticCmd: func() interface{} {
-				return hcashjson.NewSendToAddressCmd("1Address", 0.5, nil, nil)
+				// revised by sammy 2017-10-27
+				//return hcashjson.NewSendToAddressCmd("1Address", 0.5, nil, nil)
+				return hcashjson.NewSendToAddressCmd("1Address", 0.5, 0, nil, nil)
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendtoaddress","params":["1Address",0.5],"id":1}`,
 			unmarshalled: &hcashjson.SendToAddressCmd{
@@ -945,10 +958,14 @@ func TestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendtoaddress optional1",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5, "comment", "commentto")
+				// revised by sammy at 2017-10-27
+				//return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5, "comment", "commentto")
+				return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5, 0, "comment", "commentto")
 			},
 			staticCmd: func() interface{} {
-				return hcashjson.NewSendToAddressCmd("1Address", 0.5, hcashjson.String("comment"),
+				// revised by sammy at 2017-10-27
+				//return hcashjson.NewSendToAddressCmd("1Address", 0.5, hcashjson.String("comment"),
+				return hcashjson.NewSendToAddressCmd("1Address", 0.5, 0, hcashjson.String("comment"),
 					hcashjson.String("commentto"))
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendtoaddress","params":["1Address",0.5,"comment","commentto"],"id":1}`,

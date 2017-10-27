@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // makeHeader is a convenience function to make a message header in the form of
@@ -53,7 +53,9 @@ func TestMessage(t *testing.T) {
 		t.Errorf("NewNetAddress: %v", err)
 	}
 	me.Timestamp = time.Time{} // Version message has zero value timestamp.
-	msgVersion := NewMsgVersion(me, you, 123123, 0)
+	// revise by sammy at 2017-10-27
+	//msgVersion := NewMsgVersion(me, you, 123123, 0)
+	msgVersion := NewMsgVersion(me, you, 123123, 0, 0)
 
 	msgVerack := NewMsgVerAck()
 	msgGetAddr := NewMsgGetAddr()
@@ -73,11 +75,13 @@ func TestMessage(t *testing.T) {
 	msgFilterAdd := NewMsgFilterAdd([]byte{0x01})
 	msgFilterClear := NewMsgFilterClear()
 	msgFilterLoad := NewMsgFilterLoad([]byte{0x01}, 10, 0, BloomUpdateNone)
+	// revise by sammy at 2017-10-27
 	bh := NewBlockHeader(
 		int32(0),                                    // Version
 		&chainhash.Hash{},                           // PrevHash
 		&chainhash.Hash{},                           // MerkleRoot
 		&chainhash.Hash{},                           // StakeRoot
+		&chainhash.Hash{},                           // add by sammy
 		uint16(0x0000),                              // VoteBits
 		[6]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // FinalState
 		uint16(0x0000),                              // Voters
@@ -89,6 +93,7 @@ func TestMessage(t *testing.T) {
 		uint32(0),                                   // Height
 		uint32(0),                                   // Size
 		uint32(0x00000000),                          // Nonce
+		0,                                           //add by sammy
 		[32]byte{},                                  // ExtraData
 		uint32(0xcab005e0),                          // StakeVersion
 	)
@@ -96,11 +101,11 @@ func TestMessage(t *testing.T) {
 	msgReject := NewMsgReject("block", RejectDuplicate, "duplicate block")
 
 	tests := []struct {
-		in     Message     // Value to encode
-		out    Message     // Expected decoded value
-		pver   uint32      // Protocol version for wire encoding
+		in       Message     // Value to encode
+		out      Message     // Expected decoded value
+		pver     uint32      // Protocol version for wire encoding
 		hcashnet CurrencyNet // Network to use for wire encoding
-		bytes  int         // Expected num bytes read/written
+		bytes    int         // Expected num bytes read/written
 	}{
 		{msgVersion, msgVersion, pver, MainNet, 125},         // [0]
 		{msgVerack, msgVerack, pver, MainNet, 24},            // [1]
@@ -252,12 +257,12 @@ func TestReadMessageWireErrors(t *testing.T) {
 	discardBytes := makeHeader(hcashnet, "bogus", 15*1024, 0)
 
 	tests := []struct {
-		buf     []byte      // Wire encoding
-		pver    uint32      // Protocol version for wire encoding
-		hcashnet  CurrencyNet // Hypercash network for wire encoding
-		max     int         // Max size of fixed buffer to induce errors
-		readErr error       // Expected read error
-		bytes   int         // Expected num bytes read
+		buf      []byte      // Wire encoding
+		pver     uint32      // Protocol version for wire encoding
+		hcashnet CurrencyNet // Hypercash network for wire encoding
+		max      int         // Max size of fixed buffer to induce errors
+		readErr  error       // Expected read error
+		bytes    int         // Expected num bytes read
 	}{
 		// Latest protocol version with intentional read errors.
 
@@ -419,12 +424,12 @@ func TestWriteMessageWireErrors(t *testing.T) {
 	bogusMsg := &fakeMessage{command: "bogus", payload: bogusPayload}
 
 	tests := []struct {
-		msg    Message     // Message to encode
-		pver   uint32      // Protocol version for wire encoding
+		msg      Message     // Message to encode
+		pver     uint32      // Protocol version for wire encoding
 		hcashnet CurrencyNet // Hypercash network for wire encoding
-		max    int         // Max size of fixed buffer to induce errors
-		err    error       // Expected error
-		bytes  int         // Expected num bytes written
+		max      int         // Max size of fixed buffer to induce errors
+		err      error       // Expected error
+		bytes    int         // Expected num bytes written
 	}{
 		// Command too long.
 		{badCommandMsg, pver, hcashnet, 0, wireErr, 0},

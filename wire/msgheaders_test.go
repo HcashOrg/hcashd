@@ -64,11 +64,13 @@ func TestHeaders(t *testing.T) {
 // TestHeadersWire tests the MsgHeaders wire encode and decode for various
 // numbers of headers and protocol versions.
 func TestHeadersWire(t *testing.T) {
+	// revise by sammy at 2017-10-27
 	bh := NewBlockHeader(
 		testBlock.Header.Version,                    // Version
 		&mainNetGenesisHash,                         // PrevHash
 		&testBlock.Header.MerkleRoot,                // MerkleRootHash
 		&testBlock.Header.StakeRoot,                 // StakeRoot
+		&testBlock.Header.StakeRoot,                 // add by sammy
 		uint16(0x0000),                              // VoteBits
 		[6]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // FinalState
 		uint16(0x0000),                              // Voters
@@ -80,6 +82,7 @@ func TestHeadersWire(t *testing.T) {
 		uint32(0),                                   // Height
 		uint32(0),                                   // Size
 		uint32(0x01010101),                          // Nonce
+		0,                                           // add by sammy
 		[32]byte{},                                  // ExtraData
 		uint32(0xba5eba11),                          //StakeVersion
 	)
@@ -198,6 +201,7 @@ func TestHeadersWireErrors(t *testing.T) {
 		&hash,                                       // PrevHash
 		&merkleHash,                                 // MerkleRootHash
 		&merkleHash,                                 // StakeRoot
+		&hash,                                       // add by sammy
 		uint16(0x0000),                              // VoteBits
 		[6]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // FinalState
 		uint16(0x0000),                              // Voters
@@ -209,6 +213,7 @@ func TestHeadersWireErrors(t *testing.T) {
 		uint32(1),                 // Height
 		uint32(0),                 // Size
 		nonce,                     // Nonce
+		0,                         // add by sammy
 		[32]byte{},                // ExtraData
 		uint32(0xca55e77e),        //StakeVersion
 	)
@@ -270,6 +275,7 @@ func TestHeadersWireErrors(t *testing.T) {
 		&hash,                                       // PrevHash
 		&merkleHash,                                 // MerkleRootHash
 		&merkleHash,                                 // StakeRoot
+		&hash,                                       // add by sammy
 		uint16(0x0000),                              // VoteBits
 		[6]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // FinalState
 		uint16(0x0000),                              // Voters
@@ -281,6 +287,7 @@ func TestHeadersWireErrors(t *testing.T) {
 		uint32(1),                 // Height
 		uint32(0),                 // Size
 		nonce,                     // Nonce
+		0,                         // add by sammy
 		[32]byte{},                // ExtraData
 		uint32(0xf01dab1e),        // StakeVersion
 	)

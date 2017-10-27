@@ -12,8 +12,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // TestBlockHeader tests the BlockHeader API.
@@ -39,11 +39,13 @@ func TestBlockHeader(t *testing.T) {
 	stakeVersion := uint32(0xb0a710ad)
 	extraData := [32]byte{}
 
+	// revised by sammy at 2017-10-27
 	bh := NewBlockHeader(
 		1, // verision
 		&hash,
 		&merkleHash,
 		&merkleHash, // stakeRoot
+		&merkleHash,
 		votebits,
 		finalState,
 		voters,
@@ -54,6 +56,7 @@ func TestBlockHeader(t *testing.T) {
 		sbits,
 		blockHeight,
 		blockSize,
+		0,
 		nonce,
 		extraData,
 		stakeVersion,

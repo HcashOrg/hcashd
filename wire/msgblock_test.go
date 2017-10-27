@@ -12,20 +12,22 @@ import (
 	"testing"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
+	"github.com/davecgh/go-spew/spew"
 )
 
 // TestBlock tests the MsgBlock API.
 func TestBlock(t *testing.T) {
 	pver := ProtocolVersion
 
+	// revise by sammy at 2017-10-27
 	// Test block header.
 	bh := NewBlockHeader(
 		int32(pver),                                 // Version
 		&testBlock.Header.PrevBlock,                 // PrevHash
 		&testBlock.Header.MerkleRoot,                // MerkleRoot
 		&testBlock.Header.StakeRoot,                 // StakeRoot
+		&testBlock.Header.StakeRoot,                 // add by sammy
 		uint16(0x0000),                              // VoteBits
 		[6]byte{0x00, 0x00, 0x00, 0x00, 0x00, 0x00}, // FinalState
 		uint16(0x0000),                              // Voters
@@ -37,8 +39,9 @@ func TestBlock(t *testing.T) {
 		uint32(1),                                   // Height
 		uint32(1),                                   // Size
 		testBlock.Header.Nonce,                      // Nonce
-		[32]byte{},                                  // ExtraData
-		uint32(0x5ca1ab1e),                          // StakeVersion
+		0,                  //add by sammy
+		[32]byte{},         // ExtraData
+		uint32(0x5ca1ab1e), // StakeVersion
 	)
 
 	// Ensure the command is expected value.

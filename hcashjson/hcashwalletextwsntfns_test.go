@@ -79,7 +79,9 @@ func TestHcashwalletChainSvrWsNtfns(t *testing.T) {
 				return hcashjson.NewCmd("winningtickets", "123", 100, map[string]string{"a": "b"})
 			},
 			staticNtfn: func() interface{} {
-				return hcashjson.NewWinningTicketsNtfn("123", 100, map[string]string{"a": "b"})
+				// revised by sammy at 2017-10-27
+				//return hcashjson.NewWinningTicketsNtfn("123", 100, map[string]string{"a": "b"})
+				return hcashjson.NewWinningTicketsNtfn("123", 100, 100, map[string]string{"a": "b"})
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"winningtickets","params":["123",100,{"a":"b"}],"id":null}`,
 			unmarshalled: &hcashjson.WinningTicketsNtfn{
