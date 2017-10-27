@@ -27,16 +27,16 @@ Command Line Examples:
 |--rpclisten=|all interfaces on default port which is changed by `--testnet`|
 |--rpclisten=0.0.0.0|all IPv4 interfaces on default port which is changed by `--testnet`|
 |--rpclisten=::|all IPv6 interfaces on default port which is changed by `--testnet`|
-|--rpclisten=:11009|all interfaces on port 11009|
-|--rpclisten=0.0.0.0:11009|all IPv4 interfaces on port 11009|
-|--rpclisten=[::]:11009|all IPv6 interfaces on port 11009|
-|--rpclisten=127.0.0.1:11009|only IPv4 localhost on port 11009|
-|--rpclisten=[::1]:11009|only IPv6 localhost on port 11009|
+|--rpclisten=:14009|all interfaces on port 14009|
+|--rpclisten=0.0.0.0:14009|all IPv4 interfaces on port 14009|
+|--rpclisten=[::]:14009|all IPv6 interfaces on port 14009|
+|--rpclisten=127.0.0.1:14009|only IPv4 localhost on port 14009|
+|--rpclisten=[::1]:14009|only IPv6 localhost on port 14009|
 |--rpclisten=:8336|all interfaces on non-standard port 8336|
 |--rpclisten=0.0.0.0:8336|all IPv4 interfaces on non-standard port 8336|
 |--rpclisten=[::]:8336|all IPv6 interfaces on non-standard port 8336|
-|--rpclisten=127.0.0.1:8337 --listen=[::1]:11009|IPv4 localhost on port 8337 and IPv6 localhost on port 11009|
-|--rpclisten=:11009 --listen=:8337|all interfaces on ports 11009 and 8337|
+|--rpclisten=127.0.0.1:8337 --listen=[::1]:14009|IPv4 localhost on port 8337 and IPv6 localhost on port 14009|
+|--rpclisten=:14009 --listen=:8337|all interfaces on ports 14009 and 8337|
 
 The following config file would configure the hcashd RPC server to listen to all interfaces on the default port, including external interfaces, for both IPv4 and IPv6:
 
