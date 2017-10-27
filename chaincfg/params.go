@@ -463,9 +463,9 @@ type Params struct {
 
 // MainNetParams defines the network parameters for the main Hypercash network.
 var MainNetParams = Params{
-	Name:        "testdata",
+	Name:        "testdata2",
 	Net:         wire.MainNet,
-	DefaultPort: "11008",
+	DefaultPort: "14008",
 	DNSSeeds: []string{
 		"testnet-seeds.hcashtech.org",
 	},
@@ -476,7 +476,7 @@ var MainNetParams = Params{
 	PowLimit:                 mainPowLimit,
 	DifficultyRate:           16,
 	MaxMicroPerKey:           31,
-	PowLimitBits:             0x1e000fff,
+	PowLimitBits:             0x1e0fffff,
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0, // Does not apply since ReduceMinDifficulty false
 	GenerateSupported:        false,
@@ -484,16 +484,16 @@ var MainNetParams = Params{
 	MaxTxSize:                2048000,
 	TargetTimePerBlock:       time.Minute * 5,
 	WorkDiffAlpha:            1,
-	WorkDiffWindowSize:       24,
+	WorkDiffWindowSize:       144,
 	WorkDiffWindows:          20,
-	TargetTimespan:           time.Minute * 5 * 24, // TimePerBlock * WindowSize
+	TargetTimespan:           time.Minute * 5 * 144, // TimePerBlock * WindowSize
 	RetargetAdjustmentFactor: 4,
 
 	// Subsidy parameters.
-	BaseSubsidy:              3119582664, // 21m
-	MulSubsidy:               100,
-	DivSubsidy:               101,
-	SubsidyReductionInterval: 1494,
+	BaseSubsidy:              5000000000, //
+	MulSubsidy:               1000,
+	DivSubsidy:               1005,
+	SubsidyReductionInterval: 1543,
 	WorkRewardProportion:     45,
 	StakeRewardProportion:    45,
 	BlockTaxProportion:       10,
@@ -511,61 +511,61 @@ var MainNetParams = Params{
 	RuleChangeActivationDivisor:    4,
 	RuleChangeActivationInterval:   2016 * 4, // 4 weeks
 	Deployments: map[uint32][]ConsensusDeployment{
-		4: {{
-			Vote: Vote{
-				Id:          VoteIDSDiffAlgorithm,
-				Description: "Change stake difficulty algorithm as defined in DCP0001",
-				Mask:        0x0006, // Bits 1 and 2
-				Choices: []Choice{{
-					Id:          "abstain",
-					Description: "abstain voting for change",
-					Bits:        0x0000,
-					IsAbstain:   true,
-					IsNo:        false,
-				}, {
-					Id:          "no",
-					Description: "keep the existing algorithm",
-					Bits:        0x0002, // Bit 1
-					IsAbstain:   false,
-					IsNo:        true,
-				}, {
-					Id:          "yes",
-					Description: "change to the new algorithm",
-					Bits:        0x0004, // Bit 2
-					IsAbstain:   false,
-					IsNo:        false,
-				}},
-			},
-			StartTime:  1493164800, // Apr 26th, 2017
-			ExpireTime: 1524700800, // Apr 26th, 2018
-		}, {
-			Vote: Vote{
-				Id:          VoteIDLNSupport,
-				Description: "Request developers begin work on Lightning Network (LN) integration",
-				Mask:        0x0018, // Bits 3 and 4
-				Choices: []Choice{{
-					Id:          "abstain",
-					Description: "abstain from voting",
-					Bits:        0x0000,
-					IsAbstain:   true,
-					IsNo:        false,
-				}, {
-					Id:          "no",
-					Description: "no, do not work on integrating LN support",
-					Bits:        0x0008, // Bit 3
-					IsAbstain:   false,
-					IsNo:        true,
-				}, {
-					Id:          "yes",
-					Description: "yes, begin work on integrating LN support",
-					Bits:        0x0010, // Bit 4
-					IsAbstain:   false,
-					IsNo:        false,
-				}},
-			},
-			StartTime:  1493164800, // Apr 26th, 2017
-			ExpireTime: 1508976000, // Oct 26th, 2017
-		}},
+		//4: {{
+		//	Vote: Vote{
+		//		Id:          VoteIDSDiffAlgorithm,
+		//		Description: "Change stake difficulty algorithm as defined in DCP0001",
+		//		Mask:        0x0006, // Bits 1 and 2
+		//		Choices: []Choice{{
+		//			Id:          "abstain",
+		//			Description: "abstain voting for change",
+		//			Bits:        0x0000,
+		//			IsAbstain:   true,
+		//			IsNo:        false,
+		//		}, {
+		//			Id:          "no",
+		//			Description: "keep the existing algorithm",
+		//			Bits:        0x0002, // Bit 1
+		//			IsAbstain:   false,
+		//			IsNo:        true,
+		//		}, {
+		//			Id:          "yes",
+		//			Description: "change to the new algorithm",
+		//			Bits:        0x0004, // Bit 2
+		//			IsAbstain:   false,
+		//			IsNo:        false,
+		//		}},
+		//	},
+		//	StartTime:  1493164800, // Apr 26th, 2017
+		//	ExpireTime: 1524700800, // Apr 26th, 2018
+		//}, {
+		//	Vote: Vote{
+		//		Id:          VoteIDLNSupport,
+		//		Description: "Request developers begin work on Lightning Network (LN) integration",
+		//		Mask:        0x0018, // Bits 3 and 4
+		//		Choices: []Choice{{
+		//			Id:          "abstain",
+		//			Description: "abstain from voting",
+		//			Bits:        0x0000,
+		//			IsAbstain:   true,
+		//			IsNo:        false,
+		//		}, {
+		//			Id:          "no",
+		//			Description: "no, do not work on integrating LN support",
+		//			Bits:        0x0008, // Bit 3
+		//			IsAbstain:   false,
+		//			IsNo:        true,
+		//		}, {
+		//			Id:          "yes",
+		//			Description: "yes, begin work on integrating LN support",
+		//			Bits:        0x0010, // Bit 4
+		//			IsAbstain:   false,
+		//			IsNo:        false,
+		//		}},
+		//	},
+		//	StartTime:  1493164800, // Apr 26th, 2017
+		//	ExpireTime: 1508976000, // Oct 26th, 2017
+		//}},
 	},
 
 	// Enforce current block version once majority of the network has
@@ -578,7 +578,7 @@ var MainNetParams = Params{
 	BlockRejectNumRequired:  950,
 	BlockUpgradeNumToCheck:  1000,
 
-	MicroBlockValidationHeight: 32,
+	MicroBlockValidationHeight: 64,
 
 	// Mempool parameters
 	RelayNonStdTxs: false,
@@ -602,20 +602,20 @@ var MainNetParams = Params{
 
 	// Hypercash PoS parameters
 	MinimumStakeDiff:        2 * 1e8, // 2 Coin
-	TicketPoolSize:          2048,
+	TicketPoolSize:          8192,
 	TicketsPerBlock:         5,
-	TicketMaturity:          32/*256*/,
-	TicketExpiry:            10240, // 5*TicketPoolSize
-	CoinbaseMaturity:        32/*256*/,
+	TicketMaturity:          128/*256*/,
+	TicketExpiry:            40960, // 5*TicketPoolSize
+	CoinbaseMaturity:        128/*256*/,
 	SStxChangeMaturity:      1,
 	TicketPoolSizeWeight:    4,
 	StakeDiffAlpha:          1, // Minimal
-	StakeDiffWindowSize:     24,
+	StakeDiffWindowSize:     144,
 	StakeDiffWindows:        20,
 	StakeVersionInterval:    144 * 2 * 7, // ~1 week
 	MaxFreshStakePerBlock:   20,          // 4*TicketsPerBlock
-	StakeEnabledHeight:      32 + 32/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
-	StakeValidationHeight:   192,        // ~14 days
+	StakeEnabledHeight:      128 + 128/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
+	StakeValidationHeight:   512,        // ~14 days
 	StakeBaseSigScript:      []byte{0x00, 0x00},
 	StakeMajorityMultiplier: 3,
 	StakeMajorityDivisor:    4,
