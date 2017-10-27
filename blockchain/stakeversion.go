@@ -318,8 +318,7 @@ func (b *BlockChain) calcVoterVersionInterval(prevNode *blockNode) (uint32, erro
 // This function MUST be called with the chain state lock held (for writes).
 func (b *BlockChain) calcVoterVersion(prevNode *blockNode) (uint32, *blockNode) {
 	// Walk blockchain backwards to find interval.
-	fmt.Println("--hello0")
-	fmt.Printf("%+v\n", prevNode)
+
 	if !prevNode.isKeyBlock {
 		prevNode, _ = b.getPrevKeyNodeFromNode(prevNode)
 	}

@@ -97,7 +97,7 @@ address.
 
 ```text
 HiddenServiceDir /var/tor/hcashd
-HiddenServicePort 11008 127.0.0.1:11008
+HiddenServicePort 14008 127.0.0.1:14008
 ```
 
 Once Tor is configured to provide the hidden service and you have obtained your

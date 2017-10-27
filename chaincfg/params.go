@@ -476,7 +476,7 @@ var MainNetParams = Params{
 	PowLimit:                 mainPowLimit,
 	DifficultyRate:           16,
 	MaxMicroPerKey:           31,
-	PowLimitBits:             0x1e0fffff,
+	PowLimitBits:             0x1d0fffff,
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0, // Does not apply since ReduceMinDifficulty false
 	GenerateSupported:        false,
@@ -511,61 +511,61 @@ var MainNetParams = Params{
 	RuleChangeActivationDivisor:    4,
 	RuleChangeActivationInterval:   2016 * 4, // 4 weeks
 	Deployments: map[uint32][]ConsensusDeployment{
-		//4: {{
-		//	Vote: Vote{
-		//		Id:          VoteIDSDiffAlgorithm,
-		//		Description: "Change stake difficulty algorithm as defined in DCP0001",
-		//		Mask:        0x0006, // Bits 1 and 2
-		//		Choices: []Choice{{
-		//			Id:          "abstain",
-		//			Description: "abstain voting for change",
-		//			Bits:        0x0000,
-		//			IsAbstain:   true,
-		//			IsNo:        false,
-		//		}, {
-		//			Id:          "no",
-		//			Description: "keep the existing algorithm",
-		//			Bits:        0x0002, // Bit 1
-		//			IsAbstain:   false,
-		//			IsNo:        true,
-		//		}, {
-		//			Id:          "yes",
-		//			Description: "change to the new algorithm",
-		//			Bits:        0x0004, // Bit 2
-		//			IsAbstain:   false,
-		//			IsNo:        false,
-		//		}},
-		//	},
-		//	StartTime:  1493164800, // Apr 26th, 2017
-		//	ExpireTime: 1524700800, // Apr 26th, 2018
-		//}, {
-		//	Vote: Vote{
-		//		Id:          VoteIDLNSupport,
-		//		Description: "Request developers begin work on Lightning Network (LN) integration",
-		//		Mask:        0x0018, // Bits 3 and 4
-		//		Choices: []Choice{{
-		//			Id:          "abstain",
-		//			Description: "abstain from voting",
-		//			Bits:        0x0000,
-		//			IsAbstain:   true,
-		//			IsNo:        false,
-		//		}, {
-		//			Id:          "no",
-		//			Description: "no, do not work on integrating LN support",
-		//			Bits:        0x0008, // Bit 3
-		//			IsAbstain:   false,
-		//			IsNo:        true,
-		//		}, {
-		//			Id:          "yes",
-		//			Description: "yes, begin work on integrating LN support",
-		//			Bits:        0x0010, // Bit 4
-		//			IsAbstain:   false,
-		//			IsNo:        false,
-		//		}},
-		//	},
-		//	StartTime:  1493164800, // Apr 26th, 2017
-		//	ExpireTime: 1508976000, // Oct 26th, 2017
-		//}},
+		4: {{
+			Vote: Vote{
+				Id:          VoteIDSDiffAlgorithm,
+				Description: "Change stake difficulty algorithm as defined in DCP0001",
+				Mask:        0x0006, // Bits 1 and 2
+				Choices: []Choice{{
+					Id:          "abstain",
+					Description: "abstain voting for change",
+					Bits:        0x0000,
+					IsAbstain:   true,
+					IsNo:        false,
+				}, {
+					Id:          "no",
+					Description: "keep the existing algorithm",
+					Bits:        0x0002, // Bit 1
+					IsAbstain:   false,
+					IsNo:        true,
+				}, {
+					Id:          "yes",
+					Description: "change to the new algorithm",
+					Bits:        0x0004, // Bit 2
+					IsAbstain:   false,
+					IsNo:        false,
+				}},
+			},
+			StartTime:  1493164800, // Apr 26th, 2017
+			ExpireTime: 1524700800, // Apr 26th, 2018
+		}, {
+			Vote: Vote{
+				Id:          VoteIDLNSupport,
+				Description: "Request developers begin work on Lightning Network (LN) integration",
+				Mask:        0x0018, // Bits 3 and 4
+				Choices: []Choice{{
+					Id:          "abstain",
+					Description: "abstain from voting",
+					Bits:        0x0000,
+					IsAbstain:   true,
+					IsNo:        false,
+				}, {
+					Id:          "no",
+					Description: "no, do not work on integrating LN support",
+					Bits:        0x0008, // Bit 3
+					IsAbstain:   false,
+					IsNo:        true,
+				}, {
+					Id:          "yes",
+					Description: "yes, begin work on integrating LN support",
+					Bits:        0x0010, // Bit 4
+					IsAbstain:   false,
+					IsNo:        false,
+				}},
+			},
+			StartTime:  1493164800, // Apr 26th, 2017
+			ExpireTime: 1508976000, // Oct 26th, 2017
+		}},
 	},
 
 	// Enforce current block version once majority of the network has
@@ -622,7 +622,7 @@ var MainNetParams = Params{
 
 	// Hypercash organization related parameters
 	// Organization address is HcR2g1eGf6mpQz7QNa1u5AFeWq8yKnfRUeM
-	OrganizationPkScript:        hexDecode("a9144b9586d593ae006c07850d5f9887d7d0ad13ccc287"),
+	OrganizationPkScript:        hexDecode("a914cc53f47615e01dcae979f5813278095627f095cc87"),  //HccmQdPB1hkFQcB7jE2drqRYbavEhoQuAdx
 	OrganizationPkScriptVersion: 0,
 	BlockOneLedger:              BlockOneLedgerMainNet,
 }
