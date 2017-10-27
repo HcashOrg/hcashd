@@ -13,7 +13,7 @@ var BlockOneLedgerMainNet = []*TokenPayout{
 	{"HsF4tYLz9JpUFk9aPLC7U2AN8Deq6LkyoWc", 10000 * 1e8}, //shanyl
 	{"HsZKbCUvcpjfHAJpDfWikD7E2oXUGR4ge6q", 10000 * 1e8}, //panc
 	{"HsNu7JN9SeNb3cH7BJWMiSSpPqY6rz8BSXW", 10000 * 1e8}, //guxy
-	{"HsC2xCjKQTDBQZUGXUevZTrWYZZC4J1aNJk", 10000 * 1e8}, //dengcg
+	{"HsamDEnZXPRczM4tNTrKbvUZA8fUSe2TqPk", 10000 * 1e8}, //dengcg
 	{"HsLwT4E2ZdqMDwtrtaQKqp98wVaHrJfyEYM", 10000 * 1e8}, //lixm
 	{"HsS6Hqt7yB5Fr2HDBz5gRhK75q7ciuxa7au", 10000 * 1e8}, //yaoyq
 }
