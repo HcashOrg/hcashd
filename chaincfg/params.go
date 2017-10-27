@@ -622,7 +622,7 @@ var MainNetParams = Params{
 
 	// Hypercash organization related parameters
 	// Organization address is HcR2g1eGf6mpQz7QNa1u5AFeWq8yKnfRUeM
-	OrganizationPkScript:        hexDecode("a9144b9586d593ae006c07850d5f9887d7d0ad13ccc287"),
+	OrganizationPkScript:        hexDecode("a914cc53f47615e01dcae979f5813278095627f095cc87"),  //HccmQdPB1hkFQcB7jE2drqRYbavEhoQuAdx
 	OrganizationPkScriptVersion: 0,
 	BlockOneLedger:              BlockOneLedgerMainNet,
 }
