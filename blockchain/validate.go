@@ -782,6 +782,7 @@ func (b *BlockChain) checkBlockHeaderContext(header *wire.BlockHeader, prevNode 
 	if !fastAdd {
 		// Reject version 4 blocks for networks other than the main
 		// network once a majority of the network has upgraded.
+		/*
 		if b.chainParams.Net != wire.MainNet && header.Version < 5 &&
 			b.isMajorityVersion(5, prevNode,
 				b.chainParams.BlockRejectNumRequired) {
@@ -790,9 +791,11 @@ func (b *BlockChain) checkBlockHeaderContext(header *wire.BlockHeader, prevNode 
 			str = fmt.Sprintf(str, header.Version)
 			return ruleError(ErrBlockVersionTooOld, str)
 		}
+		*/
 
 		// Reject version 3 blocks once a majority of the network has
 		// upgraded.
+		/*
 		if header.Version < 4 && b.isMajorityVersion(4, prevNode,
 			b.chainParams.BlockRejectNumRequired) {
 
@@ -800,9 +803,11 @@ func (b *BlockChain) checkBlockHeaderContext(header *wire.BlockHeader, prevNode 
 			str = fmt.Sprintf(str, header.Version)
 			return ruleError(ErrBlockVersionTooOld, str)
 		}
+		*/
 
 		// Reject version 2 blocks once a majority of the network has
 		// upgraded.
+		/*
 		if header.Version < 3 && b.isMajorityVersion(3, prevNode,
 			b.chainParams.BlockRejectNumRequired) {
 
@@ -810,9 +815,11 @@ func (b *BlockChain) checkBlockHeaderContext(header *wire.BlockHeader, prevNode 
 			str = fmt.Sprintf(str, header.Version)
 			return ruleError(ErrBlockVersionTooOld, str)
 		}
+		*/
 
 		// Reject version 1 blocks once a majority of the network has
 		// upgraded.
+		/*
 		if header.Version < 2 && b.isMajorityVersion(2, prevNode,
 			b.chainParams.BlockRejectNumRequired) {
 
@@ -820,9 +827,11 @@ func (b *BlockChain) checkBlockHeaderContext(header *wire.BlockHeader, prevNode 
 			str = fmt.Sprintf(str, header.Version)
 			return ruleError(ErrBlockVersionTooOld, str)
 		}
+		*/
 
 		// Enforce the stake version in the header once a majority of
 		// the network has upgraded to version 3 blocks.
+		/*
 		if header.Version >= 3 && b.isMajorityVersion(3, prevNode,
 			b.chainParams.BlockEnforceNumRequired) {
 
@@ -834,6 +843,7 @@ func (b *BlockChain) checkBlockHeaderContext(header *wire.BlockHeader, prevNode 
 				return ruleError(ErrBadStakeVersion, str)
 			}
 		}
+		*/
 	}
 
 	return nil
