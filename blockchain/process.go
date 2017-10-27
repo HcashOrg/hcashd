@@ -211,7 +211,6 @@ func (b *BlockChain) ProcessBlock(block *hcashutil.Block, flags BehaviorFlags) (
 
 	// Perform preliminary sanity checks on the block and its transactions.
 	err = checkBlockSanity(b, block, b.timeSource, flags, b.chainParams)
-	fmt.Println("err", err)
 	if err != nil {
 		return false, false, err
 	}

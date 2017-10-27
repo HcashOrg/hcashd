@@ -1094,7 +1094,6 @@ func (b *BlockChain) getPrevKeyNodeFromNode(node *blockNode) (*blockNode, error)
 		}
 	}
 
-	fmt.Println("error", err)
 	return prevKeyNode, err
 }
 
