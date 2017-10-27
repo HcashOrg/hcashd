@@ -476,7 +476,7 @@ var MainNetParams = Params{
 	PowLimit:                 mainPowLimit,
 	DifficultyRate:           16,
 	MaxMicroPerKey:           31,
-	PowLimitBits:             0x1e0fffff,
+	PowLimitBits:             0x1d0fffff,
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0, // Does not apply since ReduceMinDifficulty false
 	GenerateSupported:        false,
