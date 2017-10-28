@@ -1826,7 +1826,7 @@ mempoolLoop:
 		// The fraud proof is not checked because it will be filled in
 		// by the miner.
 		_, _, _, err = blockchain.CheckTransactionInputs(blockManager.chain, subsidyCache, tx,
-			nextBlockHeight, blockUtxos, false, server.chainParams, nil)
+			nextBlockKeyHeight, blockUtxos, false, server.chainParams, nil)
 		if err != nil {
 			minrLog.Tracef("Skipping tx %s due to error in "+
 				"CheckTransactionInputs: %v", tx.Hash(), err)

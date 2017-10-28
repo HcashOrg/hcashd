@@ -32,6 +32,7 @@ import:
 - package: github.com/HcashOrg/hcashrpcclient
   version: dev
 - package: github.com/HcashOrg/hcashutil
+  version: dev
   subpackages:
   - bloom
   - hdkeychain

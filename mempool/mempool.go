@@ -1004,7 +1004,7 @@ func (mp *TxPool) maybeAcceptTransaction(chain *blockchain.BlockChain, tx *hcash
 	// filled in by the miner.
 
 	txFee, _, _, err := blockchain.CheckTransactionInputs(chain, mp.cfg.SubsidyCache,
-		tx, nextBlockHeight, utxoView, false, mp.cfg.ChainParams, nil)
+		tx, nextBlockKeyHeight, utxoView, false, mp.cfg.ChainParams, nil)
 	if err != nil {
 		if cerr, ok := err.(blockchain.RuleError); ok {
 			return nil, chainRuleError(cerr)

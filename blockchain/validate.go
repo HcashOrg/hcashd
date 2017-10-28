@@ -2350,7 +2350,7 @@ func (b *BlockChain) checkTransactionsAndConnect(subsidyCache *SubsidyCache, inp
 		// spent, so be aware of this.
 
 		_, txFee, _, err := CheckTransactionInputs(b, b.subsidyCache, tx,
-			node.height, utxoView, true, /* check fraud proofs */
+			node.keyHeight, utxoView, true, /* check fraud proofs */
 			b.chainParams, keyHeightCache)
 		if err != nil {
 			log.Tracef("CheckTransactionInputs failed; error "+
