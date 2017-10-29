@@ -1,5 +1,5 @@
-hash: 3fe26999c70f23eb7bb53e335279a49a269860f9ea7b50d12ce1af5b3966338f
-updated: 2017-10-10T03:29:34.255656161Z
+hash: a6634aa7b503954da4cac5082c3bc61900206197ad778b029d4c78d257f48cfd
+updated: 2017-10-29T11:48:48.171820663Z
 imports:
 - name: github.com/agl/ed25519
   version: 5312a61534124124185d41f09206b9fef1d88403
@@ -47,7 +47,7 @@ imports:
 - name: github.com/HcashOrg/bitset
   version: 3b5f0c752dfbeeda856fd6af60e997257ca399fc
 - name: github.com/HcashOrg/hcashrpcclient
-  version: 6fa250370b6e0a5af9640e7d0adaede9426d643a
+  version: bde5ceb06ad47c461394da5e670af815d332470e
 - name: github.com/HcashOrg/hcashutil
   version: b0144e1f9f6ed8ffb3493a5c33650e2b6b837f17
   subpackages:
@@ -61,7 +61,7 @@ imports:
   subpackages:
   - rotator
 - name: golang.org/x/crypto
-  version: 9419663f5a44be8b34ca85f08abc5fe1be11f8a3
+  version: 2509b142fb2b797aa7587dad548f113b2c0f20ce
   subpackages:
   - ripemd160
   - ssh/terminal
