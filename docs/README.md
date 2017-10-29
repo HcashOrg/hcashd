@@ -6,7 +6,7 @@
 ## Mining <a name="mining" />   
 While working on some PoW, `hcashd` actually tries to build a block out of a prepared `BlockTemplate` consisting of
 
-+ `Block`: block header + plain txs + stake txs, detailed as [Fig](#block-struct)    
++ `Block`: block header + plain txs + stake txs
 + `Fee`: tx fees vector paid by each tx in `Block`   
 + `SigOpCounts`: TBC   
 + `Height`: block height of current block   
@@ -14,5 +14,6 @@ While working on some PoW, `hcashd` actually tries to build a block out of a pre
 + `ValidPayAddress`: TBC   
 + `GenerateKey`: TBC    
 
-![block structure][block-struct]
-[block-struct]: images/block.png "block structure"  
+### `Block`  
+The structure of `Block` go as follows figure   
+![block structure](images/block.png)   
