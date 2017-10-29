@@ -1,5 +1,5 @@
 hash: a6634aa7b503954da4cac5082c3bc61900206197ad778b029d4c78d257f48cfd
-updated: 2017-10-29T11:48:48.171820663Z
+updated: 2017-10-29T12:18:20.196368723Z
 imports:
 - name: github.com/agl/ed25519
   version: 5312a61534124124185d41f09206b9fef1d88403
@@ -39,7 +39,7 @@ imports:
   - svc
   - winapi
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: ecdeabc65495df2dec95d7c4a4c3e021903035e5
   subpackages:
   - spew
 - name: github.com/dchest/blake256
@@ -47,9 +47,9 @@ imports:
 - name: github.com/HcashOrg/bitset
   version: 3b5f0c752dfbeeda856fd6af60e997257ca399fc
 - name: github.com/HcashOrg/hcashrpcclient
-  version: bde5ceb06ad47c461394da5e670af815d332470e
+  version: 10a6a2003c21f36a846afb600ebbbfe00831b01b
 - name: github.com/HcashOrg/hcashutil
-  version: b0144e1f9f6ed8ffb3493a5c33650e2b6b837f17
+  version: 5d9d38730c6f9eb3eceb4543ccc6c5f86c7e85f9
   subpackages:
   - base58
   - bloom
@@ -66,7 +66,7 @@ imports:
   - ripemd160
   - ssh/terminal
 - name: golang.org/x/sys
-  version: 314a259e304ff91bd6985da2a7149bbf91237993
+  version: 661970f62f5897bc0cd5fdca7e087ba8a98a8fa1
   subpackages:
   - unix
   - windows
