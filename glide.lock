@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 hash: 928175486fbf3a330cf1fdb26e11eb194ab31c4d2b48eee677bd01eb654816b1
 updated: 2017-11-23T17:41:31.83221538+08:00
+=======
+hash: a6634aa7b503954da4cac5082c3bc61900206197ad778b029d4c78d257f48cfd
+updated: 2017-10-29T12:18:20.196368723Z
+>>>>>>> update glide.lock
 imports:
 - name: github.com/agl/ed25519
   version: 5312a61534124124185d41f09206b9fef1d88403
