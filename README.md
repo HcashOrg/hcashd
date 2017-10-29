@@ -118,7 +118,8 @@ The installation of hcashd requires Go 1.7 or newer.
 	```
 # Using HcashWallet UI Version
 
-HcashWallet UI version is a graphical wallet for HCASH. With it, you can send and receive HCASH, purchase tickets for PoS voting, get a history of all your transactions and more.HcashWallet UI version is located here: https://github.com/HcashOrg/hcashwallet/releases. It could be extracted and used directly.
+HcashWallet UI version is a graphical wallet for HCASH. With it, you can send and receive HCASH, purchase tickets for PoS voting, get a history of all your transactions and more. 
+HcashWallet UI version is located here: https://github.com/HcashOrg/hcashwallet/releases. It could be extracted and used directly.
 
 # License
 
