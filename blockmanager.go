@@ -2486,6 +2486,11 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 
 		block := blockSlice[0]
 		parentBlock := blockSlice[1]
+		isKeyBlock := blockchain.HashToBig(block.Hash()).Cmp(blockchain.CompactToBig(block.MsgBlock().Header.Bits)) <= 0
+		isParentKeyBlock :=
+			blockchain.HashToBig(parentBlock.Hash()).Cmp(blockchain.CompactToBig(parentBlock.MsgBlock().Header.Bits)) <= 0
+
+
 
 		// If the parent tx tree was invalidated, we need to remove these
 		// tx from the mempool as the next incoming block may alternatively
@@ -2493,7 +2498,7 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 		txTreeRegularValid := hcashutil.IsFlagSet16(block.MsgBlock().Header.VoteBits,
 			hcashutil.BlockValid)
 
-		if !txTreeRegularValid {
+		if !txTreeRegularValid && isParentKeyBlock{
 			for _, tx := range parentBlock.Transactions()[1:] {
 				b.server.txMemPool.RemoveTransaction(tx, false)
 				b.server.txMemPool.RemoveDoubleSpends(tx)
@@ -2504,23 +2509,37 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 
 		// Reinsert all of the transactions (except the coinbase) from the parent
 		// tx tree regular into the transaction pool.
-		for _, tx := range parentBlock.Transactions()[1:] {
-			_, err := b.server.txMemPool.MaybeAcceptTransaction(b.chain, tx, false, true)
-			if err != nil {
-				// Remove the transaction and all transactions
-				// that depend on it if it wasn't accepted into
-				// the transaction pool.
-				b.server.txMemPool.RemoveTransaction(tx, true)
+		if isKeyBlock {
+			for _, tx := range block.Transactions()[2:] {
+				_, err := b.server.txMemPool.MaybeAcceptTransaction(b.chain, tx, false, true)
+				if err != nil {
+					// Remove the transaction and all transactions
+					// that depend on it if it wasn't accepted into
+					// the transaction pool.
+					b.server.txMemPool.RemoveTransaction(tx, true)
+				}
+			}
+		}else {
+			for _, tx := range block.Transactions()[1:] {
+				_, err := b.server.txMemPool.MaybeAcceptTransaction(b.chain, tx, false, true)
+				if err != nil {
+					// Remove the transaction and all transactions
+					// that depend on it if it wasn't accepted into
+					// the transaction pool.
+					b.server.txMemPool.RemoveTransaction(tx, true)
+				}
 			}
 		}
 
-		for _, tx := range block.STransactions()[0:] {
-			_, err := b.server.txMemPool.MaybeAcceptTransaction(b.chain, tx, false, true)
-			if err != nil {
-				// Remove the transaction and all transactions
-				// that depend on it if it wasn't accepted into
-				// the transaction pool.
-				b.server.txMemPool.RemoveTransaction(tx, true)
+		if isKeyBlock {
+			for _, tx := range block.STransactions()[0:] {
+				_, err := b.server.txMemPool.MaybeAcceptTransaction(b.chain, tx, false, true)
+				if err != nil {
+					// Remove the transaction and all transactions
+					// that depend on it if it wasn't accepted into
+					// the transaction pool.
+					b.server.txMemPool.RemoveTransaction(tx, true)
+				}
 			}
 		}
 
