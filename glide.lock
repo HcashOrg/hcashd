@@ -39,7 +39,7 @@ imports:
   - svc
   - winapi
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: ecdeabc65495df2dec95d7c4a4c3e021903035e5
   subpackages:
   - spew
 - name: github.com/dchest/blake256
@@ -66,7 +66,7 @@ imports:
   - ripemd160
   - ssh/terminal
 - name: golang.org/x/sys
-  version: 314a259e304ff91bd6985da2a7149bbf91237993
+  version: 661970f62f5897bc0cd5fdca7e087ba8a98a8fa1
   subpackages:
   - unix
   - windows
