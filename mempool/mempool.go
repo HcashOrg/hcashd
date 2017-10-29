@@ -1312,7 +1312,7 @@ func (mp *TxPool) pruneStakeTx(requiredStakeDifficulty, realKeyHeight int64) {
 			mp.removeTransaction(tx.Tx, true)
 		}
 		if txType == stake.TxTypeSStx &&
-			tx.Tx.MsgTx().TxOut[0].Value < requiredStakeDifficulty {
+			tx.Tx.MsgTx().TxOut[0].Value != requiredStakeDifficulty {
 			mp.removeTransaction(tx.Tx, true)
 		}
 		if (txType == stake.TxTypeSSRtx || txType == stake.TxTypeSSGen) &&
