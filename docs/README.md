@@ -1,5 +1,6 @@
 # `hcashd`: daemon program for `hcash`  
 
 ## Contents  
-+ [mining](mining.md)  
++ [Mining](mining.md)  
++ [Cryptography](crypto.md)  
 

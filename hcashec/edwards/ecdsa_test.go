@@ -10,13 +10,94 @@ import (
 	"compress/gzip"
 	"encoding/hex"
 	"io"
-	"math/big"
 	"math/rand"
 	"os"
 	"strings"
 	"testing"
 )
 
+// TestBadPubKey tests failed verification due to bad pubkeys
+func TestBadPubKey(t *testing.T) {
+	tRand := rand.New(rand.NewSource(54321))
+
+	curve := new(TwistedEdwardsCurve)
+	curve.InitParam25519()
+	msg := []byte("Hello World in TestBadSignature")
+
+	sks := mockUpSecKeysByScalars(curve, 50)
+	for _, sk := range sks {
+		r, s, err := Sign(curve, sk, msg)
+		if nil != err {
+			t.Fatalf("unexpected signing error: %s\n", err)
+		}
+
+		// derive the public key
+		pkX, pkY := sk.Public()
+		pk := NewPublicKey(curve, pkX, pkY)
+
+		// Screw up a random bit in pk and
+		// make sure it still fails.
+		pkBadBytes := pk.Serialize()
+		pos := tRand.Intn(31)
+		bitPos := tRand.Intn(7)
+		if pos == 0 {
+			// 0th bit in first byte doesn't matter
+			bitPos = tRand.Intn(6) + 1
+		}
+		pkBadBytes[pos] ^= 1 << uint8(bitPos)
+
+		// parse and verify the bad pk
+		if pkBad, err := ParsePubKey(curve, pkBadBytes); (nil == err) && (nil != pkBad) {
+
+			if Verify(pkBad, msg, r, s) {
+				t.Fatalf("verification should fail on %s with pk=%v,r=%v,s=%v\n",
+					msg, pk, *r, *s)
+			}
+		}
+	}
+}
+
+// TestBadSignature tests failed verification on bad signatures
+func TestBadSignature(t *testing.T) {
+	tRand := rand.New(rand.NewSource(54321))
+
+	curve := new(TwistedEdwardsCurve)
+	curve.InitParam25519()
+	msg := []byte("Hello World in TestBadSignature")
+
+	sks := mockUpSecKeysByScalars(curve, 50)
+	for _, sk := range sks {
+		r, s, err := Sign(curve, sk, msg)
+		if nil != err {
+			t.Fatalf("unexpected signing error: %s\n", err)
+		}
+
+		// derive the public key
+		pkX, pkY := sk.Public()
+		pk := NewPublicKey(curve, pkX, pkY)
+
+		// Screw up a random bit in the signature and
+		// make sure it still fails.
+		sig := NewSignature(r, s)
+		sigBadBytes := sig.Serialize()
+		pos := tRand.Intn(63)
+		bitPos := tRand.Intn(7)
+		// flip a bit randomly on the a random byte
+		sigBadBytes[pos] ^= 1 << uint8(bitPos)
+
+		// parse a signature from sigBadBytes
+		// and check by verification
+		if badSig, err := ParseSignature(curve, sigBadBytes); nil == err {
+			// should fail to verify
+			if Verify(pk, msg, badSig.GetR(), badSig.GetS()) {
+				t.Fatalf("verification should fail on %s with pk=%v,r=%v,s=%v",
+					msg, pk, *badSig.GetR(), *badSig.GetS())
+			}
+		}
+	}
+}
+
+// TestGolden tests the implemented TwistedEdwardsCurve against other implementation
 func TestGolden(t *testing.T) {
 	curve := new(TwistedEdwardsCurve)
 	curve.InitParam25519()
@@ -46,6 +127,8 @@ func TestGolden(t *testing.T) {
 			t.Fatalf("error reading test data: %s", err)
 		}
 
+		// each line is in inform of
+		//	private-key-bytes:public-key-bytes:message:signature
 		line := string(lineBytes)
 		parts := strings.Split(line, ":")
 		if len(parts) != 5 {
@@ -152,307 +235,55 @@ func TestGolden(t *testing.T) {
 	}
 }
 
-func randPrivScalarKeyList(curve *TwistedEdwardsCurve, i int) []*PrivateKey {
-	r := rand.New(rand.NewSource(54321))
-
-	privKeyList := make([]*PrivateKey, i, i)
-	for j := 0; j < i; j++ {
-		for {
-			bIn := new([32]byte)
-			for k := 0; k < PrivScalarSize; k++ {
-				randByte := r.Intn(255)
-				bIn[k] = uint8(randByte)
-			}
-
-			bInBig := new(big.Int).SetBytes(bIn[:])
-			bInBig.Mod(bInBig, curve.N)
-			bIn = copyBytes(bInBig.Bytes())
-			bIn[31] &= 248
-
-			pks, _, err := PrivKeyFromScalar(curve, bIn[:])
-			if err != nil {
-				r.Seed(int64(j) + r.Int63n(12345))
-				continue
-			}
-
-			// No duplicates allowed.
-			if j > 0 &&
-				(bytes.Equal(pks.Serialize(), privKeyList[j-1].Serialize())) {
-				continue
-			}
-
-			privKeyList[j] = pks
-			r.Seed(int64(j) + 54321)
-			break
-		}
-	}
-
-	return privKeyList
-}
-
-func TestNonStandardSignatures(t *testing.T) {
-	tRand := rand.New(rand.NewSource(54321))
-
-	curve := new(TwistedEdwardsCurve)
-	curve.InitParam25519()
-	msg := []byte{
-		0xbe, 0x13, 0xae, 0xf4,
-		0xe8, 0xa2, 0x00, 0xb6,
-		0x45, 0x81, 0xc4, 0xd1,
-		0x0c, 0xf4, 0x1b, 0x5b,
-		0xe1, 0xd1, 0x81, 0xa7,
-		0xd3, 0xdc, 0x37, 0x55,
-		0x58, 0xc1, 0xbd, 0xa2,
-		0x98, 0x2b, 0xd9, 0xfb,
-	}
-
-	pks := randPrivScalarKeyList(curve, 50)
-	for _, pk := range pks {
-		r, s, err := Sign(curve, pk, msg)
-		if err != nil {
-			t.Fatalf("unexpected error %s", err)
-		}
-
-		pubX, pubY := pk.Public()
-		pub := NewPublicKey(curve, pubX, pubY)
-		ok := Verify(pub, msg, r, s)
-		if !ok {
-			t.Fatalf("expected %v, got %v", true, ok)
-		}
-
-		// Test serializing/deserializing.
-		privKeyDupTest, _, err := PrivKeyFromScalar(curve,
-			copyBytes(pk.ecPk.D.Bytes())[:])
-
-		if err != nil {
-			t.Fatalf("unexpected error %s", err)
-		}
-
-		cmp := privKeyDupTest.GetD().Cmp(pk.GetD()) == 0
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-
-		privKeyDupTest2, _, err := PrivKeyFromScalar(curve, pk.Serialize())
-		if err != nil {
-			t.Fatalf("unexpected error %s", err)
-		}
-
-		cmp = privKeyDupTest2.GetD().Cmp(pk.GetD()) == 0
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-
-		// Screw up a random bit in the signature and
-		// make sure it still fails.
-		sig := NewSignature(r, s)
-		sigBad := sig.Serialize()
-		pos := tRand.Intn(63)
-		bitPos := tRand.Intn(7)
-		sigBad[pos] ^= 1 << uint8(bitPos)
-
-		bSig, err := ParseSignature(curve, sigBad)
-		if err != nil {
-			// Signature failed to parse, continue.
-			continue
-		}
-		ok = Verify(pub, msg, bSig.GetR(), bSig.GetS())
-		if ok {
-			t.Fatalf("expected %v, got %v", false, ok)
-		}
-
-		// Screw up a random bit in the pubkey and
-		// make sure it still fails.
-		pkBad := pub.Serialize()
-		pos = tRand.Intn(31)
-		if pos == 0 {
-			// 0th bit in first byte doesn't matter
-			bitPos = tRand.Intn(6) + 1
-		} else {
-			bitPos = tRand.Intn(7)
-		}
-		pkBad[pos] ^= 1 << uint8(bitPos)
-		bPub, err := ParsePubKey(curve, pkBad)
-		if err == nil && bPub != nil {
-			ok = Verify(bPub, msg, r, s)
-			if ok {
-				t.Fatalf("expected %v, got %v", false, ok)
-			}
-		}
-	}
-}
-
-func randPrivKeyList(curve *TwistedEdwardsCurve, i int) []*PrivateKey {
-	r := rand.New(rand.NewSource(54321))
-
-	privKeyList := make([]*PrivateKey, i, i)
-	for j := 0; j < i; j++ {
-		for {
-			bIn := new([32]byte)
-			for k := 0; k < fieldIntSize; k++ {
-				randByte := r.Intn(255)
-				bIn[k] = uint8(randByte)
-			}
-
-			pks, _ := PrivKeyFromSecret(curve, bIn[:])
-			if pks == nil {
-				continue
-			}
-			if j > 0 &&
-				(bytes.Equal(pks.Serialize(), privKeyList[j-1].Serialize())) {
-				r.Seed(int64(j) + r.Int63n(12345))
-				continue
-			}
-
-			privKeyList[j] = pks
-			r.Seed(int64(j) + 54321)
-			break
-		}
-	}
-
-	return privKeyList
-}
-
-func benchmarkSigning(b *testing.B) {
+// TestKeySerialization tests the serialization/deserialization
+//	operations on keys
+func TestKeySerialization(t *testing.T) {
 	curve := new(TwistedEdwardsCurve)
 	curve.InitParam25519()
 
-	r := rand.New(rand.NewSource(54321))
-	msg := []byte{
-		0xbe, 0x13, 0xae, 0xf4,
-		0xe8, 0xa2, 0x00, 0xb6,
-		0x45, 0x81, 0xc4, 0xd1,
-		0x0c, 0xf4, 0x1b, 0x5b,
-		0xe1, 0xd1, 0x81, 0xa7,
-		0xd3, 0xdc, 0x37, 0x55,
-		0x58, 0xc1, 0xbd, 0xa2,
-		0x98, 0x2b, 0xd9, 0xfb,
-	}
+	sks := mockUpSecKeysByScalars(curve, 50)
+	for _, sk := range sks {
+		// derive a secret key from a scalar
+		sk1, _, err := PrivKeyFromScalar(curve,
+			copyBytes(sk.ecPk.D.Bytes())[:])
+		if nil != err {
+			t.Fatalf("unexpected signing error: %s\n", err)
+		}
+		// check equality
+		if 0 != sk.GetD().Cmp(sk1.GetD()) {
+			t.Fatalf("want %v, got %v\n", *sk.GetD(), *sk1.GetD())
+		}
 
-	numKeys := 1024
-	privKeyList := randPrivKeyList(curve, numKeys)
-
-	for n := 0; n < b.N; n++ {
-		randIndex := r.Intn(numKeys - 1)
-		_, _, err := Sign(curve, privKeyList[randIndex], msg)
-		if err != nil {
-			panic("sign failure")
+		//derive a secret key from a scalar
+		sk2, _, err := PrivKeyFromScalar(curve, sk.Serialize())
+		if nil != err {
+			t.Fatalf("unexpected signing error: %s\n", err)
+		}
+		// check equality
+		if 0 != sk.GetD().Cmp(sk2.GetD()) {
+			t.Fatalf("want %v, got %v\n", *sk.GetD(), *sk2.GetD())
 		}
 	}
 }
 
-func BenchmarkSigning(b *testing.B) { benchmarkSigning(b) }
-
-func benchmarkSigningNonStandard(b *testing.B) {
+// TestStdSigning tests the standard signing/verifying operations
+func TestStdSigning(t *testing.T) {
 	curve := new(TwistedEdwardsCurve)
 	curve.InitParam25519()
+	msg := []byte("Hello World in TestStdSigning")
 
-	r := rand.New(rand.NewSource(54321))
-	msg := []byte{
-		0xbe, 0x13, 0xae, 0xf4,
-		0xe8, 0xa2, 0x00, 0xb6,
-		0x45, 0x81, 0xc4, 0xd1,
-		0x0c, 0xf4, 0x1b, 0x5b,
-		0xe1, 0xd1, 0x81, 0xa7,
-		0xd3, 0xdc, 0x37, 0x55,
-		0x58, 0xc1, 0xbd, 0xa2,
-		0x98, 0x2b, 0xd9, 0xfb,
-	}
+	sks := mockUpSecKeysByScalars(curve, 50)
+	for _, sk := range sks {
+		r, s, err := Sign(curve, sk, msg)
+		if nil != err {
+			t.Fatalf("unexpected signing error: %s\n", err)
+		}
 
-	numKeys := 250
-	privKeyList := randPrivScalarKeyList(curve, numKeys)
-
-	for n := 0; n < b.N; n++ {
-		randIndex := r.Intn(numKeys - 1)
-		_, _, err := Sign(curve, privKeyList[randIndex], msg)
-		if err != nil {
-			panic("sign failure")
+		pkX, pkY := sk.Public()
+		pk := NewPublicKey(curve, pkX, pkY)
+		if !Verify(pk, msg, r, s) {
+			t.Fatalf("verification failed on %s with pk=%v,r=%v,s=%v", msg, pk, r, s)
+			//t.Fatalf("expected %v, got %v", true, ok)
 		}
 	}
 }
-
-func BenchmarkSigningNonStandard(b *testing.B) { benchmarkSigningNonStandard(b) }
-
-type SignatureVerParams struct {
-	pubkey *PublicKey
-	msg    []byte
-	sig    *Signature
-}
-
-func randSigList(curve *TwistedEdwardsCurve, i int) []*SignatureVerParams {
-	r := rand.New(rand.NewSource(54321))
-
-	privKeyList := make([]*PrivateKey, i, i)
-	for j := 0; j < i; j++ {
-		for {
-			bIn := new([32]byte)
-			for k := 0; k < fieldIntSize; k++ {
-				randByte := r.Intn(255)
-				bIn[k] = uint8(randByte)
-			}
-
-			pks, _ := PrivKeyFromSecret(curve, bIn[:])
-			if pks == nil {
-				continue
-			}
-			privKeyList[j] = pks
-			r.Seed(int64(j) + 54321)
-			break
-		}
-	}
-
-	msgList := make([][]byte, i, i)
-	for j := 0; j < i; j++ {
-		m := make([]byte, 32, 32)
-		for k := 0; k < fieldIntSize; k++ {
-			randByte := r.Intn(255)
-			m[k] = uint8(randByte)
-		}
-		msgList[j] = m
-		r.Seed(int64(j) + 54321)
-	}
-
-	sigsList := make([]*Signature, i, i)
-	for j := 0; j < i; j++ {
-		r, s, err := Sign(curve, privKeyList[j], msgList[j])
-		if err != nil {
-			panic("sign failure")
-		}
-		sig := &Signature{r, s}
-		sigsList[j] = sig
-	}
-
-	sigStructList := make([]*SignatureVerParams, i, i)
-	for j := 0; j < i; j++ {
-		ss := new(SignatureVerParams)
-		pkx, pky := privKeyList[j].Public()
-		ss.pubkey = NewPublicKey(curve, pkx, pky)
-		ss.msg = msgList[j]
-		ss.sig = sigsList[j]
-		sigStructList[j] = ss
-	}
-
-	return sigStructList
-}
-
-func benchmarkVerification(b *testing.B) {
-	curve := new(TwistedEdwardsCurve)
-	curve.InitParam25519()
-	r := rand.New(rand.NewSource(54321))
-
-	numSigs := 1024
-	sigList := randSigList(curve, numSigs)
-
-	for n := 0; n < b.N; n++ {
-		randIndex := r.Intn(numSigs - 1)
-		ver := Verify(sigList[randIndex].pubkey,
-			sigList[randIndex].msg,
-			sigList[randIndex].sig.R,
-			sigList[randIndex].sig.S)
-		if !ver {
-			panic("made invalid sig")
-		}
-	}
-}
-
-func BenchmarkVerification(b *testing.B) { benchmarkVerification(b) }

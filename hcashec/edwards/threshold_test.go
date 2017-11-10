@@ -12,61 +12,35 @@ import (
 	"testing"
 )
 
-type signerHex struct {
-	privkey          string
-	privateNonce     string
-	pubKeySumLocal   string
-	partialSignature string
-}
-
-type ThresholdTestVectorHex struct {
-	msg               string
-	signersHex        []signerHex
-	combinedSignature string
-}
-
-type signer struct {
-	privkey          []byte
-	pubkey           *PublicKey
-	privateNonce     []byte
-	publicNonce      *PublicKey
-	pubKeySumLocal   *PublicKey
-	partialSignature []byte
-}
-
-type ThresholdTestVector struct {
-	msg               []byte
-	signers           []signer
-	combinedSignature []byte
-}
-
+// TestSchnorrThreshold test Schnorr threshold signature
 func TestSchnorrThreshold(t *testing.T) {
+	const MAX_SIGNATORIES = 10
+	const NUM_TEST = 5
+
 	tRand := rand.New(rand.NewSource(543212345))
-	maxSignatories := 10
-	numTests := 5
-	numSignatories := maxSignatories * numTests
+	numSignatories := MAX_SIGNATORIES * NUM_TEST
 
 	curve := new(TwistedEdwardsCurve)
 	curve.InitParam25519()
 
 	msg, _ := hex.DecodeString(
 		"d04b98f48e8f8bcc15c6ae5ac050801cd6dcfd428fb5f9e65c4e16e7807340fa")
-	privkeys := randPrivScalarKeyList(curve, numSignatories)
+	seckeys := mockUpSecKeysByScalars(curve, numSignatories)
 
-	for i := 0; i < numTests; i++ {
-		numKeysForTest := tRand.Intn(maxSignatories-2) + 2
-		keyIndex := i * maxSignatories
+	for i := 0; i < NUM_TEST; i++ {
+		numKeysForTest := tRand.Intn(MAX_SIGNATORIES-2) + 2
+		keyIndex := i * MAX_SIGNATORIES
+
+		// retrieve keys fro the faked secret key vector
 		keysToUse := make([]*PrivateKey, numKeysForTest, numKeysForTest)
 		for j := 0; j < numKeysForTest; j++ {
-			keysToUse[j] = privkeys[j+keyIndex]
+			keysToUse[j] = seckeys[j+keyIndex]
 		}
 
-		pubKeysToUse := make([]*PublicKey, numKeysForTest,
-			numKeysForTest)
+		// compute the corresponding public key vector
+		pubKeysToUse := make([]*PublicKey, numKeysForTest, numKeysForTest)
 		for j := 0; j < numKeysForTest; j++ {
-			_, pubkey, _ := PrivKeyFromScalar(curve,
-				keysToUse[j].Serialize())
-			pubKeysToUse[j] = pubkey
+			_, pubKeysToUse[j], _ = PrivKeyFromScalar(curve, keysToUse[j].Serialize())
 		}
 
 		// Combine pubkeys.
@@ -75,10 +49,9 @@ func TestSchnorrThreshold(t *testing.T) {
 
 		allPksSum := CombinePubkeys(curve, allPubkeys)
 
-		privNoncesToUse := make([]*PrivateKey, numKeysForTest,
-			numKeysForTest)
-		pubNoncesToUse := make([]*PublicKey, numKeysForTest,
-			numKeysForTest)
+		// fake the secret and public nonce vectors
+		privNoncesToUse := make([]*PrivateKey, numKeysForTest, numKeysForTest)
+		pubNoncesToUse := make([]*PublicKey, numKeysForTest, numKeysForTest)
 		for j := 0; j < numKeysForTest; j++ {
 			nonce := nonceRFC6979(curve, keysToUse[j].Serialize(), msg, nil,
 				Sha512VersionStringRFC6979)
@@ -87,20 +60,16 @@ func TestSchnorrThreshold(t *testing.T) {
 			nonce = copyBytes(nonceBig.Bytes())[:]
 			nonce[31] &= 248
 
-			privNonce, pubNonce, err := PrivKeyFromScalar(curve,
-				nonce[:])
-			cmp := privNonce != nil
-			if !cmp {
-				t.Fatalf("expected %v, got %v", true, cmp)
-			}
-
-			cmp = pubNonce != nil
-			if !cmp {
-				t.Fatalf("expected %v, got %v", true, cmp)
-			}
-
+			privNonce, pubNonce, err := PrivKeyFromScalar(curve, nonce[:])
 			if err != nil {
 				t.Fatalf("unexpected error %s, ", err)
+			}
+			if privNonce == nil {
+				t.Fatalf("private nonce shouldn't be nil")
+			}
+
+			if pubNonce == nil {
+				t.Fatalf("public nonce shouldn't be nil")
 			}
 
 			privNoncesToUse[j] = privNonce
@@ -111,9 +80,8 @@ func TestSchnorrThreshold(t *testing.T) {
 
 		// Partial signature generation.
 		publicNonceSum := CombinePubkeys(curve, pubNoncesToUse)
-		cmp := publicNonceSum != nil
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
+		if publicNonceSum == nil {
+			t.Fatal("sum of public nonce should be nonzero")
 		}
 		for j := range keysToUse {
 			r, s, err := schnorrPartialSign(curve, msg, keysToUse[j].Serialize(),
@@ -148,37 +116,41 @@ func TestSchnorrThreshold(t *testing.T) {
 			combinedNonceD.Mod(combinedNonceD, curve.N)
 		}
 
+		// convert the scalar to a valid secret key for curve
 		combinedPrivkey, _, err := PrivKeyFromScalar(curve,
 			copyBytes(combinedPrivkeysD.Bytes())[:])
 		if err != nil {
 			t.Fatalf("unexpected error %s, ", err)
 		}
+		// convert the scalar to a valid nonce for curve
 		combinedNonce, _, err := PrivKeyFromScalar(curve,
 			copyBytes(combinedNonceD.Bytes())[:])
 		if err != nil {
 			t.Fatalf("unexpected error %s, ", err)
 		}
+
+		// sign with the combined secret key and nonce
 		cSigR, cSigS, err := SignFromScalar(curve, combinedPrivkey,
 			combinedNonce.Serialize(), msg)
 		sumSig := NewSignature(cSigR, cSigS)
-		cmp = bytes.Equal(sumSig.Serialize(), combinedSignature.Serialize())
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-
 		if err != nil {
 			t.Fatalf("unexpected error %s, ", err)
 		}
+		if !bytes.Equal(sumSig.Serialize(), combinedSignature.Serialize()) {
+			t.Fatalf("want %s, got %s",
+				hex.EncodeToString(combinedSignature.Serialize()),
+				hex.EncodeToString(sumSig.Serialize()))
+		}
 
 		// Verify the combined signature and public keys.
-		ok := Verify(allPksSum, msg, combinedSignature.GetR(),
-			combinedSignature.GetS())
-		if !ok {
-			t.Fatalf("expected %v, got %v", true, ok)
+		if !Verify(allPksSum, msg, combinedSignature.GetR(),
+			combinedSignature.GetS()) {
+			t.Fatalf("failed to verify the combined signature")
 		}
 
 		// Corrupt some memory and make sure it breaks something.
-		corruptWhat := tRand.Intn(3)
+		//corruptWhat := tRand.Intn(4)
+		corruptWhat := 1
 		randItem := tRand.Intn(numKeysForTest - 1)
 
 		// Corrupt private key.
@@ -216,8 +188,7 @@ func TestSchnorrThreshold(t *testing.T) {
 
 		for j := range keysToUse {
 			thisPubNonce := pubNoncesToUse[j]
-			localPubNonces := make([]*PublicKey, numKeysForTest-1,
-				numKeysForTest-1)
+			localPubNonces := make([]*PublicKey, numKeysForTest-1, numKeysForTest-1)
 			itr := 0
 			for _, pubNonce := range pubNoncesToUse {
 				if bytes.Equal(thisPubNonce.Serialize(), pubNonce.Serialize()) {
@@ -242,10 +213,9 @@ func TestSchnorrThreshold(t *testing.T) {
 
 		// Nothing that makes it here should be valid.
 		if allPksSum != nil && combinedSignature != nil {
-			ok = Verify(allPksSum, msg, combinedSignature.GetR(),
-				combinedSignature.GetS())
-			if ok {
-				t.Fatalf("expected %v, got %v", false, ok)
+			if Verify(allPksSum, msg, combinedSignature.GetR(),
+				combinedSignature.GetS()) {
+				t.Fatal("failed to verify combined signature")
 			}
 		}
 	}
