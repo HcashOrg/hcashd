@@ -3,6 +3,7 @@ package edwards
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"math/big"
 	"math/rand"
 )
@@ -226,6 +227,35 @@ func mockUpSchnorrKeyVec(curve *TwistedEdwardsCurve, sz int, msg []byte) *Schnor
 	}
 
 	return keyVec
+}
+
+// mockUpSchnorrMultiSign generates the Schnorr multi-signature
+//	on the given message with the key vector
+func mockUpSchnorrMultiSign(curve *TwistedEdwardsCurve, msg []byte,
+	keyVec *SchnorrKeyVec) (*Signature, error) {
+	if nil == keyVec {
+		return nil, errors.New("keyVec is nil")
+	}
+
+	numKeys := len(keyVec.skVec)
+	partialSignatures := make([]*Signature, numKeys, numKeys)
+	// Partial signature generation.
+	for j := range keyVec.skVec {
+		r, s, err := schnorrPartialSign(curve, msg,
+			keyVec.skVec[j].Serialize(),
+			keyVec.pkVecSum.Serialize(),
+			keyVec.secNonceVec[j].Serialize(),
+			keyVec.pubNonceVecSum.Serialize())
+
+		if err != nil {
+			return nil, err
+		}
+
+		localSig := NewSignature(r, s)
+		partialSignatures[j] = localSig
+	}
+
+	return SchnorrCombineSigs(curve, partialSignatures)
 }
 
 // mockUpSecKeyByBytes generates randomly some secret keys from bytes

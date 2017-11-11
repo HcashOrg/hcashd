@@ -84,28 +84,9 @@ func TestStdSchnorrThresholdSigImpl(t *testing.T) {
 		numKeysForTest := tRand.Intn(MAX_SIGNATORIES-2) + 2
 
 		schnorrKeyVec := mockUpSchnorrKeyVec(curve, numKeysForTest, msg)
-
-		partialSignatures := make([]*Signature, numKeysForTest, numKeysForTest)
-		// Partial signature generation.
-		for j := range schnorrKeyVec.skVec {
-			r, s, err := schnorrPartialSign(curve, msg,
-				schnorrKeyVec.skVec[j].Serialize(),
-				schnorrKeyVec.pkVecSum.Serialize(),
-				schnorrKeyVec.secNonceVec[j].Serialize(),
-				schnorrKeyVec.pubNonceVecSum.Serialize())
-
-			if err != nil {
-				t.Fatalf("unexpected error %s, ", err)
-			}
-
-			localSig := NewSignature(r, s)
-			partialSignatures[j] = localSig
-		}
-
-		// Combine signatures.
-		combinedSignature, err := SchnorrCombineSigs(curve, partialSignatures)
-		if err != nil {
-			t.Fatalf("unexpected error %s, ", err)
+		combinedSignature, err := mockUpSchnorrMultiSign(curve, msg, schnorrKeyVec)
+		if nil != err {
+			t.Fatal(err)
 		}
 
 		// Make sure the combined signatures are the same as the
@@ -153,7 +134,7 @@ func TestStdSchnorrThresholdSigImpl(t *testing.T) {
 
 // TestSchnorrThresholdSigOnBadPk test Schnorr threshold signature
 // being verified by wrong public keys
-// !!!TBU
+// !!!DNW
 func TestSchnorrThresholdSigOnBadPk(t *testing.T) {
 	const MAX_SIGNATORIES = 10
 	const NUM_TEST = 5
@@ -170,27 +151,10 @@ func TestSchnorrThresholdSigOnBadPk(t *testing.T) {
 		numKeysForTest := tRand.Intn(MAX_SIGNATORIES-2) + 2
 		schnorrKeyVec := mockUpSchnorrKeyVec(curve, numKeysForTest, msg)
 
-		// Partial signature generation
-		partialSignatures := make([]*Signature, numKeysForTest, numKeysForTest)
-		for j := range schnorrKeyVec.skVec {
-			r, s, err := schnorrPartialSign(curve, msg,
-				schnorrKeyVec.skVec[j].Serialize(),
-				schnorrKeyVec.pkVecSum.Serialize(),
-				schnorrKeyVec.secNonceVec[j].Serialize(),
-				schnorrKeyVec.pubNonceVecSum.Serialize())
-
-			if err != nil {
-				t.Fatalf("unexpected error %s, ", err)
-			}
-
-			localSig := NewSignature(r, s)
-			partialSignatures[j] = localSig
-		}
-
-		// Combine signatures.
-		combinedSignature, err := SchnorrCombineSigs(curve, partialSignatures)
-		if err != nil {
-			t.Fatalf("unexpected error %s, ", err)
+		// generates the signature
+		combinedSignature, err := mockUpSchnorrMultiSign(curve, msg, schnorrKeyVec)
+		if nil != err {
+			t.Fatal(err)
 		}
 
 		// Corrupt some public key.
@@ -214,7 +178,7 @@ func TestSchnorrThresholdSigOnBadPk(t *testing.T) {
 
 // TestSchnorrThresholdSigOnBadSecNonce test Schnorr threshold signature
 // being verified by wrong public nonces
-// TBU
+// !!!DNW
 func TestSchnorrThresholdSigOnBadPubNonce(t *testing.T) {
 	const MAX_SIGNATORIES = 10
 	const NUM_TEST = 5
@@ -240,27 +204,10 @@ func TestSchnorrThresholdSigOnBadPubNonce(t *testing.T) {
 		// update sum of public nonce vector
 		schnorrKeyVec.pubNonceVecSum = CombinePubkeys(curve, schnorrKeyVec.pubNonceVec)
 
-		// Partial signature generation
-		partialSignatures := make([]*Signature, numKeysForTest, numKeysForTest)
-		for j := range schnorrKeyVec.skVec {
-			r, s, err := schnorrPartialSign(curve, msg,
-				schnorrKeyVec.skVec[j].Serialize(),
-				schnorrKeyVec.pkVecSum.Serialize(),
-				schnorrKeyVec.secNonceVec[j].Serialize(),
-				schnorrKeyVec.pubNonceVecSum.Serialize())
-
-			if err != nil {
-				t.Fatalf("unexpected error %s, ", err)
-			}
-
-			localSig := NewSignature(r, s)
-			partialSignatures[j] = localSig
-		}
-
-		// Combine signatures.
-		combinedSignature, err := SchnorrCombineSigs(curve, partialSignatures)
-		if err != nil {
-			t.Fatalf("unexpected error %s, ", err)
+		// generates the signature
+		combinedSignature, err := mockUpSchnorrMultiSign(curve, msg, schnorrKeyVec)
+		if nil != err {
+			t.Fatal(err)
 		}
 
 		// Verify the combined signature and public keys.
@@ -297,27 +244,10 @@ func TestSchnorrThresholdSigOnBadSk(t *testing.T) {
 		skBad[pos] ^= 1 << uint8(bitPos)
 		schnorrKeyVec.skVec[randItem].ecPk.D.SetBytes(skBad)
 
-		// Partial signature generation
-		partialSignatures := make([]*Signature, numKeysForTest, numKeysForTest)
-		for j := range schnorrKeyVec.skVec {
-			r, s, err := schnorrPartialSign(curve, msg,
-				schnorrKeyVec.skVec[j].Serialize(),
-				schnorrKeyVec.pkVecSum.Serialize(),
-				schnorrKeyVec.secNonceVec[j].Serialize(),
-				schnorrKeyVec.pubNonceVecSum.Serialize())
-
-			if err != nil {
-				t.Fatalf("unexpected error %s, ", err)
-			}
-
-			localSig := NewSignature(r, s)
-			partialSignatures[j] = localSig
-		}
-
-		// Combine signatures.
-		combinedSignature, err := SchnorrCombineSigs(curve, partialSignatures)
-		if err != nil {
-			t.Fatalf("unexpected error %s, ", err)
+		// generates the signature
+		combinedSignature, err := mockUpSchnorrMultiSign(curve, msg, schnorrKeyVec)
+		if nil != err {
+			t.Fatal(err)
 		}
 
 		// Verify the combined signature and public keys.
@@ -353,27 +283,10 @@ func TestSchnorrThresholdSigOnBadSecNonce(t *testing.T) {
 		secNonceBytes[pos] ^= 1 << uint8(bitPos)
 		schnorrKeyVec.secNonceVec[randItem].ecPk.D.SetBytes(secNonceBytes)
 
-		// Partial signature generation
-		partialSignatures := make([]*Signature, numKeysForTest, numKeysForTest)
-		for j := range schnorrKeyVec.skVec {
-			r, s, err := schnorrPartialSign(curve, msg,
-				schnorrKeyVec.skVec[j].Serialize(),
-				schnorrKeyVec.pkVecSum.Serialize(),
-				schnorrKeyVec.secNonceVec[j].Serialize(),
-				schnorrKeyVec.pubNonceVecSum.Serialize())
-
-			if err != nil {
-				t.Fatalf("unexpected error %s, ", err)
-			}
-
-			localSig := NewSignature(r, s)
-			partialSignatures[j] = localSig
-		}
-
-		// Combine signatures.
-		combinedSignature, err := SchnorrCombineSigs(curve, partialSignatures)
-		if err != nil {
-			t.Fatalf("unexpected error %s, ", err)
+		// generates the signature
+		combinedSignature, err := mockUpSchnorrMultiSign(curve, msg, schnorrKeyVec)
+		if nil != err {
+			t.Fatal(err)
 		}
 
 		// Verify the combined signature and public keys.
