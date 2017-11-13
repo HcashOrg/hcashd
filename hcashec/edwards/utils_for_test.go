@@ -48,40 +48,6 @@ type SchnorrKeyVec struct {
 	pubNonceVecSum *PublicKey
 }
 
-/*
-// signer stores data related to signing
-type signer struct {
-	privkey          []byte
-	pubkey           *PublicKey
-	privateNonce     []byte
-	publicNonce      *PublicKey
-	pubKeySumLocal   *PublicKey
-	partialSignature []byte
-}
-
-// signerHex contains partial data of signature
-type signerHex struct {
-	privkey          string
-	privateNonce     string
-	pubKeySumLocal   string
-	partialSignature string
-}
-
-// ThresholdTestHexVec contains a vector of data for threshold testing in form of hex strings
-type ThresholdTestHexVec struct {
-	msg               string
-	signersHex        []signerHex
-	combinedSignature string
-}
-
-// ThresholdTestVec contains a vector of data for threshold testing
-type ThresholdTestVec struct {
-	msg               []byte
-	signers           []signer
-	combinedSignature []byte
-}
-*/
-
 // mockUpConversionVectors mocks up some fake conversion vectors for test
 func mockUpConversionVectors() []ConversionVector {
 	const SEED = 12345
@@ -329,6 +295,14 @@ func mockUpSecKeysByScalars(curve *TwistedEdwardsCurve, i int) []*PrivateKey {
 	}
 
 	return privKeyList
+}
+
+func mockUpSkPk(curve *TwistedEdwardsCurve, i int) (*PrivateKey, *PublicKey, error) {
+	skVec := mockUpSecKeysByBytes(curve, 1)
+
+	sk, pk, err := PrivKeyFromScalar(curve, skVec[0].Serialize())
+
+	return sk, pk, err
 }
 
 // mockUpSigList fakes a list of signatures for test
