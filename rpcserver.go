@@ -1889,6 +1889,7 @@ func handleGetBestBlock(s *rpcServer, cmd interface{}, closeChan <-chan struct{}
 	result := &hcashjson.GetBestBlockResult{
 		Hash:   best.Hash.String(),
 		Height: best.Height,
+		KeyHeight: best.KeyHeight,
 	}
 	return result, nil
 }

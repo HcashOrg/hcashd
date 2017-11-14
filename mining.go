@@ -1500,7 +1500,8 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	// house all of the input transactions so multiple lookups can be
 	// avoided.
 	blockTxns := make([]*hcashutil.Tx, 0, len(sourceTxns))
-	blockUtxos := blockchain.NewUtxoViewpoint()
+	//blockUtxos := blockchain.NewUtxoViewpoint()
+
 
 	// dependers is used to track transactions which depend on another
 	// transaction in the source pool.  This, in conjunction with the
@@ -1524,6 +1525,10 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	minrLog.Debugf("Considering %d transactions for inclusion to new block",
 		len(sourceTxns))
 	treeValid := mp.IsTxTreeValid(prevHash)
+	blockUtxos2, err := blockManager.chain.FetchCurrentUtxoView(treeValid)
+	if err != nil{
+		return nil, fmt.Errorf("Failed to fetch current utxoview")
+	}
 
 mempoolLoop:
 	for _, txDesc := range sourceTxns {
@@ -1559,16 +1564,27 @@ mempoolLoop:
 			}
 		}
 
+
+
 		// Fetch all of the utxos referenced by the this transaction.
 		// NOTE: This intentionally does not fetch inputs from the
 		// mempool since a transaction which depends on other
 		// transactions in the mempool must come after those
+		blockUtxos2, err = blockManager.chain.AddTxToUtxoView(blockUtxos2, tx)
+		if err != nil {
+			minrLog.Warnf("Unable to fetch utxo2 view for tx %s: "+
+				"%v", tx.Hash(), err)
+			continue
+		}
+
+		/*
 		utxos, err := blockManager.chain.FetchUtxoView(tx, treeValid)
 		if err != nil {
 			minrLog.Warnf("Unable to fetch utxo view for tx %s: "+
 				"%v", tx.Hash(), err)
 			continue
 		}
+		*/
 
 		// Setup dependencies for any transactions which reference
 		// other transactions in the mempool so they can be properly
@@ -1584,8 +1600,12 @@ mempoolLoop:
 
 			originHash := &txIn.PreviousOutPoint.Hash
 			originIndex := txIn.PreviousOutPoint.Index
-			utxoEntry := utxos.LookupEntry(originHash)
-			if utxoEntry == nil || utxoEntry.IsOutputSpent(originIndex) {
+			//utxoEntry := utxos.LookupEntry(originHash)
+			utxo2Entry := blockUtxos2.LookupEntry(originHash)
+
+			if utxo2Entry == nil || utxo2Entry.IsOutputSpent(originIndex) {
+
+
 				if !txSource.HaveTransaction(originHash) {
 					minrLog.Tracef("Skipping tx %s because "+
 						"it references unspent output "+
@@ -1618,7 +1638,7 @@ mempoolLoop:
 		// Calculate the final transaction priority using the input
 		// value age sum as well as the adjusted transaction size.  The
 		// formula is: sum(inputValue * inputAge) / adjustedTxSize
-		prioItem.priority = mempool.CalcPriority(tx.MsgTx(), utxos,
+		prioItem.priority = mempool.CalcPriority(tx.MsgTx(), blockUtxos2,
 			nextBlockHeight)
 
 		// Calculate the fee in Atoms/KB.
@@ -1640,7 +1660,23 @@ mempoolLoop:
 		// Merge the referenced outputs from the input transactions to
 		// this transaction into the block utxo view.  This allows the
 		// code below to avoid a second lookup.
-		mergeUtxoView(blockUtxos, utxos)
+		//mergeUtxoView(blockUtxos, utxos)
+		/*
+		if *(utxos.BestHash()) != *(blockUtxos2.BestHash()){
+			minrLog.Infof("Oxygen Hash not equal %v %v\n", utxos.BestHash(), blockUtxos2.BestHash())
+		}
+
+		if len(blockUtxos.Entries()) != len(blockUtxos2.Entries()){
+			minrLog.Infof("Oxygen len not equal %v %v\n", len(blockUtxos.Entries()), len(blockUtxos2.Entries()))
+		}
+		for AHash, AA := range blockUtxos.Entries(){
+			_, exists := blockUtxos2.Entries()[AHash]
+			if !exists{
+				minrLog.Infof("Oxygen Not exists %v\n", AA)
+			}
+		}
+		*/
+
 	}
 	minrLog.Tracef("Priority queue len %d, dependers len %d",
 		priorityQueue.Len(), len(dependers))
@@ -1740,7 +1776,7 @@ mempoolLoop:
 		// This isn't very expensive, but we do this check a number of times.
 		// Consider caching this in the mempool in the future. - Hypercash
 		numP2SHSigOps, err := blockchain.CountP2SHSigOps(tx, false,
-			isSSGen, blockUtxos)
+			isSSGen, blockUtxos2)
 		if err != nil {
 			minrLog.Tracef("Skipping tx %s due to error in "+
 				"CountP2SHSigOps: %v", tx.Hash(), err)
@@ -1826,14 +1862,14 @@ mempoolLoop:
 		// The fraud proof is not checked because it will be filled in
 		// by the miner.
 		_, _, _, err = blockchain.CheckTransactionInputs(blockManager.chain, subsidyCache, tx,
-			nextBlockKeyHeight, blockUtxos, false, server.chainParams, nil)
+			nextBlockKeyHeight, blockUtxos2, false, server.chainParams, nil)
 		if err != nil {
 			minrLog.Tracef("Skipping tx %s due to error in "+
 				"CheckTransactionInputs: %v", tx.Hash(), err)
 			logSkippedDeps(tx, deps)
 			continue
 		}
-		err = blockchain.ValidateTransactionScripts(tx, blockUtxos,
+		err = blockchain.ValidateTransactionScripts(tx, blockUtxos2,
 			txscript.StandardVerifyFlags, server.sigCache)
 		if err != nil {
 			minrLog.Tracef("Skipping tx %s due to error in "+
@@ -1846,7 +1882,7 @@ mempoolLoop:
 		// an entry for it to ensure any transactions which reference
 		// this one have it available as an input and can ensure they
 		// aren't double spending.
-		err = spendTransaction(blockUtxos, tx, nextBlockHeight)
+		err = spendTransaction(blockUtxos2, tx, nextBlockHeight)
 		if err != nil {
 			minrLog.Warnf("Unable to spend transaction %v in the preliminary "+
 				"UTXO view for the block template: %v",

@@ -1175,6 +1175,72 @@ func (b *BlockChain) FetchUtxoView(tx *hcashutil.Tx, treeValid bool) (*UtxoViewp
 	return view, err
 }
 
+
+func (b *BlockChain) FetchCurrentUtxoView(treeValid bool) (*UtxoViewpoint,
+	error) {
+	b.chainLock.RLock()
+	defer b.chainLock.RUnlock()
+
+	// Request the utxos from the point of view of the end of the main
+	// chain.
+	view := NewUtxoViewpoint()
+	if treeValid {
+		view.SetStakeViewpoint(ViewpointCurrentRegular)
+		block, err := b.fetchBlockFromHash(&b.bestNode.hash)
+		if err != nil {
+			return nil, err
+		}
+		parent, err := b.fetchBlockFromHash(&b.bestNode.header.PrevBlock)
+		if err != nil {
+			return nil, err
+		}
+		err = view.fetchInputUtxos(b.db, block, parent)
+		if err != nil {
+			return nil, err
+		}
+		for i, blockTx := range block.Transactions() {
+			err := view.connectTransaction(blockTx, b.bestNode.height,
+				uint32(i), nil)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	view.SetBestHash(&b.bestNode.hash)
+
+
+
+	return view, nil
+}
+
+func (b *BlockChain) AddTxToUtxoView(view *UtxoViewpoint, tx *hcashutil.Tx) (*UtxoViewpoint,
+	error) {
+	b.chainLock.RLock()
+	defer b.chainLock.RUnlock()
+
+	// Request the utxos from the point of view of the end of the main
+	// chain.
+	txNeededSet := make(map[chainhash.Hash]struct{})
+	txNeededSet[*tx.Hash()] = struct{}{}
+	msgTx := tx.MsgTx()
+	isSSGen, _ := stake.IsSSGen(msgTx)
+	if !IsCoinBaseTx(msgTx) {
+		for i, txIn := range msgTx.TxIn {
+			if isSSGen && i == 0 {
+				continue
+			}
+			txNeededSet[txIn.PreviousOutPoint.Hash] = struct{}{}
+		}
+	}
+
+	err := view.fetchUtxosMain(b.db, txNeededSet)
+
+	return view, err
+}
+
+
+
+
 // FetchUtxoEntry loads and returns the unspent transaction output entry for the
 // passed hash from the point of view of the end of the main chain.
 //
