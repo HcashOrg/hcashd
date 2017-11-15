@@ -1525,9 +1525,16 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	minrLog.Debugf("Considering %d transactions for inclusion to new block",
 		len(sourceTxns))
 	treeValid := mp.IsTxTreeValid(prevHash)
-	blockUtxos2, err := blockManager.chain.FetchCurrentUtxoView(treeValid)
-	if err != nil{
-		return nil, fmt.Errorf("Failed to fetch current utxoview")
+	var blockUtxos2 *blockchain.UtxoViewpoint
+	var err error
+	if len(sourceTxns) > 0 {
+		blockUtxos2, err = blockManager.chain.FetchCurrentUtxoView(treeValid)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to fetch current utxoview")
+		}
+		if *blockUtxos2.BestHash() != *prevHash {
+			return nil, fmt.Errorf("Best hash changed")
+		}
 	}
 
 mempoolLoop:
@@ -1570,12 +1577,20 @@ mempoolLoop:
 		// NOTE: This intentionally does not fetch inputs from the
 		// mempool since a transaction which depends on other
 		// transactions in the mempool must come after those
-		blockUtxos2, err = blockManager.chain.AddTxToUtxoView(blockUtxos2, tx)
+		var bestChanged bool
+		blockUtxos2, bestChanged, err = blockManager.chain.AddTxToUtxoView(blockUtxos2, tx)
+		if bestChanged {
+			minrLog.Infof("Best Hash changed from %v to %v, stop collecting more txs", *prevHash, chainState.newestHash)
+			break mempoolLoop
+		}
+
+
 		if err != nil {
 			minrLog.Warnf("Unable to fetch utxo2 view for tx %s: "+
 				"%v", tx.Hash(), err)
 			continue
 		}
+
 
 		/*
 		utxos, err := blockManager.chain.FetchUtxoView(tx, treeValid)

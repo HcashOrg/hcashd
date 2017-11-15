@@ -1213,10 +1213,14 @@ func (b *BlockChain) FetchCurrentUtxoView(treeValid bool) (*UtxoViewpoint,
 	return view, nil
 }
 
-func (b *BlockChain) AddTxToUtxoView(view *UtxoViewpoint, tx *hcashutil.Tx) (*UtxoViewpoint,
+func (b *BlockChain) AddTxToUtxoView(view *UtxoViewpoint, tx *hcashutil.Tx) (*UtxoViewpoint, bool,
 	error) {
 	b.chainLock.RLock()
 	defer b.chainLock.RUnlock()
+
+	if b.bestNode.hash != *(view.BestHash()) {
+		return view, true, nil
+	}
 
 	// Request the utxos from the point of view of the end of the main
 	// chain.
@@ -1235,7 +1239,7 @@ func (b *BlockChain) AddTxToUtxoView(view *UtxoViewpoint, tx *hcashutil.Tx) (*Ut
 
 	err := view.fetchUtxosMain(b.db, txNeededSet)
 
-	return view, err
+	return view, false, err
 }
 
 
