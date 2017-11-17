@@ -1242,6 +1242,61 @@ func (b *BlockChain) AddTxToUtxoView(view *UtxoViewpoint, tx *hcashutil.Tx) (*Ut
 	return view, false, err
 }
 
+func DeepCopyUtxoViewpoint(utxoViewpoint *UtxoViewpoint) *UtxoViewpoint{
+	if utxoViewpoint == nil{
+		return nil
+	}
+	entries := utxoViewpoint.entries
+	entriesCopy := make(map[chainhash.Hash]*UtxoEntry)
+	for hash, entry := range entries{
+		if entry == nil{
+			entriesCopy[hash] = nil
+			continue
+		}
+		sparseOutputs := entry.sparseOutputs
+		sparseOutputsCopy := make(map[uint32]*utxoOutput)
+		for index, output := range sparseOutputs{
+			if output == nil{
+				sparseOutputsCopy[index] = nil
+				continue
+			}
+
+			outputCopy := &utxoOutput{
+				pkScript: make([]byte, len(output.pkScript)),
+				amount: output.amount,
+				scriptVersion: output.scriptVersion,
+				compressed : output.compressed,
+				spent: output.spent,
+			}
+			for i, pkScriptByte := range output.pkScript{
+				outputCopy.pkScript[i] = pkScriptByte
+			}
+			sparseOutputsCopy[index] = outputCopy
+		}
+		entryCopy := &UtxoEntry{
+			sparseOutputs: sparseOutputsCopy,
+			stakeExtra: make([]byte, len(entry.stakeExtra)),
+			txVersion: entry.txVersion,
+			height: entry.height,
+			index: entry.index,
+			txType: entry.txType,
+			isCoinBase: entry.isCoinBase,
+			hasExpiry: entry.hasExpiry,
+			modified: entry.modified,
+		}
+		for i, stakeExtraByte := range entry.stakeExtra{
+			entryCopy.stakeExtra[i] = stakeExtraByte
+		}
+		entriesCopy[hash] = entryCopy
+	}
+
+	return &UtxoViewpoint{
+		entries: entriesCopy,
+		bestHash: utxoViewpoint.bestHash,
+		stakeView: utxoViewpoint.stakeView,
+	}
+}
+
 
 
 
