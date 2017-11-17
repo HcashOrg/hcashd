@@ -1581,8 +1581,7 @@ mempoolLoop:
 		var bestChanged bool
 		blockUtxos, bestChanged, err = blockManager.chain.AddTxToUtxoView(blockUtxos, tx)
 		if bestChanged {
-			minrLog.Infof("Best Hash changed from %v to %v, stop collecting more txs", *prevHash, chainState.newestHash)
-			break mempoolLoop
+			return nil, fmt.Errorf("Best hash changed when collecting txs from %v to %v", prevHash, blockUtxos.BestHash())
 		}
 
 
@@ -1971,8 +1970,6 @@ mempoolLoop:
 				voteBitsVoters = append(voteBitsVoters, vb)
 				blockTxnsStake = append(blockTxnsStake, txCopy)
 				voters++
-			}else{
-				minrLog.Warnf("voting insertion failed %v", txCopy.Hash())
 			}
 		}
 
@@ -2334,7 +2331,7 @@ mempoolLoop:
 	if nextBlockKeyHeight + 1 >= stakeValidationHeight &&
 		voters < minimumVotesRequired {
 		minrLog.Warnf("incongruent number of voters in mempool " +
-			"vs mempool.voters; not enough voters found: %v voters and prevHash is %v and nextBlockheight is %v", voters, *prevHash, nextBlockHeight)
+			"vs mempool.voters; not enough voters found: %v voters", voters)
 		return handleTooFewVoters(subsidyCache, nextBlockHeight, nextBlockKeyHeight, payToAddress,
 			server.blockManager)
 	}
