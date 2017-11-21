@@ -691,6 +691,25 @@ func (b *blockManager) syncMiningStateAfterSync(sp *serverPeer) {
 	}()
 }
 
+// syncMemPoolAfterSync polls the blockMananger for the current sync
+// state; if the mananger is synced, it executes a call to the peer to
+// sync the mempool to the network.
+func (b *blockManager) syncMempoolAfterSync(sp *serverPeer) {
+	go func() {
+		for {
+			time.Sleep(3 * time.Second)
+			if !sp.Connected() {
+				return
+			}
+			if b.IsCurrent() {
+				msg := wire.NewMsgMemPool()
+				sp.QueueMessage(msg, nil)
+				return
+			}
+		}
+	}()
+}
+
 // handleNewPeerMsg deals with new peers that have signalled they may
 // be considered as a sync peer (they have already successfully negotiated).  It
 // also starts syncing if needed.  It is invoked from the syncHandler goroutine.
@@ -717,6 +736,8 @@ func (b *blockManager) handleNewPeerMsg(peers *list.List, sp *serverPeer) {
 	if !cfg.NoMiningStateSync {
 		b.syncMiningStateAfterSync(sp)
 	}
+
+	b.syncMempoolAfterSync(sp)
 }
 
 // handleDonePeerMsg deals with peers that have signalled they are done.  It
