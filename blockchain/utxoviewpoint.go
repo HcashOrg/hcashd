@@ -965,6 +965,11 @@ func (view *UtxoViewpoint) fetchInputUtxos(db database.DB,
 	// current chain without the TxTreeRegular of the previous block
 	// added so we can validate that.
 	if viewpoint == ViewpointPrevRegular {
+		offset := 1
+		if HashToBig(parent.Hash()).Cmp(CompactToBig(parent.MsgBlock().Header.Bits)) <= 0{
+			offset = 2
+		}
+
 		transactions := parent.Transactions()
 		for i, tx := range transactions {
 			txInFlight[*tx.Hash()] = i
@@ -973,7 +978,7 @@ func (view *UtxoViewpoint) fetchInputUtxos(db database.DB,
 		// Loop through all of the transaction inputs (except for the coinbase
 		// which has no inputs) collecting them into sets of what is needed and
 		// what is already known (in-flight).
-		for i, tx := range transactions[1:] {
+		for i, tx := range transactions[offset:] {
 			for _, txIn := range tx.MsgTx().TxIn {
 				// It is acceptable for a transaction input to reference
 				// the output of another transaction in this block only
@@ -988,7 +993,7 @@ func (view *UtxoViewpoint) fetchInputUtxos(db database.DB,
 				// the block due to skipping the coinbase.
 				originHash := &txIn.PreviousOutPoint.Hash
 				if inFlightIndex, ok := txInFlight[*originHash]; ok &&
-					i >= inFlightIndex {
+					i + offset > inFlightIndex {
 
 					originTx := transactions[inFlightIndex]
 					view.AddTxOuts(originTx, parent.Height(), uint32(inFlightIndex))
@@ -1063,12 +1068,15 @@ func (view *UtxoViewpoint) fetchInputUtxos(db database.DB,
 		for i, tx := range transactions {
 			txInFlight[*tx.Hash()] = i
 		}
-
+		offset := 1
+		if HashToBig(block.Hash()).Cmp(CompactToBig(block.MsgBlock().Header.Bits)) <= 0{
+			offset = 2
+		}
 		// Loop through all of the transaction inputs (except for the coinbase
 		// which has no inputs) collecting them into sets of what is needed and
 		// what is already known (in-flight).
 		txNeededSet := make(map[chainhash.Hash]struct{})
-		for i, tx := range transactions[1:] {
+		for i, tx := range transactions[offset:] {
 			for _, txIn := range tx.MsgTx().TxIn {
 				// It is acceptable for a transaction input to reference
 				// the output of another transaction in this block only
@@ -1083,7 +1091,7 @@ func (view *UtxoViewpoint) fetchInputUtxos(db database.DB,
 				// the block due to skipping the coinbase.
 				originHash := &txIn.PreviousOutPoint.Hash
 				if inFlightIndex, ok := txInFlight[*originHash]; ok &&
-					i >= inFlightIndex {
+					i + offset > inFlightIndex {
 
 					originTx := transactions[inFlightIndex]
 					view.AddTxOuts(originTx, block.Height(), uint32(inFlightIndex))
