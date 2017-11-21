@@ -991,7 +991,7 @@ func (view *UtxoViewpoint) fetchInputUtxos(db database.DB,
 					i >= inFlightIndex {
 
 					originTx := transactions[inFlightIndex]
-					view.AddTxOuts(originTx, block.Height(), uint32(i))
+					view.AddTxOuts(originTx, parent.Height(), uint32(inFlightIndex))
 					continue
 				}
 
@@ -1086,7 +1086,7 @@ func (view *UtxoViewpoint) fetchInputUtxos(db database.DB,
 					i >= inFlightIndex {
 
 					originTx := transactions[inFlightIndex]
-					view.AddTxOuts(originTx, block.Height(), uint32(i))
+					view.AddTxOuts(originTx, block.Height(), uint32(inFlightIndex))
 					continue
 				}
 
