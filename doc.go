@@ -34,7 +34,7 @@ Application Options:
                             or --proxy options are used without also specifying
                             listen interfaces via --listen
       --listen=             Add an interface/port to listen for connections
-                            (default all interfaces port: 14008, testnet: 14008)
+                            (default all interfaces port: 16008, testnet: 16008)
       --maxpeers=           Max number of inbound and outbound peers (125)
       --nobanning           Disable banning of misbehaving peers
       --banduration=        How long to ban misbehaving peers.  Valid time units

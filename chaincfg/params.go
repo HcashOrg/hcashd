@@ -465,7 +465,7 @@ type Params struct {
 var MainNetParams = Params{
 	Name:        "testdata2",
 	Net:         wire.MainNet,
-	DefaultPort: "14008",
+	DefaultPort: "16008",
 	DNSSeeds: []string{
 		"testnet-seeds.hcashtech.org",
 	},
