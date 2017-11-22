@@ -144,6 +144,9 @@ type MessageListeners struct {
 	// OnGetData is invoked when a peer receives a getdata wire message.
 	OnGetData func(p *Peer, msg *wire.MsgGetData)
 
+	//OnGetMissedTxs is invoked when a peer receives a getMissedTxs wire message.
+	OnGetMissedTxs func(p *Peer, msg *wire.MsgGetMissedTxs)
+
 	// OnGetBlocks is invoked when a peer receives a getblocks wire message.
 	OnGetBlocks func(p *Peer, msg *wire.MsgGetBlocks)
 
@@ -1553,6 +1556,10 @@ out:
 				p.cfg.Listeners.OnGetData(p, msg)
 			}
 
+		case *wire.MsgGetMissedTxs:
+			if p.cfg.Listeners.OnGetMissedTxs != nil {
+				p.cfg.Listeners.OnGetMissedTxs(p,msg)
+			}
 		case *wire.MsgGetBlocks:
 			if p.cfg.Listeners.OnGetBlocks != nil {
 				p.cfg.Listeners.OnGetBlocks(p, msg)

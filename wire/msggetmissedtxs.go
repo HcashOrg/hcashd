@@ -124,7 +124,7 @@ func (msg *MsgGetMissedTxs) BtcEncode(w io.Writer, pver uint32) error {
 // Command returns the protocol command string for the message.  This is part
 // of the Message interface implementation.
 func (msg *MsgGetMissedTxs) Command() string {
-	return CmdInv
+	return CmdGetMissedTxs
 }
 
 // MaxPayloadLength returns the maximum length the payload can be for the
@@ -152,7 +152,7 @@ func NewMsgGetMissedTxs() *MsgGetMissedTxs {
 // that - a hint that is used for the default allocation size.  Adding more
 // (or less) inventory vectors will still work properly.  The size hint is
 // limited to MaxInvPerMsg.
-func NeMsgGetMissedTxsSizeHint(sizeHint uint) *MsgGetMissedTxs {
+func NewMsgGetMissedTxsSizeHint(sizeHint uint) *MsgGetMissedTxs {
 	// Limit the specified hint to the maximum allow per message.
 	if sizeHint > MaxInvPerMsg {
 		sizeHint = MaxInvPerMsg

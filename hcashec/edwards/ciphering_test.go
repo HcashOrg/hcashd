@@ -1,5 +1,6 @@
 // Copyright (c) 2015 The btcsuite developers
 // Copyright (c) 2015-2016 The Decred developers
+// Copyright (c) 2016-2017 The Hcash developers @sammietocat
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
@@ -12,6 +13,7 @@ import (
 	"testing"
 )
 
+// TestGenerateSharedSecret simulates a ECDH process
 func TestGenerateSharedSecret(t *testing.T) {
 	c := new(TwistedEdwardsCurve)
 	c.InitParam25519()
@@ -39,7 +41,7 @@ func TestGenerateSharedSecret(t *testing.T) {
 	}
 }
 
-// Test 1: Encryption and decryption
+//  TestCipheringBasic runs a test against encryption and decryption
 func TestCipheringBasic(t *testing.T) {
 	c := new(TwistedEdwardsCurve)
 	c.InitParam25519()
@@ -67,6 +69,8 @@ func TestCipheringBasic(t *testing.T) {
 	}
 }
 
+// TestCiphering serves the same purpose as TestCipheringBasic, except
+// the private key is specified manually
 func TestCiphering(t *testing.T) {
 	c := new(TwistedEdwardsCurve)
 	c.InitParam25519()
@@ -74,6 +78,7 @@ func TestCiphering(t *testing.T) {
 	pb, _ := hex.DecodeString("fe38240982f313ae5afb3e904fb8215fb11af1200592b" +
 		"fca26c96c4738e4bf8f")
 	pbBig := new(big.Int).SetBytes(pb)
+	// pbBig = pbBig mod c.N
 	pbBig.Mod(pbBig, c.N)
 	pb = pbBig.Bytes()
 	pb = copyBytes(pb)[:]
@@ -87,6 +92,7 @@ func TestCiphering(t *testing.T) {
 		t.Error(err)
 	}
 
+	// expected ciphertext for in
 	out, _ := hex.DecodeString("1ffcb6f11fb9dc57222382019ae710b2ffff0020503f4" +
 		"117665f80b226961a4a0c0ae229f3b914d43e36238be05b0799623ae6ea0209d3095" +
 		"04f86635c50baca78d11189d4dc02c2f32c4c11e9d50b04eb2d3ff4b9f95e7f2e90e" +
@@ -102,6 +108,7 @@ func TestCiphering(t *testing.T) {
 		t.Fatal("failed to decrypt:", err)
 	}
 
+	// check the correctness of decryption
 	if !bytes.Equal(in, dec) {
 		t.Error("decrypted data doesn't match original")
 	}
@@ -186,15 +193,10 @@ func TestCipheringErrors(t *testing.T) {
 		{bytes.Repeat([]byte{0x07}, 15)},
 	}
 	for i, test := range tests2 {
-		_, err = TstRemovePKCSPadding(test.in)
+		//_, err = TstRemovePKCSPadding(test.in)
+		_, err = removePKCSPadding(test.in)
 		if err == nil {
 			t.Errorf("removePKCSPadding #%d did not get error", i)
 		}
 	}
-}
-
-// TstRemovePKCSPadding makes the internal removePKCSPadding function available
-// to the test package.
-func TstRemovePKCSPadding(src []byte) ([]byte, error) {
-	return removePKCSPadding(src)
 }

@@ -218,7 +218,7 @@ func (msg *MsgLightBlock) SerializeSize() int {
 // Command returns the protocol command string for the message.  This is part
 // of the Message interface implementation.
 func (msg *MsgLightBlock) Command() string {
-	return CmdBlock
+	return CmdLightBlock
 }
 
 // MaxPayloadLength returns the maximum length the payload can be for the

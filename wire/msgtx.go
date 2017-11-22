@@ -149,6 +149,10 @@ const (
 	// TxSerializeWitnessValueSigning indicates a transaction be serialized
 	// with only the witness input values and scripts.
 	TxSerializeWitnessValueSigning
+
+	//TxSerializeMissed indicates a transaction be serialized with the prefix
+	// and all witness data. and this transaction is requested for a missed transaction.
+	TxSerializeMissed
 )
 
 // scriptFreeList defines a free list of byte slices (up to the maximum number
@@ -624,6 +628,9 @@ func writeTxScriptsToMsgTx(msg *MsgTx, totalScriptSize uint64, serType TxSeriali
 		fallthrough
 	case TxSerializeWitnessValueSigning:
 		writeTxIns()
+	case TxSerializeMissed:
+		writeTxIns()
+		writeTxOuts()
 	case TxSerializeFull:
 		writeTxIns()
 		writeTxOuts()
@@ -940,7 +947,19 @@ func (msg *MsgTx) BtcDecode(r io.Reader, pver uint32) error {
 			return err
 		}
 		writeTxScriptsToMsgTx(msg, totalScriptSize, txSerType)
-
+	case TxSerializeMissed:
+		totalScriptSizeIns, err := msg.decodePrefix(r, pver)
+		if err != nil {
+			returnScriptBuffers()
+			return err
+		}
+		totalScriptSizeOuts, err := msg.decodeWitness(r, pver, true)
+		if err != nil {
+			returnScriptBuffers()
+			return err
+		}
+		writeTxScriptsToMsgTx(msg, totalScriptSizeIns+
+			totalScriptSizeOuts, txSerType)
 	case TxSerializeFull:
 		totalScriptSizeIns, err := msg.decodePrefix(r, pver)
 		if err != nil {
@@ -1114,7 +1133,15 @@ func (msg *MsgTx) BtcEncode(w io.Writer, pver uint32) error {
 		if err != nil {
 			return err
 		}
-
+	case TxSerializeMissed:
+		err := msg.encodePrefix(w, pver)
+		if err != nil {
+			return err
+		}
+		err = msg.encodeWitness(w, pver)
+		if err != nil {
+			return err
+		}
 	case TxSerializeFull:
 		err := msg.encodePrefix(w, pver)
 		if err != nil {
@@ -1215,7 +1242,20 @@ func (msg *MsgTx) SerializeSize() int {
 		for _, txIn := range msg.TxIn {
 			n += txIn.SerializeSizeWitnessValueSigning()
 		}
+	case TxSerializeMissed:
+		n = 12 + VarIntSerializeSize(uint64(len(msg.TxIn))) +
+			VarIntSerializeSize(uint64(len(msg.TxIn))) +
+			VarIntSerializeSize(uint64(len(msg.TxOut)))
 
+		for _, txIn := range msg.TxIn {
+			n += txIn.SerializeSizePrefix()
+		}
+		for _, txIn := range msg.TxIn {
+			n += txIn.SerializeSizeWitness()
+		}
+		for _, txOut := range msg.TxOut {
+			n += txOut.SerializeSize()
+		}
 	case TxSerializeFull:
 		// Version 4 bytes + LockTime 4 bytes + Expiry 4 bytes + Serialized
 		// varint size for the number of transaction inputs (x2) and
