@@ -848,15 +848,16 @@ func medianAdjustedTime(chainState *chainState,
 // valid from the perspective of the mainchain (not necessarily
 // the mempool or block) before inserting into a tx tree.
 // If it fails the check, it returns false; otherwise true.
-func maybeInsertStakeTx(bm *blockManager, stx *hcashutil.Tx, treeValid bool) bool {
+func maybeInsertStakeTx(bm *blockManager, stx *hcashutil.Tx, treeValid bool, view *blockchain.UtxoViewpoint) bool {
 	missingInput := false
 
-	view, err := bm.chain.FetchUtxoView(stx, treeValid)
+	/*view, err := bm.chain.FetchUtxoView(stx, treeValid)
 	if err != nil {
 		minrLog.Warnf("Unable to fetch transaction store for "+
 			"stx %s: %v", stx.Hash(), err)
 		return false
 	}
+	*/
 	mstx := stx.MsgTx()
 	isSSGen, _ := stake.IsSSGen(mstx)
 	for i, txIn := range mstx.TxIn {
@@ -1500,7 +1501,8 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	// house all of the input transactions so multiple lookups can be
 	// avoided.
 	blockTxns := make([]*hcashutil.Tx, 0, len(sourceTxns))
-	blockUtxos := blockchain.NewUtxoViewpoint()
+	//blockUtxos := blockchain.NewUtxoViewpoint()
+
 
 	// dependers is used to track transactions which depend on another
 	// transaction in the source pool.  This, in conjunction with the
@@ -1524,6 +1526,17 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	minrLog.Debugf("Considering %d transactions for inclusion to new block",
 		len(sourceTxns))
 	treeValid := mp.IsTxTreeValid(prevHash)
+	var blockUtxos *blockchain.UtxoViewpoint
+	var err error
+	if len(sourceTxns) > 0 {
+		blockUtxos, err = blockManager.chain.FetchCurrentUtxoView(treeValid)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to fetch current utxoview")
+		}
+		if *blockUtxos.BestHash() != *prevHash {
+			return nil, fmt.Errorf("Best hash changed from %v to %v", prevHash, blockUtxos.BestHash())
+		}
+	}
 
 mempoolLoop:
 	for _, txDesc := range sourceTxns {
@@ -1559,16 +1572,34 @@ mempoolLoop:
 			}
 		}
 
+
+
 		// Fetch all of the utxos referenced by the this transaction.
 		// NOTE: This intentionally does not fetch inputs from the
 		// mempool since a transaction which depends on other
 		// transactions in the mempool must come after those
+		var bestChanged bool
+		blockUtxos, bestChanged, err = blockManager.chain.AddTxToUtxoView(blockUtxos, tx)
+		if bestChanged {
+			return nil, fmt.Errorf("Best hash changed when collecting txs from %v to %v", prevHash, blockUtxos.BestHash())
+		}
+
+
+		if err != nil {
+			minrLog.Warnf("Unable to fetch utxo view for tx %s: "+
+				"%v", tx.Hash(), err)
+			continue
+		}
+
+
+		/*
 		utxos, err := blockManager.chain.FetchUtxoView(tx, treeValid)
 		if err != nil {
 			minrLog.Warnf("Unable to fetch utxo view for tx %s: "+
 				"%v", tx.Hash(), err)
 			continue
 		}
+		*/
 
 		// Setup dependencies for any transactions which reference
 		// other transactions in the mempool so they can be properly
@@ -1584,8 +1615,12 @@ mempoolLoop:
 
 			originHash := &txIn.PreviousOutPoint.Hash
 			originIndex := txIn.PreviousOutPoint.Index
-			utxoEntry := utxos.LookupEntry(originHash)
+			//utxoEntry := utxos.LookupEntry(originHash)
+			utxoEntry := blockUtxos.LookupEntry(originHash)
+
 			if utxoEntry == nil || utxoEntry.IsOutputSpent(originIndex) {
+
+
 				if !txSource.HaveTransaction(originHash) {
 					minrLog.Tracef("Skipping tx %s because "+
 						"it references unspent output "+
@@ -1618,7 +1653,7 @@ mempoolLoop:
 		// Calculate the final transaction priority using the input
 		// value age sum as well as the adjusted transaction size.  The
 		// formula is: sum(inputValue * inputAge) / adjustedTxSize
-		prioItem.priority = mempool.CalcPriority(tx.MsgTx(), utxos,
+		prioItem.priority = mempool.CalcPriority(tx.MsgTx(), blockUtxos,
 			nextBlockHeight)
 
 		// Calculate the fee in Atoms/KB.
@@ -1640,8 +1675,26 @@ mempoolLoop:
 		// Merge the referenced outputs from the input transactions to
 		// this transaction into the block utxo view.  This allows the
 		// code below to avoid a second lookup.
-		mergeUtxoView(blockUtxos, utxos)
+		//mergeUtxoView(blockUtxos, utxos)
+		/*
+		if *(utxos.BestHash()) != *(blockUtxos2.BestHash()){
+			minrLog.Infof("Oxygen Hash not equal %v %v\n", utxos.BestHash(), blockUtxos2.BestHash())
+		}
+
+		if len(blockUtxos.Entries()) != len(blockUtxos2.Entries()){
+			minrLog.Infof("Oxygen len not equal %v %v\n", len(blockUtxos.Entries()), len(blockUtxos2.Entries()))
+		}
+		for AHash, AA := range blockUtxos.Entries(){
+			_, exists := blockUtxos2.Entries()[AHash]
+			if !exists{
+				minrLog.Infof("Oxygen Not exists %v\n", AA)
+			}
+		}
+		*/
+
 	}
+	blockUtxosCopy := blockchain.DeepCopyUtxoViewpoint(blockUtxos)
+
 	minrLog.Tracef("Priority queue len %d, dependers len %d",
 		priorityQueue.Len(), len(dependers))
 
@@ -1912,7 +1965,7 @@ mempoolLoop:
 
 		if isSSGen, _ := stake.IsSSGen(msgTx); isSSGen {
 			txCopy := hcashutil.NewTxDeepTxIns(msgTx)
-			if maybeInsertStakeTx(blockManager, txCopy, treeValid) {
+			if maybeInsertStakeTx(blockManager, txCopy, treeValid, blockUtxosCopy) {
 				vb := stake.SSGenVoteBits(txCopy.MsgTx())
 				voteBitsVoters = append(voteBitsVoters, vb)
 				blockTxnsStake = append(blockTxnsStake, txCopy)
@@ -2019,7 +2072,7 @@ mempoolLoop:
 			// Quick check for difficulty here.
 			if msgTx.TxOut[0].Value >= reqStakeDifficulty {
 				txCopy := hcashutil.NewTxDeepTxIns(msgTx)
-				if maybeInsertStakeTx(blockManager, txCopy, treeValid) {
+				if maybeInsertStakeTx(blockManager, txCopy, treeValid, blockUtxosCopy) {
 					blockTxnsStake = append(blockTxnsStake, txCopy)
 					freshStake++
 				}
@@ -2043,7 +2096,7 @@ mempoolLoop:
 		isSSRtx, _ := stake.IsSSRtx(msgTx)
 		if tx.Tree() == wire.TxTreeStake && isSSRtx {
 			txCopy := hcashutil.NewTxDeepTxIns(msgTx)
-			if maybeInsertStakeTx(blockManager, txCopy, treeValid) {
+			if maybeInsertStakeTx(blockManager, txCopy, treeValid, blockUtxosCopy) {
 				blockTxnsStake = append(blockTxnsStake, txCopy)
 				revocations++
 			}
@@ -2278,7 +2331,7 @@ mempoolLoop:
 	if nextBlockKeyHeight + 1 >= stakeValidationHeight &&
 		voters < minimumVotesRequired {
 		minrLog.Warnf("incongruent number of voters in mempool " +
-			"vs mempool.voters; not enough voters found")
+			"vs mempool.voters; not enough voters found: %v voters", voters)
 		return handleTooFewVoters(subsidyCache, nextBlockHeight, nextBlockKeyHeight, payToAddress,
 			server.blockManager)
 	}
@@ -2293,7 +2346,7 @@ mempoolLoop:
 			break
 		}
 
-		utxs, err := blockManager.chain.FetchUtxoView(tx, treeValid)
+		//utxs, err := blockManager.chain.FetchUtxoView(tx, treeValid)
 		if err != nil {
 			str := fmt.Sprintf("failed to fetch input utxs for tx %v: %s",
 				tx.Hash(), err.Error())
@@ -2307,7 +2360,7 @@ mempoolLoop:
 
 		for _, txIn := range tx.MsgTx().TxIn {
 			originHash := &txIn.PreviousOutPoint.Hash
-			utx := utxs.LookupEntry(originHash)
+			utx := blockUtxosCopy.LookupEntry(originHash)
 			if utx == nil {
 				// Set a flag with the index so we can properly set
 				// the fraud proof below.

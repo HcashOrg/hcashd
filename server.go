@@ -561,6 +561,7 @@ func (sp *serverPeer) OnTx(p *peer.Peer, msg *wire.MsgTx) {
 	// Convert the raw MsgTx to a hcashutil.Tx which provides some convenience
 	// methods and things such as hash caching.
 	tx := hcashutil.NewTx(msg)
+
 	iv := wire.NewInvVect(wire.InvTypeTx, tx.Hash())
 	p.AddKnownInventory(iv)
 
@@ -702,7 +703,6 @@ func (sp *serverPeer) OnGetData(p *peer.Peer, msg *wire.MsgGetData) {
 			err = sp.server.pushBlockMsg(sp, &iv.Hash, c, waitChan)
 		case wire.InvTypeFilteredBlock:
 			err = sp.server.pushMerkleBlockMsg(sp, &iv.Hash, c, waitChan)
-
 		case wire.InvTypeLightBlock:
 			err = sp.server.pushLightBlockMsg(sp, &iv.Hash, c, waitChan)
 
@@ -720,6 +720,83 @@ func (sp *serverPeer) OnGetData(p *peer.Peer, msg *wire.MsgGetData) {
 			// it here because there is now not found inventory
 			// that will use the channel momentarily.
 			if i == len(msg.InvList)-1 && c != nil {
+				<-c
+			}
+		}
+		numAdded++
+		waitChan = c
+	}
+	if len(notFound.InvList) != 0 {
+		p.QueueMessage(notFound, doneChan)
+	}
+
+	// Wait for messages to be sent. We can send quite a lot of data at this
+	// point and this will keep the peer busy for a decent amount of time.
+	// We don't process anything else by them in this time so that we
+	// have an idea of when we should hear back from them - else the idle
+	// timeout could fire when we were only half done sending the blocks.
+	if numAdded > 0 {
+		<-doneChan
+	}
+}
+
+//OnGetMissedTxs is invoked when a peer receives a getmissedtxs wire message.
+func (sp *serverPeer) OnGetMissedTxs(p *peer.Peer,msg *wire.MsgGetMissedTxs){
+
+	// Ignore empty getdata messages.
+	if len(msg.TxInvList) == 0 {
+		return
+	}
+
+	numAdded := 0
+	notFound := wire.NewMsgNotFound()
+
+	length := len(msg.TxInvList)
+	// A decaying ban score increase is applied to prevent exhausting resources
+	// with unusually large inventory queries.
+	// Requesting more than the maximum inventory vector length within a short
+	// period of time yields a score above the default ban threshold. Sustained
+	// bursts of small requests are not penalized as that would potentially ban
+	// peers performing IBD.
+	// This incremental score decays each minute to half of its value.
+	sp.addBanScore(0, uint32(length)*99/wire.MaxInvPerMsg, "getmissedtxs")
+
+	// We wait on this wait channel periodically to prevent queuing
+	// far more data than we can send in a reasonable time, wasting memory.
+	// The waiting occurs after the database fetch for the next one to
+	// provide a little pipelining.
+	var waitChan chan struct{}
+	doneChan := make(chan struct{}, 1)
+
+	blockhash := msg.BlockInv.Hash
+
+	for i, iv := range msg.TxInvList {
+		var c chan struct{}
+		// If this will be the last message we send.
+		if i == length-1 && len(notFound.InvList) == 0 {
+			c = doneChan
+		} else if (i+1)%3 == 0 {
+			// Buffered so as to not make the send goroutine block.
+			c = make(chan struct{}, 1)
+		}
+		var err error
+		switch iv.Type {
+		case wire.InvTypeTx:
+			err = sp.server.pushMissedTxMsg(sp,&blockhash, &iv.Hash, c, waitChan)
+		default:
+			peerLog.Warnf("UnSupported type in txInvList request %d",
+				iv.Type)
+			continue
+		}
+		if err != nil {
+			notFound.AddInvVect(iv)
+
+			// When there is a failure fetching the final entry
+			// and the done channel was sent in due to there
+			// being no outstanding not found inventory, consume
+			// it here because there is now not found inventory
+			// that will use the channel momentarily.
+			if i == len(msg.TxInvList)-1 && c != nil {
 				<-c
 			}
 		}
@@ -1154,6 +1231,80 @@ func (s *server) AnnounceNewTransactions(newTxs []*hcashutil.Tx) {
 		}
 	}
 }
+
+
+//PushMissedTxMsg send a tx meessage for provided transaction hash to the connected peer
+//
+func (s *server) pushMissedTxMsg(sp * serverPeer,blockhash *chainhash.Hash, hash *chainhash.Hash, doneChan chan<- struct{}, waitChan <-chan struct{}) error{
+	// Try to fetch the transaction from the memory pool and if that fails,
+	// try the block database.
+
+	var mtx *wire.MsgTx
+	tx, err := s.txMemPool.FetchTransaction(hash, true)
+	if err != nil {
+		txIndex := s.txIndex
+		if txIndex == nil {
+			if doneChan != nil {
+				doneChan <- struct{}{}
+			}
+			return  rpcInternalError("The transaction index "+
+				"must be enabled to query the blockchain "+
+				"(specify --txindex)", "Configuration")
+		}
+
+		// Look up the location of the transaction.
+		blockRegion, err := txIndex.TxBlockRegion(*hash)
+		if err != nil {
+			if doneChan != nil {
+				doneChan <- struct{}{}
+			}
+			context := "Failed to retrieve transaction location"
+			return  rpcInternalError(err.Error(), context)
+		}
+		if blockRegion == nil {
+			if doneChan != nil {
+				doneChan <- struct{}{}
+			}
+			return rpcNoTxInfoError(hash)
+		}
+
+		// Load the raw transaction bytes from the database.
+		var txBytes []byte
+		err = s.db.View(func(dbTx database.Tx) error {
+			var err error
+			txBytes, err = dbTx.FetchBlockRegion(blockRegion)
+			return err
+		})
+		if err != nil {
+			if doneChan != nil {
+				doneChan <- struct{}{}
+			}
+			return err
+		}
+
+		// Deserialize the transaction
+		var msgTx wire.MsgTx
+		err = msgTx.Deserialize(bytes.NewReader(txBytes))
+		if err != nil {
+			if doneChan != nil {
+				doneChan <- struct{}{}
+			}
+			return  err
+		}
+		mtx = &msgTx
+	}else {
+		mtx = tx.MsgTx()
+	}
+
+	// Once we have fetched data wait for any previous operation to finish.
+	if waitChan != nil {
+		<-waitChan
+	}
+	mtx.SerType= wire.TxSerializeMissed
+	sp.QueueMessage(mtx, doneChan)
+	return  nil
+}
+
 
 // pushTxMsg sends a tx message for the provided transaction hash to the
 // connected peer.  An error is returned if the transaction hash is not known.
@@ -1735,6 +1886,7 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 			OnInv:            sp.OnInv,
 			OnHeaders:        sp.OnHeaders,
 			OnGetData:        sp.OnGetData,
+			OnGetMissedTxs:	  sp.OnGetMissedTxs,
 			OnGetBlocks:      sp.OnGetBlocks,
 			OnGetHeaders:     sp.OnGetHeaders,
 			OnFilterAdd:      sp.OnFilterAdd,

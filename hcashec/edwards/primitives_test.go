@@ -1,50 +1,95 @@
 // Copyright (c) 2015-2016 The Decred developers
+// Copyright (c) 2016-2017 The Hcash developers @sammietocat
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
+// This unit test aims at checking the conversion among
+//	* big integer
+//  * encoded bytes
+//	* field element
+//	* curve point
 
 package edwards
 
 import (
 	"bytes"
 	"encoding/hex"
-	"math/rand"
 	"testing"
 )
 
-type ConversionVector struct {
-	bIn *[32]byte
-}
+// TestConvBetweenBigIntAndEncodedBytes tests the conversion between
+// big integers and encoded bytes in little endian representation
+func TestConvBetweenBigIntAndEncodedBytes(t *testing.T) {
+	fakeConvVecs := mockUpConversionVectors()
 
-func testConversionVectors() []ConversionVector {
-	r := rand.New(rand.NewSource(12345))
+	for _, vec := range fakeConvVecs {
+		// make a big integer from bytes
+		biFB := EncodedBytesToBigInt(vec.bIn)
+		// convert a big integer to encoded bytes
+		biTB := BigIntToEncodedBytes(biFB)
 
-	numCvs := 50
-	cvs := make([]ConversionVector, numCvs, numCvs)
-	for i := 0; i < numCvs; i++ {
-		bIn := new([32]byte)
-		for j := 0; j < fieldIntSize; j++ {
-			randByte := r.Intn(255)
-			bIn[j] = uint8(randByte)
+		if !bytes.Equal(vec.bIn[:], biTB[:]) {
+			t.Fatalf("want %s, got %s\n", hex.EncodeToString(vec.bIn[:]), hex.EncodeToString(biTB[:]))
 		}
-
-		// Zero out the LSB as these aren't points.
-		bIn[31] = bIn[31] &^ (1 << 7)
-		cvs[i] = ConversionVector{bIn}
-		r.Seed(int64(i) + 12345)
 	}
-
-	return cvs
 }
 
-// Tested functions:
-//   EncodedBytesToBigInt
-//   BigIntToFieldElement
-//   FieldElementToEncodedBytes
-//   BigIntToEncodedBytes
-//   FieldElementToBigInt
-//   EncodedBytesToFieldElement
-func TestConversion(t *testing.T) {
-	encodedNumToStrIdx := 0
+// TestConvBetweenBigIntAndEncodedBytesBigEndian tests the conversion between
+// big integers and encoded bytes in big endian representation
+func TestConvBetweenBigIntAndEncodedBytesBigEndian(t *testing.T) {
+	fakeConvVecs := mockUpConversionVectors()
+
+	for _, vec := range fakeConvVecs {
+		// make a big integer from bytes
+		biFB := EncodedBytesToBigIntNoReverse(vec.bIn)
+		// convert a big integer to encoded bytes
+		biTB := BigIntToEncodedBytesNoReverse(biFB)
+
+		if !bytes.Equal(vec.bIn[:], biTB[:]) {
+			t.Fatalf("want %s, got %s\n", hex.EncodeToString(vec.bIn[:]), hex.EncodeToString(biTB[:]))
+		}
+	}
+}
+
+// TestConvBetweenBigIntAndFieldElement tests the conversion between
+// big integers and field elements
+func TestConvBetweenBigIntAndFieldElement(t *testing.T) {
+	fakeConvVecs := mockUpConversionVectors()
+
+	for _, vec := range fakeConvVecs {
+		// make a big integer from bytes in little endian
+		biFB := EncodedBytesToBigInt(vec.bIn)
+		// make a field element from the big integer
+		fe := BigIntToFieldElement(biFB)
+		// convert a big integer from the field element
+		biFFE := FieldElementToBigInt(fe)
+
+		if 0 != biFB.Cmp(biFFE) {
+			t.Fatalf("want %v, got %v\n", *biFB, *biFFE)
+		}
+	}
+}
+
+// TestConvBetweenFieldElementAndEncodedBytes tests the conversion between
+// encoded bytes and field elements
+func TestConvBetweenEncodedBytesAndFieldElement(t *testing.T) {
+	fakeConvVecs := mockUpConversionVectors()
+
+	for _, vec := range fakeConvVecs {
+		// make a field element from bytes
+		feFB := EncodedBytesToFieldElement(vec.bIn)
+		// convert a field element to encoded bytes
+		feTB := FieldElementToEncodedBytes(feFB)
+
+		if !bytes.Equal(vec.bIn[:], feTB[:]) {
+			t.Fatalf("want %s, got %s\n", hex.EncodeToString(vec.bIn[:]), hex.EncodeToString(feTB[:]))
+		}
+	}
+}
+
+// TestEncodeNumToStr validates the conversion from big integers to strings
+func TestEncodeNumToStr(t *testing.T) {
+	// encodedNumToStrSet should be of the
+	// same length (50) with the faked conversion vectors
 	encodedNumToStrSet := []string{
 		"20196841024736227335511321252453997055107605473446826399550527392484145048463",
 		"20196841024736227335511321252453997055107605473446826399550527392484145048463",
@@ -98,7 +143,19 @@ func TestConversion(t *testing.T) {
 		"23859883219144731818639907160556442618096669420651409242145922210614455254846",
 	}
 
-	encodedBytesToStrIdx := 0
+	for i, vec := range mockUpConversionVectors() {
+		// make a big integer from encoded bytes
+		bigInt := EncodedBytesToBigInt(vec.bIn)
+		// check expectation
+		if encodedNumToStrSet[i] != bigInt.String() {
+			t.Fatalf("want %s, got %s\n", encodedNumToStrSet[i], bigInt.String())
+		}
+	}
+}
+
+// TestEncodedBytesToString validates the conversion of encoded bytes to strings
+func TestEncodedBytesToString(t *testing.T) {
+	// encodedBytesToStrSet should be of the same length (50) as the faked conversion vectors
 	encodedBytesToStrSet := []string{
 		"8f2be510838ccf15d321efde1e209c5835112aa064b80bf0f93db988c501a72c",
 		"8f2be510838ccf15d321efde1e209c5835112aa064b80bf0f93db988c501a72c",
@@ -151,83 +208,20 @@ func TestConversion(t *testing.T) {
 		"cd4e6522b33196728a8cba1fca74f57a1740a0ea070ff38e04f0984463f8700b",
 		"3e3f97667479347342460ad574fd40d53c66eb41ded74b0e8e624ee91f37c034",
 	}
-
-	for _, vector := range testConversionVectors() {
-		// Test encoding to FE --> bytes.
-		feFB := EncodedBytesToFieldElement(vector.bIn)
-		feTB := FieldElementToEncodedBytes(feFB)
-		cmp := bytes.Equal(vector.bIn[:], feTB[:])
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
+	for i, vec := range mockUpConversionVectors() {
+		// check expectation
+		if encodedBytesToStrSet[i] != hex.EncodeToString(vec.bIn[:]) {
+			t.Fatalf("want %s, got %s\n", encodedBytesToStrSet[i], hex.EncodeToString(vec.bIn[:]))
 		}
-
-		// Test encoding to big int --> FE --> bytes.
-		big := EncodedBytesToBigInt(vector.bIn)
-		fe := BigIntToFieldElement(big)
-		b := FieldElementToEncodedBytes(fe)
-		cmp = bytes.Equal(vector.bIn[:], b[:])
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-
-		// Test encoding to big int --> bytes.
-		b = BigIntToEncodedBytes(big)
-		cmp = bytes.Equal(vector.bIn[:], b[:])
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-
-		// Test encoding FE --> big int --> bytes.
-		feBig := FieldElementToBigInt(fe)
-		b = BigIntToEncodedBytes(feBig)
-		cmp = bytes.Equal(vector.bIn[:], b[:])
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-
-		// Asert our results.
-		encodedNumStr := encodedNumToStrSet[encodedNumToStrIdx]
-		cmp = encodedNumStr == big.String()
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-		encodedNumToStrIdx++
-
-		// Assert our results.
-		encodedBytesToStr := encodedBytesToStrSet[encodedBytesToStrIdx]
-		cmp = hex.EncodeToString(vector.bIn[:]) == encodedBytesToStr
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
-		}
-		encodedBytesToStrIdx++
 	}
 }
 
-func testPointConversionVectors() []ConversionVector {
-	r := rand.New(rand.NewSource(54321))
-
-	numCvs := 50
-	cvs := make([]ConversionVector, numCvs, numCvs)
-	for i := 0; i < numCvs; i++ {
-		bIn := new([32]byte)
-		for j := 0; j < fieldIntSize; j++ {
-			randByte := r.Intn(255)
-			bIn[j] = uint8(randByte)
-		}
-
-		cvs[i] = ConversionVector{bIn}
-		r.Seed(int64(i) + 54321)
-	}
-
-	return cvs
-}
-
+// TestPointConversion tests the conversion between points on curve and encoded bytes
 // Tested functions:
 //   BigIntPointToEncodedBytes
-//   extendedToBigAffine
 //   EncodedBytesToBigIntPoint
-func TestPointConversion(t *testing.T) {
-	decodedPointsIdx := 0
+func TestConvBetweenBigIntPointAndEncodedBytes(t *testing.T) {
+	// expected decoded points in hex format
 	decodedPointsSet := []string{
 		"36342386295235510298682738805067969701306540594271578388800019131093341795154,12122921476001995645148951048614280991245620197289177635264906062452356396947",
 		"9867744591134514766234409775134503735789242596068738861666234899385955184391,27007105853956697146464305861539326123893364786296641738920699361975205011161",
@@ -256,7 +250,7 @@ func TestPointConversion(t *testing.T) {
 		"3780609302167966527808115014787075050391511873602293238860225507873910096878,40571044426480029736683329118811835506584488408510318455853674070731785488148",
 	}
 
-	encodedPointsIdx := 0
+	// expected encoded points in hex format
 	encodedPointsSet := []string{
 		"93b705486da83fd0e864654923104b3f13e5030c198599961b40e7079554cd1a",
 		"d99e220f3d1f5eb5c04e42ddbee8ae2d0037e75493946a763fe02675ef7ab5bb",
@@ -288,17 +282,17 @@ func TestPointConversion(t *testing.T) {
 	curve := new(TwistedEdwardsCurve)
 	curve.InitParam25519()
 
-	for _, vector := range testPointConversionVectors() {
+	pointIdx := 0
+	for _, vector := range mockUpPointConversionVectors(50) {
 		x, y, err := curve.EncodedBytesToBigIntPoint(vector.bIn)
 		// The random point wasn't on the curve.
 		if err != nil {
 			continue
 		}
 
-		yB := BigIntPointToEncodedBytes(x, y)
-		cmp := bytes.Equal(vector.bIn[:], yB[:])
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
+		eb := BigIntPointToEncodedBytes(x, y)
+		if !bytes.Equal(vector.bIn[:], eb[:]) {
+			t.Fatalf("want %s, got %s\n", hex.EncodeToString(vector.bIn[:]), hex.EncodeToString(eb[:]))
 		}
 
 		// Assert our results.
@@ -306,20 +300,16 @@ func TestPointConversion(t *testing.T) {
 		buffer.WriteString(x.String())
 		buffer.WriteString(",")
 		buffer.WriteString(y.String())
-		localStr := buffer.String()
-		decodedPoint := decodedPointsSet[decodedPointsIdx]
-		cmp = localStr == decodedPoint
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
+
+		if buffer.String() != decodedPointsSet[pointIdx] {
+			t.Fatalf("want %s, got %s\n", buffer.String(), decodedPointsSet[pointIdx])
 		}
-		decodedPointsIdx++
 
 		// Assert our results.
-		encodedPoint := encodedPointsSet[encodedPointsIdx]
-		cmp = hex.EncodeToString(vector.bIn[:]) == encodedPoint
-		if !cmp {
-			t.Fatalf("expected %v, got %v", true, cmp)
+		if hex.EncodeToString(vector.bIn[:]) != encodedPointsSet[pointIdx] {
+			t.Fatalf("want %s, got %s\n", hex.EncodeToString(vector.bIn[:]), encodedPointsSet[pointIdx])
 		}
-		encodedPointsIdx++
+
+		pointIdx++
 	}
 }

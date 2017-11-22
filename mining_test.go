@@ -1,8 +1,3 @@
-// Copyright (c) 2016 The btcsuite developers
-// Copyright (c) 2015-2016 The Decred developers
-// Use of this source code is governed by an ISC
-// license that can be found in the LICENSE file.
-
 package main
 
 import (
@@ -13,16 +8,11 @@ import (
 	"github.com/HcashOrg/hcashd/blockchain/stake"
 )
 
-// TestStakeTxFeePrioHeap tests the priority heaps including the stake types for
-// both transaction fees per KB and transaction priority. It ensures that the
-// primary sorting is first by stake type, and then by the latter chosen priority
-// type.
-func TestStakeTxFeePrioHeap(t *testing.T) {
-	numElements := 1000
-	numEdgeConditionElements := 12
-	// Create some fake priority items that exercise the expected sort
-	// edge conditions.
-	testItems := []*txPrioItem{
+// fakePrioritizedTxes prepares some fake prioritized txes for test
+func fakePrioritizedTxes() []*txPrioItem {
+	const numRandTx = 1000
+	// some items under the edge condition
+	prioritizedTxes := []*txPrioItem{
 		{feePerKB: 5678, txType: stake.TxTypeRegular, priority: 3},
 		{feePerKB: 5678, txType: stake.TxTypeRegular, priority: 1},
 		{feePerKB: 5678, txType: stake.TxTypeRegular, priority: 1}, // Duplicate fee and prio
@@ -36,93 +26,123 @@ func TestStakeTxFeePrioHeap(t *testing.T) {
 		{feePerKB: 10000, txType: stake.TxTypeRegular, priority: 0}, // Higher fee, smaller prio
 		{feePerKB: 0, txType: stake.TxTypeRegular, priority: 10000}, // Higher prio, lower fee
 	}
-	ph := newTxPriorityQueue((numElements + numEdgeConditionElements), txPQByStakeAndFee)
 
-	// Add random data in addition to the edge conditions already manually
-	// specified.
-	for i := 0; i < (numElements + numEdgeConditionElements); i++ {
-		if i >= numEdgeConditionElements {
-			randType := stake.TxType(rand.Intn(4))
-			randPrio := rand.Float64() * 100
-			randFeePerKB := rand.Float64() * 10
-			testItems = append(testItems, &txPrioItem{
-				tx:       nil,
-				txType:   randType,
-				feePerKB: randFeePerKB,
-				priority: randPrio,
-			})
-		}
-
-		heap.Push(ph, testItems[i])
-	}
-
-	// Test sorting by stake and fee per KB.
-	last := &txPrioItem{
-		tx:       nil,
-		txType:   stake.TxTypeSSGen,
-		priority: 10000.0,
-		feePerKB: 10000.0,
-	}
-	for i := 0; i < numElements; i++ {
-		prioItem := heap.Pop(ph)
-		txpi, ok := prioItem.(*txPrioItem)
-		if ok {
-			if txpi.feePerKB > last.feePerKB &&
-				compareStakePriority(txpi, last) >= 0 {
-				t.Errorf("bad pop: %v fee per KB was more than last of %v "+
-					"while the txtype was %v but last was %v",
-					txpi.feePerKB, last.feePerKB, txpi.txType, last.txType)
-			}
-			last = txpi
-		}
-	}
-
-	ph = newTxPriorityQueue(len(testItems), txPQByStakeAndFeeAndThenPriority)
-	for i := 0; i < numElements; i++ {
-		randType := stake.TxType(rand.Intn(4))
-		randPrio := rand.Float64() * 100
+	for i := 0; i < numRandTx; i++ {
+		// fake a random tx
+		randTxType := stake.TxType(rand.Intn(4))
+		randPriority := rand.Float64() * 100
 		randFeePerKB := rand.Float64() * 10
-		prioItem := &txPrioItem{
+
+		prioritizedTxes = append(prioritizedTxes, &txPrioItem{
 			tx:       nil,
-			txType:   randType,
+			txType:   randTxType,
 			feePerKB: randFeePerKB,
-			priority: randPrio,
-		}
-		heap.Push(ph, prioItem)
+			priority: randPriority,
+		})
 	}
 
-	// Test sorting with fees per KB for high stake priority, then
-	// priority for low stake priority.
-	last = &txPrioItem{
+	return prioritizedTxes
+}
+
+// TestTxPQOnStakePriorityAndFeeAndTxPriority tests the priority
+// queue on stake priority, fee per kb and tx priority
+func TestTxPQOnStakePriorityAndFeeAndTxPriority(t *testing.T) {
+	// get fake txes as samples
+	prioritizedTxes := fakePrioritizedTxes()
+	pq := newTxPriorityQueue(len(prioritizedTxes), txPQByStakeAndFee)
+
+	// build the priority queue tx by tx
+	for _, tx := range prioritizedTxes {
+		heap.Push(pq, tx)
+	}
+
+	// ensure the size of queue is correct
+	if pq.Len() != len(prioritizedTxes) {
+		t.Errorf("size of priority queue built is %v, want %v\n", pq.Len(), len(prioritizedTxes))
+	}
+
+	// last item popped out
+	prev := &txPrioItem{
 		tx:       nil,
 		txType:   stake.TxTypeSSGen,
-		priority: 10000.0,
-		feePerKB: 10000.0,
+		priority: 10000.0, // since highest priority of the fake tx is 10000
+		feePerKB: 10000.0, // since highest feePerKB of the fake tx is 10000
 	}
-	for i := 0; i < numElements; i++ {
-		prioItem := heap.Pop(ph)
-		txpi, ok := prioItem.(*txPrioItem)
-		if ok {
-			bothAreLowStakePriority :=
-				txStakePriority(txpi.txType) == regOrRevocPriority &&
-					txStakePriority(last.txType) == regOrRevocPriority
-			if !bothAreLowStakePriority {
-				if txpi.feePerKB > last.feePerKB &&
-					compareStakePriority(txpi, last) >= 0 {
-					t.Errorf("bad pop: %v fee per KB was more than last of %v "+
-						"while the txtype was %v but last was %v",
-						txpi.feePerKB, last.feePerKB, txpi.txType, last.txType)
+
+	for pq.Len() > 0 {
+		item := heap.Pop(pq)
+		if tx, ok := item.(*txPrioItem); ok {
+			// check correctness of order
+			// higher stake priority, fee per kb and tx priority comes first
+			if (compareStakePriority(tx, prev) > 0) ||
+				((0 == compareStakePriority(tx, prev)) && (tx.feePerKB > prev.feePerKB)) {
+				t.Errorf("bad pop: %v fee per KB was more than previous of %v "+
+					"while the txtype was %v but previous was %v",
+					tx.feePerKB, prev.feePerKB, tx.txType, prev.txType)
+			}
+
+			prev = tx
+		}
+	}
+}
+
+// TestTxPQOnStakePriorityAndFeeAndTxPriorityConsideringTxType tests the priority
+// queue on stake priority, fee per kb
+// if both tx are of type regular or revocation, plus the tx priority
+func TestTxPQOnStakePriorityAndFeeAndConditionalTxPriority(t *testing.T) {
+	// get fake txes as samples
+	prioritizedTxes := fakePrioritizedTxes()
+	pq := newTxPriorityQueue(len(prioritizedTxes), txPQByStakeAndFeeAndThenPriority)
+
+	// build the priority queue tx by tx
+	for _, tx := range prioritizedTxes {
+		heap.Push(pq, tx)
+	}
+
+	// ensure the size of queue is correct
+	if pq.Len() != len(prioritizedTxes) {
+		t.Errorf("size of priority queue built is %v, want %v\n", pq.Len(), len(prioritizedTxes))
+	}
+
+	// last item popped out
+	prev := &txPrioItem{
+		tx:       nil,
+		txType:   stake.TxTypeSSGen,
+		priority: 10000.0, // since highest priority of the fake tx is 10000
+		feePerKB: 10000.0, // since highest feePerKB of the fake tx is 10000
+	}
+
+	for pq.Len() > 0 {
+		item := heap.Pop(pq)
+		if tx, ok := item.(*txPrioItem); ok {
+			// check correctness of order
+			// higher stake priority, fee per kb
+			// if both tx types are either regular or revocation, plus priority
+			// comes first
+
+			stakePriorityDelta := compareStakePriority(tx, prev)
+			if (txStakePriority(tx.txType) == regOrRevocPriority) &&
+				(txStakePriority(prev.txType) == regOrRevocPriority) {
+				// both are of low stake priority
+
+				if (stakePriorityDelta > 0) ||
+					((0 == stakePriorityDelta) && (tx.priority > prev.priority)) {
+					t.Errorf("bad pop: %v priority was more than previous of %v "+
+						"while the tx type was %v but previous was %v",
+						tx.priority, prev.priority, tx.txType, prev.txType)
+				}
+			} else {
+				// neither are of low stake priority
+
+				if (stakePriorityDelta > 0) ||
+					((0 == stakePriorityDelta) && (tx.feePerKB > prev.feePerKB)) {
+					t.Errorf("bad pop: %v fee per KB was more than previous of %v "+
+						"while the tx type was %v but previous was %v",
+						tx.feePerKB, prev.feePerKB, tx.txType, prev.txType)
 				}
 			}
-			if bothAreLowStakePriority {
-				if txpi.priority > last.priority &&
-					compareStakePriority(txpi, last) >= 0 {
-					t.Errorf("bad pop: %v priority was more than last of %v "+
-						"while the txtype was %v but last was %v",
-						txpi.feePerKB, last.feePerKB, txpi.txType, last.txType)
-				}
-			}
-			last = txpi
+
+			prev = tx
 		}
 	}
 }
