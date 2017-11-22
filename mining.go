@@ -578,7 +578,7 @@ func UpdateExtraNonce(msgBlock *wire.MsgBlock, blockHeight uint32, blockKeyHeigh
 	}
 	msgBlock.Transactions[0].TxOut[1].PkScript = coinbaseOpReturn
 
-	coinbaseExtraOpReturn, err := standardExtraCoinbaseOpReturn(blockHeight, msgBlock.Transactions[0].TxHashFull())
+	coinbaseExtraOpReturn, err := standardExtraCoinbaseOpReturn(blockHeight, msgBlock.Transactions[0].TxHash())
 	if err != nil {
 		return err
 	}
@@ -1098,7 +1098,7 @@ func handleTooFewVoters(subsidyCache *blockchain.SubsidyCache,
 				btMsgBlock.AddTransaction(extraCoinbaseTx.MsgTx())
 
 				opReturnExtraPkScript, err :=
-					standardExtraCoinbaseOpReturn(topKeyBlock.MsgBlock().Header.Height, extraCoinbaseTx.MsgTx().TxHashFull())
+					standardExtraCoinbaseOpReturn(topKeyBlock.MsgBlock().Header.Height, extraCoinbaseTx.MsgTx().TxHash())
 				if err != nil {
 					return nil, err
 				}
@@ -2252,7 +2252,7 @@ mempoolLoop:
 		txFees[0] = -totalFees
 	}
 
-	opExtraReturnPkScript, err := standardExtraCoinbaseOpReturn(uint32(nextBlockHeight), extraCoinbaseTx.MsgTx().TxHashFull())
+	opExtraReturnPkScript, err := standardExtraCoinbaseOpReturn(uint32(nextBlockHeight), extraCoinbaseTx.MsgTx().TxHash())
 
 	coinbaseTx.MsgTx().TxOut[0].PkScript = opExtraReturnPkScript
 

@@ -2700,7 +2700,8 @@ func (state *gbtWorkState) blockTemplateResult(bm *blockManager, useCoinbaseValu
 	transactions := make([]hcashjson.GetBlockTemplateResultTx, 0, numTx-1)
 	txIndex := make(map[chainhash.Hash]int64, numTx)
 	for i, tx := range msgBlock.Transactions {
-		txHash := tx.TxHashFull()
+		//txHash := tx.TxHashFull()
+		txHash := tx.TxHash()
 		txIndex[txHash] = int64(i)
 
 		// Skip the coinbase transaction.
@@ -2813,8 +2814,8 @@ func (state *gbtWorkState) blockTemplateResult(bm *blockManager, useCoinbaseValu
 	stransactions := make([]hcashjson.GetBlockTemplateResultTx, 0, numSTx)
 	stxIndex := make(map[chainhash.Hash]int64, numSTx)
 	for i, stx := range msgBlock.STransactions {
-		stxHash := stx.TxHashFull()
-
+		//stxHash := stx.TxHashFull()
+		stxHash := stx.TxHash()
 		stxIndex[stxHash] = int64(i)
 
 		// Create an array of 1-based indices to transactions that come

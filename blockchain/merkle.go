@@ -112,8 +112,8 @@ func BuildMerkleTreeStore(transactions []*hcashutil.Tx, compressed bool) []*chai
 
 	for i, tx := range transactions[0:] {
 		msgTx := tx.MsgTx()
-		txHashFull := msgTx.TxHashFull()
-		merkles[i + offset] = &txHashFull
+		txHash := msgTx.TxHash()
+		merkles[i + offset] = &txHash
 	}
 
 

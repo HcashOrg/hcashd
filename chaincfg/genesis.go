@@ -55,7 +55,8 @@ var genesisCoinbaseTx = wire.MsgTx{
 
 // genesisMerkleRoot is the hash of the first transaction in the genesis block
 // for the main network.
-var genesisMerkleRoot = genesisCoinbaseTx.TxHashFull()
+//var genesisMerkleRoot = genesisCoinbaseTx.TxHashFull()
+var genesisMerkleRoot = genesisCoinbaseTx.TxHash()
 
 // genesisBlock defines the genesis block of the block chain which serves as the
 // public transaction ledger for the main network.
