@@ -35,6 +35,7 @@ const (
 	CmdAddr           = "addr"
 	CmdGetBlocks      = "getblocks"
 	CmdInv            = "inv"
+	CmdGetMissedTxs   = "getmissedtxs"
 	CmdGetData        = "getdata"
 	CmdNotFound       = "notfound"
 	CmdBlock          = "block"
@@ -92,6 +93,9 @@ func makeEmptyMessage(command string) (Message, error) {
 
 	case CmdInv:
 		msg = &MsgInv{}
+
+	case CmdGetMissedTxs:
+		msg = &MsgGetMissedTxs{}
 
 	case CmdGetData:
 		msg = &MsgGetData{}

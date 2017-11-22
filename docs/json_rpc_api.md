@@ -249,8 +249,8 @@ the method name for further details such as parameter and return information.
 |Description|Returns information about manually added (persistent) peers.|
 |Returns (dns=false)|`["ip:port", ...]`|
 |Returns (dns=true)|`(json array of objects)`<br />`addednode`: (string) the ip address or domain of the added peer<br />`connected`: (boolean) whether or not the peer is currently connected<br />`addresses`: (json array or objects) DNS lookup and connection information about the peer<br />`address`:  (string) the ip address for this DNS entry<br />`connected`: (string) the connection 'direction' (if connected)<br />`[{"addednode": "ip_or_domain","connected": true or false,"addresses": [{address: "ip"}, ...], "connected": "inbound/outbound/false"}, ...]`|
-|Example Return (dns=false)|`["192.168.0.10:16008", "mydomain.org:16008"]`|
-|Example Return (dns=true)|`[{"addednode": "mydomain.org:16008", "connected": true, "addresses": [{"address": "1.2.3.4", "connected": "outbound"}, {"address": "5.6.7.8", "connected": "false"}]}]`|
+|Example Return (dns=false)|`["192.168.0.10:14008", "mydomain.org:14008"]`|
+|Example Return (dns=true)|`[{"addednode": "mydomain.org:14008", "connected": true, "addresses": [{"address": "1.2.3.4", "connected": "outbound"}, {"address": "5.6.7.8", "connected": "false"}]}]`|
 [Return to Overview](#MethodOverview)<br />
 
 ***
@@ -433,7 +433,7 @@ the method name for further details such as parameter and return information.
 |Parameters|None|
 |Description|Returns data about each connected network peer as an array of json objects.|
 |Returns|`(json array)`<br />`addr`: (string) the ip address and port of the peer<br />`services`: (string) the services supported by the peer<br />`lastrecv`: (numeric) time the last message was received in seconds since 1 Jan 1970 GMT<br />`lastsend`: (numeric) time the last message was sent in seconds since 1 Jan 1970 GMT<br />`bytessent`: (numeric) total bytes sent<br />`bytesrecv`:  (numeric) total bytes received<br />`conntime`: (numeric) time the connection was made in seconds since 1 Jan 1970 GMT<br />`pingtime`: (numeric) number of microseconds the last ping took<br />`pingwait`: (numeric) number of microseconds a queued ping has been waiting for a response<br />`version`: (numeric) the protocol version of the peer<br />`subver`: (string) the user agent of the peer<br />`inbound`: (boolean) whether or not the peer is an inbound connection<br />`startingheight`: (numeric) the latest block height the peer knew about when the connection was established<br />`currentheight`: (numeric) the latest block height the peer is known to have relayed since connected<br />`syncnode`: (boolean) whether or not the peer is the sync peer<br />`[{"addr": "host:port", "services": "00000001", "lastrecv": n, "lastsend": n,  "bytessent": n, "bytesrecv": n, "conntime": n, "pingtime": n, "pingwait": n,  "version": n, "subver": "useragent", "inbound": true_or_false, "startingheight": n, "currentheight": n, "syncnode": true_or_false }, ...]`|
-|Example Return|`[{"addr": "178.172.xxx.xxx:16008", "services": "00000001", "lastrecv": 1388183523, "lastsend": 1388185470, "bytessent": 287592965, "bytesrecv": 780340, "conntime": 1388182973, "pingtime": 405551, "pingwait": 183023, "version": 70001, "subver": "/hcashd:0.4.0/", "inbound": false, "startingheight": 276921, "currentheight": 276955, "syncnode": true }, ...]`|
+|Example Return|`[{"addr": "178.172.xxx.xxx:14008", "services": "00000001", "lastrecv": 1388183523, "lastsend": 1388185470, "bytessent": 287592965, "bytesrecv": 780340, "conntime": 1388182973, "pingtime": 405551, "pingwait": 183023, "version": 70001, "subver": "/hcashd:0.4.0/", "inbound": false, "startingheight": 276921, "currentheight": 276955, "syncnode": true }, ...]`|
 [Return to Overview](#MethodOverview)<br />
 
 ***

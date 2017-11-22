@@ -608,7 +608,6 @@ func (b *blockManager) startSync(peers *list.List) {
 		// we may ignore blocks we need that the last sync peer failed
 		// to send.
 		b.requestedBlocks = make(map[chainhash.Hash]struct{})
-
 		locator, err := b.chain.LatestBlockLocator()
 		if err != nil {
 			bmgrLog.Errorf("Failed to get block locator for the "+
@@ -692,7 +691,7 @@ func (b *blockManager) syncMiningStateAfterSync(sp *serverPeer) {
 }
 
 // syncMemPoolAfterSync polls the blockMananger for the current sync
-// state; if the mananger is synced, it executes a call to the peer to
+// state; if the mananger is synced, it executes a call to all peer to
 // sync the mempool to the network.
 func (b *blockManager) syncMempoolAfterSync(sp *serverPeer) {
 	go func() {
@@ -737,6 +736,7 @@ func (b *blockManager) handleNewPeerMsg(peers *list.List, sp *serverPeer) {
 		b.syncMiningStateAfterSync(sp)
 	}
 
+	// Grab the mempool from all connected peer after we're synced.
 	b.syncMempoolAfterSync(sp)
 }
 
@@ -1864,6 +1864,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	}
 	imsg.peer.requestQueue = requestQueue
 	if len(gdmsg.InvList) > 0 {
+
 		imsg.peer.QueueMessage(gdmsg, nil)
 	}
 }
