@@ -129,6 +129,9 @@ type MessageListeners struct {
 	// OnBlock is invoked when a peer receives a block wire message.
 	OnBlock func(p *Peer, msg *wire.MsgBlock, buf []byte)
 
+	// OnLightBlock is invoked when a peer receives a light block wire message.
+	OnLightBlock func(p *Peer, msg *wire.MsgLightBlock, buf []byte)
+
 	// OnInv is invoked when a peer receives an inv wire message.
 	OnInv func(p *Peer, msg *wire.MsgInv)
 
@@ -898,7 +901,7 @@ func (p *Peer) PushAddrMsg(addresses []*wire.NetAddress) ([]*wire.NetAddress, er
 // and stop hash.  It will ignore back-to-back duplicate requests.
 //
 // This function is safe for concurrent access.
-func (p *Peer) PushGetBlocksMsg(locator blockchain.BlockLocator, stopHash *chainhash.Hash) error {
+func (p *Peer) PushGetBlocksMsg(locator blockchain.BlockLocator, stopHash *chainhash.Hash, isLight bool) error {
 	// Extract the begin hash from the block locator, if one was specified,
 	// to use for filtering duplicate getblocks requests.
 	var beginHash *chainhash.Hash
@@ -921,6 +924,8 @@ func (p *Peer) PushGetBlocksMsg(locator blockchain.BlockLocator, stopHash *chain
 
 	// Construct the getblocks request and queue it to be sent.
 	msg := wire.NewMsgGetBlocks(stopHash)
+
+	msg.IsLight = isLight
 	for _, hash := range locator {
 		err := msg.AddBlockLocatorHash(hash)
 		if err != nil {
@@ -1524,6 +1529,11 @@ out:
 		case *wire.MsgBlock:
 			if p.cfg.Listeners.OnBlock != nil {
 				p.cfg.Listeners.OnBlock(p, msg, buf)
+			}
+
+		case *wire.MsgLightBlock:
+			if p.cfg.Listeners.OnLightBlock != nil {
+				p.cfg.Listeners.OnLightBlock(p, msg, buf)
 			}
 
 		case *wire.MsgInv:

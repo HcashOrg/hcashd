@@ -561,6 +561,7 @@ func (sp *serverPeer) OnTx(p *peer.Peer, msg *wire.MsgTx) {
 	// Convert the raw MsgTx to a hcashutil.Tx which provides some convenience
 	// methods and things such as hash caching.
 	tx := hcashutil.NewTx(msg)
+
 	iv := wire.NewInvVect(wire.InvTypeTx, tx.Hash())
 	p.AddKnownInventory(iv)
 
@@ -573,6 +574,28 @@ func (sp *serverPeer) OnTx(p *peer.Peer, msg *wire.MsgTx) {
 	<-sp.txProcessed
 }
 
+func (sp *serverPeer) OnLightBlock(p *peer.Peer, msg *wire.MsgLightBlock, buf []byte){
+	// Convert the raw MsgBlock to a hcashutil.Block which provides some
+	// convenience methods and things such as hash caching.
+	//block := hcashutil.NewBlockFromBlockAndBytes(msg, buf)
+	
+	// Add the block to the known inventory for the peer.
+	blockHash := msg.Header.BlockHash()
+	iv := wire.NewInvVect(wire.InvTypeLightBlock, &blockHash)
+	p.AddKnownInventory(iv)
+	
+	// Queue the block up to be handled by the block manager and
+	// intentionally block further receives until the network block is fully
+	// processed and known good or bad.  This helps prevent a malicious peer
+	// from queuing up a bunch of bad blocks before disconnecting (or being
+	// disconnected) and wasting memory.  Additionally, this behavior is
+	// depended on by at least the block acceptance test tool as the
+	// reference implementation processes blocks in the same thread and
+	// therefore blocks further messages until the network block has been
+	// fully processed.
+	sp.server.blockManager.QueueLightBlock(msg, sp)
+	<-sp.blockProcessed
+}
 // OnBlock is invoked when a peer receives a block wire message.  It blocks
 // until the network block has been fully processed.
 func (sp *serverPeer) OnBlock(p *peer.Peer, msg *wire.MsgBlock, buf []byte) {
@@ -680,6 +703,9 @@ func (sp *serverPeer) OnGetData(p *peer.Peer, msg *wire.MsgGetData) {
 			err = sp.server.pushBlockMsg(sp, &iv.Hash, c, waitChan)
 		case wire.InvTypeFilteredBlock:
 			err = sp.server.pushMerkleBlockMsg(sp, &iv.Hash, c, waitChan)
+		case wire.InvTypeLightBlock:
+			err = sp.server.pushLightBlockMsg(sp, &iv.Hash, c, waitChan)
+
 		default:
 			peerLog.Warnf("Unknown type in inventory request %d",
 				iv.Type)
@@ -835,9 +861,14 @@ func (sp *serverPeer) OnGetBlocks(p *peer.Peer, msg *wire.MsgGetBlocks) {
 	}
 
 	// Generate inventory message.
+	invType := wire.InvTypeBlock
+	if msg.IsLight {
+		invType = wire.InvTypeLightBlock
+	}
+
 	invMsg := wire.NewMsgInv()
 	for i := range hashList {
-		iv := wire.NewInvVect(wire.InvTypeBlock, &hashList[i])
+		iv := wire.NewInvVect(invType, &hashList[i])
 		invMsg.AddInvVect(iv)
 	}
 
@@ -855,6 +886,7 @@ func (sp *serverPeer) OnGetBlocks(p *peer.Peer, msg *wire.MsgGetBlocks) {
 		p.QueueMessage(invMsg, nil)
 	}
 }
+
 
 // locateBlocks returns the hashes of the blocks after the first known block in
 // locators, until hashStop is reached, or up to a max of
@@ -1301,6 +1333,53 @@ func (s *server) pushTxMsg(sp *serverPeer, hash *chainhash.Hash, doneChan chan<-
 
 	sp.QueueMessage(tx.MsgTx(), doneChan)
 
+	return nil
+}
+
+// pushLightBlockMsg sends a block message for the provided block hash to the
+// connected peer.  An error is returned if the block hash is not known.
+func (s *server) pushLightBlockMsg(sp *serverPeer, hash *chainhash.Hash, doneChan chan<- struct{}, waitChan <-chan struct{}) error {
+	block, err := sp.server.blockManager.chain.FetchBlockFromHash(hash)
+	if err != nil {
+		peerLog.Tracef("Unable to fetch requested block hash %v: %v",
+			hash, err)
+
+		if doneChan != nil {
+			doneChan <- struct{}{}
+		}
+		return err
+	}
+
+	// Once we have fetched data wait for any previous operation to finish.
+	if waitChan != nil {
+		<-waitChan
+	}
+
+	// We only send the channel for this message if we aren't sending
+	// an inv straight after.
+	var dc chan<- struct{}
+	continueHash := sp.continueHash
+	sendInv := continueHash != nil && continueHash.IsEqual(hash)
+	if !sendInv {
+		dc = doneChan
+	}
+
+	lightBlock := wire.NewMsgLightBlockFromMsgBlock(block.MsgBlock())
+	sp.QueueMessage(lightBlock, dc)
+
+	// When the peer requests the final block that was advertised in
+	// response to a getblocks message which requested more blocks than
+	// would fit into a single message, send it a new inventory message
+	// to trigger it to issue another getblocks message for the next
+	// batch of inventory.
+	if sendInv {
+		best := sp.server.blockManager.chain.BestSnapshot()
+		invMsg := wire.NewMsgInvSizeHint(1)
+		iv := wire.NewInvVect(wire.InvTypeBlock, best.Hash)
+		invMsg.AddInvVect(iv)
+		sp.QueueMessage(invMsg, doneChan)
+		sp.continueHash = nil
+	}
 	return nil
 }
 
@@ -1803,6 +1882,7 @@ func newPeerConfig(sp *serverPeer) *peer.Config {
 			OnMiningState:    sp.OnMiningState,
 			OnTx:             sp.OnTx,
 			OnBlock:          sp.OnBlock,
+			OnLightBlock:	  sp.OnLightBlock,
 			OnInv:            sp.OnInv,
 			OnHeaders:        sp.OnHeaders,
 			OnGetData:        sp.OnGetData,

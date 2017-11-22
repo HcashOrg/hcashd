@@ -25,6 +25,7 @@ import (
 	"github.com/HcashOrg/hcashd/mempool"
 	"github.com/HcashOrg/hcashd/wire"
 	"github.com/HcashOrg/hcashutil"
+	"math"
 )
 
 var BlockManager *blockManager
@@ -87,6 +88,13 @@ type newPeerMsg struct {
 // so the block handler has access to that information.
 type blockMsg struct {
 	block *hcashutil.Block
+	peer  *serverPeer
+}
+
+// lightBlockMsg packages a hypercash light block message and the peer it came from together
+// so the block handler has access to that information.
+type lightBlockMsg struct {
+	lightBlock *wire.MsgLightBlock
 	peer  *serverPeer
 }
 
@@ -271,6 +279,12 @@ type processBlockMsg struct {
 	block *hcashutil.Block
 	flags blockchain.BehaviorFlags
 	reply chan processBlockResponse
+}
+
+
+type IncompleteBlock struct {
+	block *wire.MsgBlock
+	missedTx []*chainhash.Hash
 }
 
 // processTransactionResponse is a response sent to the reply channel of a
@@ -480,6 +494,9 @@ type blockManager struct {
 	cachedCurrentTemplate *BlockTemplate
 	cachedParentTemplate  *BlockTemplate
 	AggressiveMining      bool
+
+
+	incompleteBlocks []*IncompleteBlock
 }
 
 // resetHeaderState sets the headers-first mode state to values appropriate for
@@ -651,7 +668,7 @@ func (b *blockManager) startSync(peers *list.List) {
 				"%d from peer %s", best.Height+1,
 				b.nextCheckpoint.Height, bestPeer.Addr())
 		} else {
-			err := bestPeer.PushGetBlocksMsg(locator, &zeroHash)
+			err := bestPeer.PushGetBlocksMsg(locator, &zeroHash, false)
 			if err != nil {
 				bmgrLog.Errorf("Failed to push getblocksmsg for the "+
 					"latest blocks: %v", err)
@@ -803,48 +820,93 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 		return
 	}
 
-	// Process the transaction to include validation, insertion in the
-	// memory pool, orphan handling, etc.
-	allowOrphans := cfg.MaxOrphanTxs > 0
-	acceptedTxs, err := b.server.txMemPool.ProcessTransaction(b.chain, tmsg.tx,
-		allowOrphans, true, true)
+	if tmsg.tx.MsgTx().SerType == wire.TxSerializeMissed {
 
-	// Remove transaction from request maps. Either the mempool/chain
-	// already knows about it and as such we shouldn't have any more
-	// instances of trying to fetch it, or we failed to insert and thus
-	// we'll retry next time we get an inv.
-	delete(tmsg.peer.requestedTxns, *txHash)
-	delete(b.requestedTxns, *txHash)
+		txmsg := tmsg.tx
+		txHash := txmsg.MsgTx().TxHash()
 
-	if err != nil {
-		// Do not request this transaction again until a new block
-		// has been processed.
-		b.rejectedTxns[*txHash] = struct{}{}
-		b.limitMap(b.rejectedTxns, maxRejectedTxns)
+		out:
+		for _,incompleteBlock := range b.incompleteBlocks{
 
-		// When the error is a rule error, it means the transaction was
-		// simply rejected as opposed to something actually going wrong,
-		// so log it as such.  Otherwise, something really did go wrong,
-		// so log it as an actual error.
-		if _, ok := err.(mempool.RuleError); ok {
-			bmgrLog.Debugf("Rejected transaction %v from %s: %v",
-				txHash, tmsg.peer, err)
-		} else {
-			bmgrLog.Errorf("Failed to process transaction %v: %v",
-				txHash, err)
+			for i,txid := range incompleteBlock.missedTx {
+				if txid.IsEqual(&txHash) {
+
+					//check tx
+					b.maybeAcceptMissedTransaction(txmsg)
+
+					txtype := stake.DetermineTxType(txmsg.MsgTx())
+					if txtype == stake.TxTypeRegular{
+						incompleteBlock.block.AddTransaction(txmsg.MsgTx())
+					}else {
+						incompleteBlock.block.AddSTransaction(txmsg.MsgTx())
+					}
+					incompleteBlock.missedTx = append(incompleteBlock.missedTx[:i],incompleteBlock.missedTx[i+1:]...)
+
+					if len(incompleteBlock.missedTx) == 0 {
+						b.QueueBlock(hcashutil.NewBlock(incompleteBlock.block),tmsg.peer)
+					}
+
+					break out
+				}
+			}
 		}
 
-		// Convert the error into an appropriate reject message and
-		// send it.
-		code, reason := mempool.ErrToRejectErr(err)
-		tmsg.peer.PushRejectMsg(wire.CmdTx, code, reason, txHash,
-			false)
-		return
+	}else {
+		// Process the transaction to include validation, insertion in the
+		// memory pool, orphan handling, etc.
+		allowOrphans := cfg.MaxOrphanTxs > 0
+
+		acceptedTxs, err := b.server.txMemPool.ProcessTransaction(b.chain, tmsg.tx,
+			allowOrphans, true, true)
+
+		// Remove transaction from request maps. Either the mempool/chain
+		// already knows about it and as such we shouldn't have any more
+		// instances of trying to fetch it, or we failed to insert and thus
+		// we'll retry next time we get an inv.
+		delete(tmsg.peer.requestedTxns, *txHash)
+		delete(b.requestedTxns, *txHash)
+
+		if err != nil {
+			// Do not request this transaction again until a new block
+			// has been processed.
+			b.rejectedTxns[*txHash] = struct{}{}
+			b.limitMap(b.rejectedTxns, maxRejectedTxns)
+
+			// When the error is a rule error, it means the transaction was
+			// simply rejected as opposed to something actually going wrong,
+			// so log it as such.  Otherwise, something really did go wrong,
+			// so log it as an actual error.
+			if _, ok := err.(mempool.RuleError); ok {
+				bmgrLog.Debugf("Rejected transaction %v from %s: %v",
+					txHash, tmsg.peer, err)
+			} else {
+				bmgrLog.Errorf("Failed to process transaction %v: %v",
+					txHash, err)
+			}
+
+			// Convert the error into an appropriate reject message and
+			// send it.
+			code, reason := mempool.ErrToRejectErr(err)
+			tmsg.peer.PushRejectMsg(wire.CmdTx, code, reason, txHash,
+				false)
+			return
+		}
+
+		b.server.AnnounceNewTransactions(acceptedTxs)
 	}
 
-	b.server.AnnounceNewTransactions(acceptedTxs)
 }
 
+func (b *blockManager) needMissedTx(txid *chainhash.Hash) bool {
+	for _, incompleteBlock := range b.incompleteBlocks {
+		for _, missedtxId := range incompleteBlock.missedTx {
+			if missedtxId.IsEqual(txid) {
+				return true
+			}
+		}
+	}
+	return false
+}
 // current returns true if we believe we are synced with our peers, false if we
 // still have blocks to check
 func (b *blockManager) current() bool {
@@ -879,6 +941,60 @@ func (b *blockManager) current() bool {
 	}
 
 	return true
+}
+
+
+// maybeAcceptMissedTransaction
+func (b *blockManager) maybeAcceptMissedTransaction(tx *hcashutil.Tx) error {
+
+	msgTx := tx.MsgTx()
+	txHash := tx.Hash()
+
+	// Perform preliminary sanity checks on the transaction.  This makes
+	// use of chain which contains the invariant rules for what
+	// transactions are allowed into blocks.
+	err := blockchain.CheckTransactionSanity(msgTx, b.server.chainParams)
+	if err != nil {
+		if cerr, ok := err.(blockchain.RuleError); ok {
+			return  chainRuleError(cerr)
+		}
+		return  err
+	}
+
+	// A standalone transaction must not be a coinbase transaction.
+	if blockchain.IsCoinBase(tx) {
+		str := fmt.Sprintf("transaction %v is an individual coinbase",
+			txHash)
+		return  txRuleError(wire.RejectInvalid, str)
+	}
+
+	// Don't accept transactions with a lock time after the maximum int32
+	// value for now.  This is an artifact of older bitcoind clients which
+	// treated this field as an int32 and would treat anything larger
+	// incorrectly (as negative).
+	if msgTx.LockTime > math.MaxInt32 {
+		str := fmt.Sprintf("transaction %v has a lock time after "+
+			"2038 which is not accepted yet", txHash)
+		return txRuleError(wire.RejectNonstandard, str)
+	}
+
+	return nil
+}
+
+// txRuleError creates an underlying TxRuleError with the given a set of
+// arguments and returns a RuleError that encapsulates it.
+func txRuleError(c wire.RejectCode, desc string) mempool.RuleError {
+	return mempool.RuleError{
+		Err: mempool.TxRuleError{RejectCode: c, Description: desc},
+	}
+}
+
+// chainRuleError returns a RuleError that encapsulates the given
+// blockchain.RuleError.
+func chainRuleError(chainErr blockchain.RuleError) mempool.RuleError {
+	return mempool.RuleError{
+		Err: chainErr,
+	}
 }
 
 // checkBlockForHiddenVotes checks to see if a newly added block contains
@@ -1071,6 +1187,101 @@ func (b *blockManager) checkBlockForHiddenVotes(block *hcashutil.Block) {
 	return
 }
 
+func (b *blockManager) pushGetMissedTxMsg(missedTxIds []*chainhash.Hash, msgBlock *wire.MsgBlock, peer *serverPeer){
+	if len(missedTxIds) <= 0 {
+		return
+	}
+
+	invMsg := wire.NewMsgGetMissedTxs()
+	
+	bh := msgBlock.Header.BlockHash()
+	invMsg.SetBlockInv(&bh)
+
+	for _, txIds := range missedTxIds {
+		iv := wire.NewInvVect(wire.InvTypeMissedTx, txIds)
+		invMsg.AddTxInvVect(iv)
+	}
+
+	// Send the inventory message if there is anything to send.
+	if len(invMsg.TxInvList) > 0 {
+		//invListLen := len(invMsg.TxInvList)
+		// if autoContinue && invListLen == wire.MaxBlocksPerMsg {
+		// 	// Intentionally use a copy of the final hash so there
+		// 	// is not a reference into the inventory slice which
+		// 	// would prevent the entire slice from being eligible
+		// 	// for GC as soon as it's sent.
+		// 	continueHash := invMsg.InvList[invListLen-1].Hash
+		// 	sp.continueHash = &continueHash
+		// }
+		peer.QueueMessage(invMsg, nil)
+	}else {
+		block := hcashutil.NewBlock(msgBlock)
+		bmsg := &blockMsg{
+			block : block,
+			peer : peer}
+		b.handleBlockMsg(bmsg)
+	}
+}
+
+func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
+	txs := make([]*wire.MsgTx, 0, len(msgLightBlock.lightBlock.TxIds))
+	stxs := make([]*wire.MsgTx, 0, len(msgLightBlock.lightBlock.STxIds))
+	missedTxIds := make([]*chainhash.Hash, 0, len(msgLightBlock.lightBlock.STxIds) + len(msgLightBlock.lightBlock.STxIds))
+	
+	peer := msgLightBlock.peer
+	//check incompleteBlocks
+	for _, incompleteBlock := range b.incompleteBlocks {
+		blkHash := msgLightBlock.lightBlock.Header.BlockHash()
+		incompleteBlkHash := incompleteBlock.block.Header.BlockHash()
+		if blkHash.IsEqual(&incompleteBlkHash){
+			b.pushGetMissedTxMsg(incompleteBlock.missedTx, incompleteBlock.block, peer)
+			return
+		}
+	}
+
+	for _, txId := range msgLightBlock.lightBlock.TxIds {
+		tx, err := b.server.txMemPool.FetchTransaction(txId, true)
+		if err != nil {
+			//...
+			missedTxIds = append(missedTxIds, txId)
+			continue
+		}
+		txs = append(txs, tx.MsgTx())
+	}
+	
+	for _, stxId := range msgLightBlock.lightBlock.STxIds {
+		stx, err := b.server.txMemPool.FetchTransaction(stxId, true)
+		if err != nil {
+			//...
+			missedTxIds = append(missedTxIds, stxId)
+			continue
+		}
+		stxs = append(stxs, stx.MsgTx())
+	}
+
+	msgblock := &wire.MsgBlock{
+		Header:        msgLightBlock.lightBlock.Header,
+		Transactions:  txs,
+		STransactions: stxs,
+	}
+
+	if len(missedTxIds) != 0 {
+		b.pushGetMissedTxMsg(missedTxIds, msgblock, peer)
+
+		incompleteBlock := &IncompleteBlock{
+			block: msgblock,
+			missedTx: missedTxIds}
+		b.incompleteBlocks = append(b.incompleteBlocks, incompleteBlock)
+		return
+	}
+
+	
+	block := hcashutil.NewBlock(msgblock)
+	bmsg := &blockMsg{
+		block : block,
+		peer : peer}
+	b.handleBlockMsg(bmsg)
+}
 // handleBlockMsg handles block messages from all peers.
 func (b *blockManager) handleBlockMsg(bmsg *blockMsg) {
 	// If we didn't ask for this block then the peer is misbehaving.
@@ -1195,7 +1406,7 @@ func (b *blockManager) handleBlockMsg(bmsg *blockMsg) {
 			bmgrLog.Warnf("Failed to get block locator for the "+
 				"latest block: %v", err)
 		} else {
-			err = bmsg.peer.PushGetBlocksMsg(locator, orphanRoot)
+			err = bmsg.peer.PushGetBlocksMsg(locator, orphanRoot, true)
 			if err != nil {
 				bmgrLog.Warnf("Failed to push getblocksmsg for the "+
 					"latest block: %v", err)
@@ -1461,7 +1672,7 @@ func (b *blockManager) handleBlockMsg(bmsg *blockMsg) {
 	b.headerList.Init()
 	bmgrLog.Infof("Reached the final checkpoint -- switching to normal mode")
 	locator := blockchain.BlockLocator([]*chainhash.Hash{blockHash})
-	err = bmsg.peer.PushGetBlocksMsg(locator, &zeroHash)
+	err = bmsg.peer.PushGetBlocksMsg(locator, &zeroHash, true)
 	if err != nil {
 		bmgrLog.Warnf("Failed to send getblocks message to peer %s: %v",
 			bmsg.peer.Addr(), err)
@@ -1665,7 +1876,6 @@ func (b *blockManager) haveInventory(invVect *wire.InvVect) (bool, error) {
 		//return b.chain.MainChainHasBlock(&invVect.Hash)
 		return b.chain.HaveBlockV2(&invVect.Hash)
 
-
 	case wire.InvTypeTx:
 		// Ask the transaction memory pool if the transaction is known
 		// to it in any form (main pool or orphan).
@@ -1680,6 +1890,11 @@ func (b *blockManager) haveInventory(invVect *wire.InvVect) (bool, error) {
 			return false, err
 		}
 		return entry != nil && !entry.IsFullySpent(), nil
+
+	case wire.InvTypeLightBlock:
+
+		return b.chain.HaveBlockV2(&invVect.Hash)
+
 	}
 
 	// The requested inventory is is an unsupported type, so just claim
@@ -1695,7 +1910,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	lastBlock := -1
 	invVects := imsg.inv.InvList
 	for i := len(invVects) - 1; i >= 0; i-- {
-		if invVects[i].Type == wire.InvTypeBlock {
+		if invVects[i].Type == wire.InvTypeBlock || invVects[i].Type == wire.InvTypeLightBlock{
 			lastBlock = i
 			break
 		}
@@ -1727,7 +1942,6 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	if lastBlock != -1 && b.current() {
 		blkHeight, err := b.chain.BlockHeightByHash(&invVects[lastBlock].Hash)
 		if err == nil {
-
 			imsg.peer.UpdateLastBlockHeight(blkHeight)
 		}
 	}
@@ -1737,8 +1951,11 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	// Finally, attempt to detect potential stalls due to long side chains
 	// we already have and request more blocks to prevent them.
 	for i, iv := range invVects {
+
+		isLight := (iv.Type == wire.InvTypeLightBlock)
+		
 		// Ignore unsupported inventory types.
-		if iv.Type != wire.InvTypeBlock && iv.Type != wire.InvTypeTx {
+		if iv.Type != wire.InvTypeBlock && iv.Type != wire.InvTypeTx && iv.Type != wire.InvTypeMissedTx && iv.Type != wire.InvTypeLightBlock {
 			continue
 		}
 
@@ -1773,7 +1990,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 			continue
 		}
 
-		if iv.Type == wire.InvTypeBlock {
+		if iv.Type == wire.InvTypeBlock || iv.Type == wire.InvTypeLightBlock {
 			// The block is an orphan block that we already have.
 			// When the existing orphan was processed, it requested
 			// the missing parent blocks.  When this scenario
@@ -1796,7 +2013,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 						"%v", err)
 					continue
 				}
-				err = imsg.peer.PushGetBlocksMsg(locator, orphanRoot)
+				err = imsg.peer.PushGetBlocksMsg(locator, orphanRoot, isLight)
 				if err != nil {
 					bmgrLog.Errorf("PEER: Failed to push getblocksmsg "+
 						"for orphan chain: %v", err)
@@ -1813,7 +2030,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 				// final one the remote peer knows about (zero
 				// stop hash).
 				locator := b.chain.BlockLocatorFromHash(&iv.Hash)
-				err = imsg.peer.PushGetBlocksMsg(locator, &zeroHash)
+				err = imsg.peer.PushGetBlocksMsg(locator, &zeroHash, isLight)
 				if err != nil {
 					bmgrLog.Errorf("PEER: Failed to push getblocksmsg: "+
 						"%v", err)
@@ -1853,6 +2070,18 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 				b.requestedEverTxns[iv.Hash] = 0
 				b.limitMap(b.requestedTxns, maxRequestedTxns)
 				imsg.peer.requestedTxns[iv.Hash] = struct{}{}
+				gdmsg.AddInvVect(iv)
+				numRequested++
+			}
+
+		case wire.InvTypeLightBlock:
+			// Request the block if there is not already a pending
+			// request.
+			if _, exists := b.requestedBlocks[iv.Hash]; !exists {
+				b.requestedBlocks[iv.Hash] = struct{}{}
+				b.requestedEverBlocks[iv.Hash] = 0
+				b.limitMap(b.requestedBlocks, maxRequestedBlocks)
+				imsg.peer.requestedBlocks[iv.Hash] = struct{}{}
 				gdmsg.AddInvVect(iv)
 				numRequested++
 			}
@@ -1910,7 +2139,11 @@ out:
 			case *blockMsg:
 				b.handleBlockMsg(msg)
 				msg.peer.blockProcessed <- struct{}{}
-
+				
+			case *lightBlockMsg:
+				b.handleLightBlockMsg(msg)
+				msg.peer.blockProcessed <- struct{}{}
+				
 			case *invMsg:
 				b.handleInvMsg(msg)
 
@@ -2358,7 +2591,8 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 		}
 
 		// Generate the inventory vector and relay it.
-		iv := wire.NewInvVect(wire.InvTypeBlock, block.Hash())
+		//iv := wire.NewInvVect(wire.InvTypeBlock, block.Hash())
+		iv := wire.NewInvVect(wire.InvTypeLightBlock, block.Hash())
 		b.server.RelayInventory(iv, block.MsgBlock().Header)
 
 	// A block has been connected to the main block chain.
@@ -2619,6 +2853,17 @@ func (b *blockManager) QueueBlock(block *hcashutil.Block, sp *serverPeer) {
 	}
 
 	b.msgChan <- &blockMsg{block: block, peer: sp}
+}
+
+// QueueBlock adds the passed block message and peer to the block handling queue.
+func (b *blockManager) QueueLightBlock(block *wire.MsgLightBlock, sp *serverPeer) {
+	// Don't accept more blocks if we're shutting down.
+	if atomic.LoadInt32(&b.shutdown) != 0 {
+		sp.blockProcessed <- struct{}{}
+		return
+	}
+
+	b.msgChan <- &lightBlockMsg{lightBlock: block, peer: sp}
 }
 
 // QueueInv adds the passed inv message and peer to the block handling queue.

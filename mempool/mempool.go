@@ -824,8 +824,6 @@ func (mp *TxPool) maybeAcceptTransaction(chain *blockchain.BlockChain, tx *hcash
 
 	nextBlockKeyHeight := mp.cfg.BestRealKeyHeight()
 
-
-
 	// Determine what type of transaction we're dealing with (regular or stake).
 	// Then, be sure to set the tx tree correctly as it's possible a use submitted
 	// it to the network with TxTreeUnknown.
