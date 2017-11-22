@@ -25,6 +25,7 @@ import (
 	"github.com/HcashOrg/hcashd/mempool"
 	"github.com/HcashOrg/hcashd/wire"
 	"github.com/HcashOrg/hcashutil"
+	"math"
 )
 
 var BlockManager *blockManager
@@ -819,46 +820,81 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 		return
 	}
 
-	// Process the transaction to include validation, insertion in the
-	// memory pool, orphan handling, etc.
-	allowOrphans := cfg.MaxOrphanTxs > 0
-	acceptedTxs, err := b.server.txMemPool.ProcessTransaction(b.chain, tmsg.tx,
-		allowOrphans, true, true)
+	if tmsg.tx.MsgTx().SerType == wire.TxSerializeMissed {
 
-	// Remove transaction from request maps. Either the mempool/chain
-	// already knows about it and as such we shouldn't have any more
-	// instances of trying to fetch it, or we failed to insert and thus
-	// we'll retry next time we get an inv.
-	delete(tmsg.peer.requestedTxns, *txHash)
-	delete(b.requestedTxns, *txHash)
+		txmsg := tmsg.tx
+		txHash := txmsg.MsgTx().TxHash()
 
-	if err != nil {
-		// Do not request this transaction again until a new block
-		// has been processed.
-		b.rejectedTxns[*txHash] = struct{}{}
-		b.limitMap(b.rejectedTxns, maxRejectedTxns)
+		out:
+		for _,incompleteBlock := range b.incompleteBlocks{
 
-		// When the error is a rule error, it means the transaction was
-		// simply rejected as opposed to something actually going wrong,
-		// so log it as such.  Otherwise, something really did go wrong,
-		// so log it as an actual error.
-		if _, ok := err.(mempool.RuleError); ok {
-			bmgrLog.Debugf("Rejected transaction %v from %s: %v",
-				txHash, tmsg.peer, err)
-		} else {
-			bmgrLog.Errorf("Failed to process transaction %v: %v",
-				txHash, err)
+			for i,txid := range incompleteBlock.missedTx {
+				if txid.IsEqual(&txHash) {
+
+					//check tx
+					b.maybeAcceptMissedTransaction(txmsg)
+
+					txtype := stake.DetermineTxType(txmsg.MsgTx())
+					if txtype == stake.TxTypeRegular{
+						incompleteBlock.block.AddTransaction(txmsg.MsgTx())
+					}else {
+						incompleteBlock.block.AddSTransaction(txmsg.MsgTx())
+					}
+					incompleteBlock.missedTx = append(incompleteBlock.missedTx[:i],incompleteBlock.missedTx[i+1:]...)
+
+					if len(incompleteBlock.missedTx) == 0 {
+						b.QueueBlock(hcashutil.NewBlock(incompleteBlock.block),tmsg.peer)
+					}
+
+					break out
+				}
+			}
 		}
 
-		// Convert the error into an appropriate reject message and
-		// send it.
-		code, reason := mempool.ErrToRejectErr(err)
-		tmsg.peer.PushRejectMsg(wire.CmdTx, code, reason, txHash,
-			false)
-		return
+	}else {
+		// Process the transaction to include validation, insertion in the
+		// memory pool, orphan handling, etc.
+		allowOrphans := cfg.MaxOrphanTxs > 0
+
+		acceptedTxs, err := b.server.txMemPool.ProcessTransaction(b.chain, tmsg.tx,
+			allowOrphans, true, true)
+
+		// Remove transaction from request maps. Either the mempool/chain
+		// already knows about it and as such we shouldn't have any more
+		// instances of trying to fetch it, or we failed to insert and thus
+		// we'll retry next time we get an inv.
+		delete(tmsg.peer.requestedTxns, *txHash)
+		delete(b.requestedTxns, *txHash)
+
+		if err != nil {
+			// Do not request this transaction again until a new block
+			// has been processed.
+			b.rejectedTxns[*txHash] = struct{}{}
+			b.limitMap(b.rejectedTxns, maxRejectedTxns)
+
+			// When the error is a rule error, it means the transaction was
+			// simply rejected as opposed to something actually going wrong,
+			// so log it as such.  Otherwise, something really did go wrong,
+			// so log it as an actual error.
+			if _, ok := err.(mempool.RuleError); ok {
+				bmgrLog.Debugf("Rejected transaction %v from %s: %v",
+					txHash, tmsg.peer, err)
+			} else {
+				bmgrLog.Errorf("Failed to process transaction %v: %v",
+					txHash, err)
+			}
+
+			// Convert the error into an appropriate reject message and
+			// send it.
+			code, reason := mempool.ErrToRejectErr(err)
+			tmsg.peer.PushRejectMsg(wire.CmdTx, code, reason, txHash,
+				false)
+			return
+		}
+
+		b.server.AnnounceNewTransactions(acceptedTxs)
 	}
 
-	b.server.AnnounceNewTransactions(acceptedTxs)
 }
 
 func (b *blockManager) needMissedTx(txid *chainhash.Hash) bool {
@@ -905,6 +941,60 @@ func (b *blockManager) current() bool {
 	}
 
 	return true
+}
+
+
+// maybeAcceptMissedTransaction
+func (b *blockManager) maybeAcceptMissedTransaction(tx *hcashutil.Tx) error {
+
+	msgTx := tx.MsgTx()
+	txHash := tx.Hash()
+
+	// Perform preliminary sanity checks on the transaction.  This makes
+	// use of chain which contains the invariant rules for what
+	// transactions are allowed into blocks.
+	err := blockchain.CheckTransactionSanity(msgTx, b.server.chainParams)
+	if err != nil {
+		if cerr, ok := err.(blockchain.RuleError); ok {
+			return  chainRuleError(cerr)
+		}
+		return  err
+	}
+
+	// A standalone transaction must not be a coinbase transaction.
+	if blockchain.IsCoinBase(tx) {
+		str := fmt.Sprintf("transaction %v is an individual coinbase",
+			txHash)
+		return  txRuleError(wire.RejectInvalid, str)
+	}
+
+	// Don't accept transactions with a lock time after the maximum int32
+	// value for now.  This is an artifact of older bitcoind clients which
+	// treated this field as an int32 and would treat anything larger
+	// incorrectly (as negative).
+	if msgTx.LockTime > math.MaxInt32 {
+		str := fmt.Sprintf("transaction %v has a lock time after "+
+			"2038 which is not accepted yet", txHash)
+		return txRuleError(wire.RejectNonstandard, str)
+	}
+
+	return nil
+}
+
+// txRuleError creates an underlying TxRuleError with the given a set of
+// arguments and returns a RuleError that encapsulates it.
+func txRuleError(c wire.RejectCode, desc string) mempool.RuleError {
+	return mempool.RuleError{
+		Err: mempool.TxRuleError{RejectCode: c, Description: desc},
+	}
+}
+
+// chainRuleError returns a RuleError that encapsulates the given
+// blockchain.RuleError.
+func chainRuleError(chainErr blockchain.RuleError) mempool.RuleError {
+	return mempool.RuleError{
+		Err: chainErr,
+	}
 }
 
 // checkBlockForHiddenVotes checks to see if a newly added block contains
@@ -1852,7 +1942,6 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	if lastBlock != -1 && b.current() {
 		blkHeight, err := b.chain.BlockHeightByHash(&invVects[lastBlock].Hash)
 		if err == nil {
-
 			imsg.peer.UpdateLastBlockHeight(blkHeight)
 		}
 	}

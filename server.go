@@ -561,6 +561,7 @@ func (sp *serverPeer) OnTx(p *peer.Peer, msg *wire.MsgTx) {
 	// Convert the raw MsgTx to a hcashutil.Tx which provides some convenience
 	// methods and things such as hash caching.
 	tx := hcashutil.NewTx(msg)
+
 	iv := wire.NewInvVect(wire.InvTypeTx, tx.Hash())
 	p.AddKnownInventory(iv)
 
@@ -702,7 +703,6 @@ func (sp *serverPeer) OnGetData(p *peer.Peer, msg *wire.MsgGetData) {
 			err = sp.server.pushBlockMsg(sp, &iv.Hash, c, waitChan)
 		case wire.InvTypeFilteredBlock:
 			err = sp.server.pushMerkleBlockMsg(sp, &iv.Hash, c, waitChan)
-
 		case wire.InvTypeLightBlock:
 			err = sp.server.pushLightBlockMsg(sp, &iv.Hash, c, waitChan)
 
