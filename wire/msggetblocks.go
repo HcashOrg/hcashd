@@ -35,6 +35,7 @@ type MsgGetBlocks struct {
 	ProtocolVersion    uint32
 	BlockLocatorHashes []*chainhash.Hash
 	HashStop           chainhash.Hash
+	IsLight			   bool
 }
 
 // AddBlockLocatorHash adds a new block locator hash to the message.
@@ -81,7 +82,12 @@ func (msg *MsgGetBlocks) BtcDecode(r io.Reader, pver uint32) error {
 		msg.AddBlockLocatorHash(hash)
 	}
 
-	return readElement(r, &msg.HashStop)
+	err = readElement(r, &msg.HashStop)
+	if err != nil {
+		return err
+	}
+
+	return readElement(r, &msg.IsLight)
 }
 
 // BtcEncode encodes the receiver to w using the hypercash protocol encoding.
@@ -111,7 +117,12 @@ func (msg *MsgGetBlocks) BtcEncode(w io.Writer, pver uint32) error {
 		}
 	}
 
-	return writeElement(w, &msg.HashStop)
+	err = writeElement(w, &msg.HashStop)
+	if err != nil {
+		return err
+	}
+
+	return writeElement(w, msg.IsLight)
 }
 
 // Command returns the protocol command string for the message.  This is part
@@ -125,7 +136,7 @@ func (msg *MsgGetBlocks) Command() string {
 func (msg *MsgGetBlocks) MaxPayloadLength(pver uint32) uint32 {
 	// Protocol version 4 bytes + num hashes (varInt) + max block locator
 	// hashes + hash stop.
-	return 4 + MaxVarIntPayload + (MaxBlockLocatorsPerMsg * chainhash.HashSize) + chainhash.HashSize
+	return 4 + MaxVarIntPayload + (MaxBlockLocatorsPerMsg * chainhash.HashSize) + chainhash.HashSize + 1
 }
 
 // NewMsgGetBlocks returns a new hypercash getblocks message that conforms to the
@@ -136,5 +147,6 @@ func NewMsgGetBlocks(hashStop *chainhash.Hash) *MsgGetBlocks {
 		ProtocolVersion:    ProtocolVersion,
 		BlockLocatorHashes: make([]*chainhash.Hash, 0, MaxBlockLocatorsPerMsg),
 		HashStop:           *hashStop,
+		IsLight:			false,
 	}
 }
