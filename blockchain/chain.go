@@ -2444,7 +2444,10 @@ func (b *BlockChain) connectBestChain(node *blockNode, block *hcashutil.Block, f
 		view.SetStakeViewpoint(ViewpointPrevRegular)
 		var stxos []spentTxOut
 		if !fastAdd {
-			err := b.checkConnectBlock(node, block, view, &stxos, false, nil)
+			keyHeightCache := make(map[int64]int64)
+			keyHeightCache[block.Height()] = int64(block.MsgBlock().Header.KeyHeight)
+
+			err := b.checkConnectBlock(node, block, view, &stxos, false, keyHeightCache)
 			if err != nil {
 				return false, err
 			}

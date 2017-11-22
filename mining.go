@@ -1526,7 +1526,7 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	minrLog.Debugf("Considering %d transactions for inclusion to new block",
 		len(sourceTxns))
 	treeValid := mp.IsTxTreeValid(prevHash)
-	var blockUtxos *blockchain.UtxoViewpoint
+	blockUtxos := blockchain.NewUtxoViewpoint()
 	var err error
 	if len(sourceTxns) > 0 {
 		blockUtxos, err = blockManager.chain.FetchCurrentUtxoView(treeValid)
@@ -1878,8 +1878,12 @@ mempoolLoop:
 		// preconditions before allowing it to be added to the block.
 		// The fraud proof is not checked because it will be filled in
 		// by the miner.
+		keyHeightCache := make(map[int64]int64)
+		keyHeightCache[nextBlockHeight] = nextBlockKeyHeight
+
+
 		_, _, _, err = blockchain.CheckTransactionInputs(blockManager.chain, subsidyCache, tx,
-			nextBlockKeyHeight, blockUtxos, false, server.chainParams, nil)
+			nextBlockKeyHeight, blockUtxos, false, server.chainParams, keyHeightCache)
 		if err != nil {
 			minrLog.Tracef("Skipping tx %s due to error in "+
 				"CheckTransactionInputs: %v", tx.Hash(), err)

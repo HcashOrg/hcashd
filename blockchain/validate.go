@@ -2777,6 +2777,9 @@ func (b *BlockChain) CheckConnectBlock(block *hcashutil.Block, isMining bool) er
 		return ruleError(ErrMissingParent, err.Error())
 	}
 
+	keyHeightCache := make(map[int64]int64)
+	keyHeightCache[block.Height()] = int64(block.MsgBlock().Header.KeyHeight)
+
 	newNode := newBlockNode(block,
 		ticketsSpentInBlock(block),
 		ticketsRevokedInBlock(block),
@@ -2795,7 +2798,7 @@ func (b *BlockChain) CheckConnectBlock(block *hcashutil.Block, isMining bool) er
 		prevNode.hash == b.bestNode.hash) {
 		view := NewUtxoViewpoint()
 		view.SetBestHash(&prevNode.hash)
-		return b.checkConnectBlock(newNode, block, view, nil, isMining, nil)
+		return b.checkConnectBlock(newNode, block, view, nil, isMining, keyHeightCache)
 	}
 
 	// The requested node is either on a side chain or is a node on the
@@ -2849,7 +2852,7 @@ func (b *BlockChain) CheckConnectBlock(block *hcashutil.Block, isMining bool) er
 	// if there are no nodes to attach, we're done.
 	if attachNodes.Len() == 0 {
 		view.SetBestHash(&parentHash)
-		return b.checkConnectBlock(newNode, block, view, nil, isMining, nil)
+		return b.checkConnectBlock(newNode, block, view, nil, isMining, keyHeightCache)
 	}
 
 	// The requested node is on a side chain, so we need to apply the
@@ -2875,5 +2878,5 @@ func (b *BlockChain) CheckConnectBlock(block *hcashutil.Block, isMining bool) er
 	}
 
 	view.SetBestHash(&parentHash)
-	return b.checkConnectBlock(newNode, block, view, &stxos, isMining, nil)
+	return b.checkConnectBlock(newNode, block, view, &stxos, isMining, keyHeightCache)
 }
