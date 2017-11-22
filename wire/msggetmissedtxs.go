@@ -48,8 +48,8 @@ func (msg *MsgGetMissedTxs) AddTxInvVect(iv *InvVect) error {
 
 // AddInvVect adds an inventory vector to the message.
 func (msg *MsgGetMissedTxs) SetBlockInv(blockHash *chainhash.Hash) error {
-	//iv := NewInvVect(InvTypeLightBlock, blockHash)
-	//msg.BlockInv = iv
+	iv := NewInvVect(InvTypeLightBlock, blockHash)
+	msg.BlockInv = iv
 	return nil
 }
 

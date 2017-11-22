@@ -83,7 +83,6 @@ func (b *BlockChain) prevKeyHashExists(prevHash, keyHash *chainhash.Hash) (bool,
 	if !ok {
 		prevBlock, err := b.fetchBlockFromHash(prevHash)
 		if err != nil {
-
 			return false, fmt.Errorf("prev blockNode : %v not exists", *prevHash)
 		}
 		block_prevKeyHash = prevBlock.MsgBlock().Header.PrevKeyBlock
