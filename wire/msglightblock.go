@@ -27,6 +27,21 @@ type MsgLightBlock struct {
 	STxIds []*chainhash.Hash
 }
 
+func (msg *MsgLightBlock) PrintMsgLightBlock(start string) {
+	fmt.Printf("[test]%v\n", start)
+	fmt.Printf("[test]block Hash:%v \n", msg.Header.BlockHash())
+
+	for _, txid := range msg.TxIds{
+		fmt.Printf("[test]txid:%v \n", txid)
+	}
+
+	for _, stxid := range msg.STxIds{
+		fmt.Printf("[test]stxid:%v \n", stxid)
+	}
+
+	fmt.Printf("[test]End Block\n")
+}
+
 // AddTransaction adds a transaction to the message.
 func (msg *MsgLightBlock) AddTransactionID(txid chainhash.Hash) error {
 	msg.TxIds = append(msg.TxIds, &txid)
@@ -109,7 +124,7 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 		}
 		msg.TxIds = append(msg.STxIds, *stxId)
 	}
-
+	msg.PrintMsgLightBlock("BtcDecode LightBlock")
 	return nil
 }
 
@@ -140,6 +155,7 @@ func (msg *MsgLightBlock) FromBytes(b []byte) error {
 // See Serialize for encoding blocks to be stored to disk, such as in a
 // database, as opposed to encoding blocks for the wire.
 func (msg *MsgLightBlock) BtcEncode(w io.Writer, pver uint32) error {
+	msg.PrintMsgLightBlock("BtcEncode LightBlock")
 	err := writeBlockHeader(w, pver, &msg.Header)
 	if err != nil {
 		return err

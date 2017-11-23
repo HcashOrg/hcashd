@@ -34,6 +34,19 @@ type MsgGetMissedTxs struct {
 	TxInvList []*InvVect
 }
 
+func (msg *MsgGetMissedTxs) PrintMsgGetMissedTxs(start string) {
+	fmt.Printf("[test]%v\n", start)
+	fmt.Printf("[test]Block inv Type:%v \n", msg.BlockInv.Type)
+	fmt.Printf("[test]Block inv Hash:%v \n", msg.BlockInv.Hash)
+
+	for _, tx := range msg.TxInvList{
+		fmt.Printf("[test]tx type:%v \n", tx.Type)
+		fmt.Printf("[test]tx id:%v \n", tx.Hash)
+	}
+
+	fmt.Printf("[test]End TxInvVect\n")
+}
+
 // AddInvVect adds an inventory vector to the message.
 func (msg *MsgGetMissedTxs) AddTxInvVect(iv *InvVect) error {
 	if len(msg.TxInvList)+1 > MaxInvPerMsg {
@@ -86,7 +99,7 @@ func (msg *MsgGetMissedTxs) BtcDecode(r io.Reader, pver uint32) error {
 		}
 		msg.AddTxInvVect(iv)
 	}
-
+	msg.PrintMsgGetMissedTxs("BtcDecode MsgGetMissedTxs")
 	return nil
 }
 
@@ -94,6 +107,7 @@ func (msg *MsgGetMissedTxs) BtcDecode(r io.Reader, pver uint32) error {
 // This is part of the Message interface implementation.
 func (msg *MsgGetMissedTxs) BtcEncode(w io.Writer, pver uint32) error {
 	// Limit to max inventory vectors per message.
+	msg.PrintMsgGetMissedTxs("BtcEncode MsgGetMissedTxs")
 	count := len(msg.TxInvList)
 	if count > MaxInvPerMsg {
 		str := fmt.Sprintf("too many invvect in message [%v]", count)

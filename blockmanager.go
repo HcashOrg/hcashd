@@ -1200,10 +1200,13 @@ func (b *blockManager) pushGetMissedTxMsg(missedTxIds []*chainhash.Hash, msgBloc
 	for _, txIds := range missedTxIds {
 		iv := wire.NewInvVect(wire.InvTypeMissedTx, txIds)
 		invMsg.AddTxInvVect(iv)
+		
+		fmt.Printf("[test]missedTxId: %v\n",txIds)
 	}
 
 	// Send the inventory message if there is anything to send.
 	if len(invMsg.TxInvList) > 0 {
+		fmt.Printf("[test]QueueMessage: %v\n",invMsg)
 		//invListLen := len(invMsg.TxInvList)
 		// if autoContinue && invListLen == wire.MaxBlocksPerMsg {
 		// 	// Intentionally use a copy of the final hash so there
@@ -1215,6 +1218,7 @@ func (b *blockManager) pushGetMissedTxMsg(missedTxIds []*chainhash.Hash, msgBloc
 		// }
 		peer.QueueMessage(invMsg, nil)
 	}else {
+		fmt.Printf("[test]Process Normal Block: %v\n",msgBlock.BlockHash())
 		block := hcashutil.NewBlock(msgBlock)
 		bmsg := &blockMsg{
 			block : block,
@@ -1224,6 +1228,8 @@ func (b *blockManager) pushGetMissedTxMsg(missedTxIds []*chainhash.Hash, msgBloc
 }
 
 func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
+	fmt.Printf("[test]handleLightBlockMsg msgLightBlock:%v \n", msgLightBlock.lightBlock.Header.BlockHash())
+
 	txs := make([]*wire.MsgTx, 0, len(msgLightBlock.lightBlock.TxIds))
 	stxs := make([]*wire.MsgTx, 0, len(msgLightBlock.lightBlock.STxIds))
 	missedTxIds := make([]*chainhash.Hash, 0, len(msgLightBlock.lightBlock.STxIds) + len(msgLightBlock.lightBlock.STxIds))
@@ -1233,29 +1239,37 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	for _, incompleteBlock := range b.incompleteBlocks {
 		blkHash := msgLightBlock.lightBlock.Header.BlockHash()
 		incompleteBlkHash := incompleteBlock.block.Header.BlockHash()
+		fmt.Printf("[test]incompleteBlock: %v \n", incompleteBlkHash)
 		if blkHash.IsEqual(&incompleteBlkHash){
+			fmt.Printf("[test]LightBlock in incompleteBlocks \n")
 			b.pushGetMissedTxMsg(incompleteBlock.missedTx, incompleteBlock.block, peer)
 			return
 		}
 	}
 
 	for _, txId := range msgLightBlock.lightBlock.TxIds {
+		fmt.Printf("[test]LightBlock txid:%v \n", txId)		
 		tx, err := b.server.txMemPool.FetchTransaction(txId, true)
 		if err != nil {
 			//...
+			fmt.Printf("[test]Missed Tx: %v\n", txId)
 			missedTxIds = append(missedTxIds, txId)
 			continue
 		}
+		fmt.Printf("[test]Find Tx: %v\n", txId)
 		txs = append(txs, tx.MsgTx())
 	}
 	
 	for _, stxId := range msgLightBlock.lightBlock.STxIds {
+		fmt.Printf("[test]LightBlock stxid:%v \n", stxId)		
 		stx, err := b.server.txMemPool.FetchTransaction(stxId, true)
 		if err != nil {
 			//...
+			fmt.Printf("[test]Missed sTx: %v\n", stxId)
 			missedTxIds = append(missedTxIds, stxId)
 			continue
 		}
+		fmt.Printf("[test]Find sTx: %v\n", stxId)
 		stxs = append(stxs, stx.MsgTx())
 	}
 
@@ -1266,6 +1280,9 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	}
 
 	if len(missedTxIds) != 0 {
+		fmt.Printf("[test]Contains MissedTx\n")
+		fmt.Printf("[test]Push Block: %v\n", msgblock.Header.BlockHash())
+
 		b.pushGetMissedTxMsg(missedTxIds, msgblock, peer)
 
 		incompleteBlock := &IncompleteBlock{
@@ -1280,6 +1297,8 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	bmsg := &blockMsg{
 		block : block,
 		peer : peer}
+	
+	fmt.Printf("[test]Process normal Block\n")
 	b.handleBlockMsg(bmsg)
 }
 // handleBlockMsg handles block messages from all peers.
@@ -1907,9 +1926,13 @@ func (b *blockManager) haveInventory(invVect *wire.InvVect) (bool, error) {
 func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	// Attempt to find the final block in the inventory list.  There may
 	// not be one.
+	fmt.Printf("[test]handleInvMsg len:%v\n", len(invVects))
+	
 	lastBlock := -1
 	invVects := imsg.inv.InvList
 	for i := len(invVects) - 1; i >= 0; i-- {
+		fmt.Printf("[test]handleInvMsg type:%v\n", invVects[i].Type)
+		fmt.Printf("[test]handleInvMsg hash:%v\n", invVects[i].Hash)
 		if invVects[i].Type == wire.InvTypeBlock || invVects[i].Type == wire.InvTypeLightBlock{
 			lastBlock = i
 			break
@@ -2005,6 +2028,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 				// Request blocks starting at the latest known
 				// up to the root of the orphan that just came
 				// in.
+				fmt.Printf("[test]HandleInvMsg IsKnownOrphan:%v\n", iv.Hash)
 				orphanRoot := b.chain.GetOrphanRoot(&iv.Hash)
 				locator, err := b.chain.LatestBlockLocator()
 				if err != nil {
@@ -2029,6 +2053,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 				// Request blocks after this one up to the
 				// final one the remote peer knows about (zero
 				// stop hash).
+				fmt.Printf("[test]HandleInvMsg lastBlock pushGetBlocksMsg:%v\n", lastBlock)
 				locator := b.chain.BlockLocatorFromHash(&iv.Hash)
 				err = imsg.peer.PushGetBlocksMsg(locator, &zeroHash, isLight)
 				if err != nil {
@@ -2059,6 +2084,8 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 				b.limitMap(b.requestedBlocks, maxRequestedBlocks)
 				imsg.peer.requestedBlocks[iv.Hash] = struct{}{}
 				gdmsg.AddInvVect(iv)
+
+				fmt.Printf("[test]Normal Add Get Data:%v\n", iv)
 				numRequested++
 			}
 
@@ -2084,6 +2111,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 				imsg.peer.requestedBlocks[iv.Hash] = struct{}{}
 				gdmsg.AddInvVect(iv)
 				numRequested++
+				fmt.Printf("[test]Light Add Get Data:%v\n", iv)
 			}
 		}
 
@@ -2094,6 +2122,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	imsg.peer.requestQueue = requestQueue
 	if len(gdmsg.InvList) > 0 {
 
+		fmt.Printf("QueueMessage Get Data\n")
 		imsg.peer.QueueMessage(gdmsg, nil)
 	}
 }
@@ -2593,6 +2622,8 @@ func (b *blockManager) handleNotifyMsg(notification *blockchain.Notification) {
 		// Generate the inventory vector and relay it.
 		//iv := wire.NewInvVect(wire.InvTypeBlock, block.Hash())
 		iv := wire.NewInvVect(wire.InvTypeLightBlock, block.Hash())
+
+		fmt.Printf("[test]Relay Block Inv:%v\n", block.Hash())
 		b.server.RelayInventory(iv, block.MsgBlock().Header)
 
 	// A block has been connected to the main block chain.

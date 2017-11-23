@@ -580,6 +580,7 @@ func (sp *serverPeer) OnLightBlock(p *peer.Peer, msg *wire.MsgLightBlock, buf []
 	//block := hcashutil.NewBlockFromBlockAndBytes(msg, buf)
 	
 	// Add the block to the known inventory for the peer.
+	fmt.Printf("[test] OnLightBlock \n")
 	blockHash := msg.Header.BlockHash()
 	iv := wire.NewInvVect(wire.InvTypeLightBlock, &blockHash)
 	p.AddKnownInventory(iv)
@@ -601,6 +602,7 @@ func (sp *serverPeer) OnLightBlock(p *peer.Peer, msg *wire.MsgLightBlock, buf []
 func (sp *serverPeer) OnBlock(p *peer.Peer, msg *wire.MsgBlock, buf []byte) {
 	// Convert the raw MsgBlock to a hcashutil.Block which provides some
 	// convenience methods and things such as hash caching.
+	fmt.Printf("[test] OnBlock \n")
 	block := hcashutil.NewBlockFromBlockAndBytes(msg, buf)
 
 	// Add the block to the known inventory for the peer.
@@ -625,6 +627,7 @@ func (sp *serverPeer) OnBlock(p *peer.Peer, msg *wire.MsgBlock, buf []byte) {
 // accordingly.  We pass the message down to blockmanager which will call
 // QueueMessage with any appropriate responses.
 func (sp *serverPeer) OnInv(p *peer.Peer, msg *wire.MsgInv) {
+	fmt.Printf("[test] OnInv \n")
 	if !cfg.BlocksOnly {
 		if len(msg.InvList) > 0 {
 			sp.server.blockManager.QueueInv(msg, sp)
@@ -698,12 +701,15 @@ func (sp *serverPeer) OnGetData(p *peer.Peer, msg *wire.MsgGetData) {
 		var err error
 		switch iv.Type {
 		case wire.InvTypeTx:
+			fmt.Printf("[test] OnGetData Tx \n")
 			err = sp.server.pushTxMsg(sp, &iv.Hash, c, waitChan)
 		case wire.InvTypeBlock:
+			fmt.Printf("[test] OnGetData Block \n")
 			err = sp.server.pushBlockMsg(sp, &iv.Hash, c, waitChan)
 		case wire.InvTypeFilteredBlock:
 			err = sp.server.pushMerkleBlockMsg(sp, &iv.Hash, c, waitChan)
 		case wire.InvTypeLightBlock:
+			fmt.Printf("[test] OnGetData LightBlock \n")
 			err = sp.server.pushLightBlockMsg(sp, &iv.Hash, c, waitChan)
 
 		default:
@@ -1365,6 +1371,8 @@ func (s *server) pushLightBlockMsg(sp *serverPeer, hash *chainhash.Hash, doneCha
 	}
 
 	lightBlock := wire.NewMsgLightBlockFromMsgBlock(block.MsgBlock())
+	
+	fmt.Printf("[test] Push LightBlock \n")
 	sp.QueueMessage(lightBlock, dc)
 
 	// When the peer requests the final block that was advertised in
