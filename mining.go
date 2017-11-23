@@ -1526,7 +1526,8 @@ func NewBlockTemplate(policy *mining.Policy, server *server,
 	minrLog.Debugf("Considering %d transactions for inclusion to new block",
 		len(sourceTxns))
 	treeValid := mp.IsTxTreeValid(prevHash)
-	var blockUtxos *blockchain.UtxoViewpoint
+	//var blockUtxos *blockchain.UtxoViewpoint
+	blockUtxos := blockchain.NewUtxoViewpoint()
 	var err error
 	if len(sourceTxns) > 0 {
 		blockUtxos, err = blockManager.chain.FetchCurrentUtxoView(treeValid)
@@ -2342,6 +2343,7 @@ mempoolLoop:
 	for i, tx := range blockTxnsRegular {
 		// No need to check any of the transactions in the custom first
 		// block.
+
 		if nextBlockHeight == 1 {
 			break
 		}

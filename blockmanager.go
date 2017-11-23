@@ -1935,7 +1935,7 @@ func (b *blockManager) haveInventory(invVect *wire.InvVect) (bool, error) {
 func (b *blockManager) handleInvMsg(imsg *invMsg) {
 	// Attempt to find the final block in the inventory list.  There may
 	// not be one.
-	fmt.Printf("[test]handleInvMsg len:%v\n", len(invVects))
+	fmt.Printf("[test]handleInvMsg len:%v\n", len(imsg.inv.InvList))
 	
 	lastBlock := -1
 	invVects := imsg.inv.InvList
