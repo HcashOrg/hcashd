@@ -389,7 +389,7 @@ func (sp *serverPeer) OnMemPool(p *peer.Peer, msg *wire.MsgMemPool) {
 	// mempool messages comes from a peer. The score decays each minute to
 	// half of its value.
 	sp.addBanScore(0, 33, "mempool")
-
+	fmt.Println("[test] received a mempool message from peer: ", sp)
 	// Generate inventory message with the available transactions in the
 	// transaction memory pool.  Limit it to the max allowed inventory
 	// per message.  The NewMsgInvSizeHint function automatically limits
@@ -414,6 +414,7 @@ func (sp *serverPeer) OnMemPool(p *peer.Peer, msg *wire.MsgMemPool) {
 
 	// Send the inventory message if there is anything to send.
 	if len(invMsg.InvList) > 0 {
+		fmt.Println("[test] send txids to reply mempool message for peer: " , sp)
 		p.QueueMessage(invMsg, nil)
 	}
 }
@@ -753,7 +754,7 @@ func (sp *serverPeer) OnGetMissedTxs(p *peer.Peer,msg *wire.MsgGetMissedTxs){
 	if len(msg.TxInvList) == 0 {
 		return
 	}
-
+	fmt.Println("[test] received a getmissedTxs message from peer: " , p)
 	numAdded := 0
 	notFound := wire.NewMsgNotFound()
 
@@ -1307,6 +1308,7 @@ func (s *server) pushMissedTxMsg(sp * serverPeer,blockhash *chainhash.Hash, hash
 		<-waitChan
 	}
 	mtx.SerType= wire.TxSerializeMissed
+	fmt.Println("[test] send a missedTx(",mtx.TxHash(),") to peer: ",sp)
 	sp.QueueMessage(mtx, doneChan)
 	return  nil
 }

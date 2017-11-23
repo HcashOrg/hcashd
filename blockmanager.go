@@ -711,6 +711,8 @@ func (b *blockManager) syncMiningStateAfterSync(sp *serverPeer) {
 // state; if the mananger is synced, it executes a call to all peer to
 // sync the mempool to the network.
 func (b *blockManager) syncMempoolAfterSync(sp *serverPeer) {
+
+	fmt.Println("[test] send a mempool message to peer: " , sp)
 	go func() {
 		for {
 			time.Sleep(3 * time.Second)
@@ -822,6 +824,7 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 
 	if tmsg.tx.MsgTx().SerType == wire.TxSerializeMissed {
 
+		fmt.Println("[test] received a missedtx(",txHash,") from remote peer " )
 		txmsg := tmsg.tx
 		txHash := txmsg.MsgTx().TxHash()
 
@@ -836,13 +839,17 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 
 					txtype := stake.DetermineTxType(txmsg.MsgTx())
 					if txtype == stake.TxTypeRegular{
+
+						fmt.Println("[test] insert regular transaction to block(",incompleteBlock.block.BlockHash(),")" )
 						incompleteBlock.block.AddTransaction(txmsg.MsgTx())
 					}else {
+						fmt.Println("[test] insert regular stransaction to block(",incompleteBlock.block.BlockHash(),")" )
 						incompleteBlock.block.AddSTransaction(txmsg.MsgTx())
 					}
 					incompleteBlock.missedTx = append(incompleteBlock.missedTx[:i],incompleteBlock.missedTx[i+1:]...)
-
+					fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
 					if len(incompleteBlock.missedTx) == 0 {
+						fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
 						b.QueueBlock(hcashutil.NewBlock(incompleteBlock.block),tmsg.peer)
 					}
 
@@ -949,6 +956,8 @@ func (b *blockManager) maybeAcceptMissedTransaction(tx *hcashutil.Tx) error {
 
 	msgTx := tx.MsgTx()
 	txHash := tx.Hash()
+
+	fmt.Println("check the transaction (",txHash,")")
 
 	// Perform preliminary sanity checks on the transaction.  This makes
 	// use of chain which contains the invariant rules for what
