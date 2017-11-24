@@ -1870,6 +1870,7 @@ mempoolLoop:
 				prioItem.priority < mempool.MinHighPriority {
 
 				heap.Push(priorityQueue, prioItem)
+				dependers[*(tx.Hash())] = deps
 				continue
 			}
 		}
@@ -1883,7 +1884,7 @@ mempoolLoop:
 
 
 		_, _, _, err = blockchain.CheckTransactionInputs(blockManager.chain, subsidyCache, tx,
-			nextBlockKeyHeight, blockUtxos, false, server.chainParams, keyHeightCache)
+			nextBlockHeight, nextBlockKeyHeight, blockUtxos, blockchain.FraudProofNoCheck, server.chainParams, keyHeightCache)
 		if err != nil {
 			minrLog.Tracef("Skipping tx %s due to error in "+
 				"CheckTransactionInputs: %v", tx.Hash(), err)
