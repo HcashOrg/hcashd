@@ -93,12 +93,12 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 
 	msg.TxIds = make([]*chainhash.Hash, 0, txCount)
 	for i := uint64(0); i < txCount; i++ {
-		txId := &msg.TxIds[i]
-		readElement(r, txId)
+		var txId chainhash.Hash
+		readElement(r, &txId)
 		if err != nil {
 			return err
 		}
-		msg.TxIds = append(msg.TxIds, *txId)
+		msg.TxIds = append(msg.TxIds, &txId)
 	}
 
 	// Prevent more transactions than could possibly fit into the stake
@@ -117,12 +117,12 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 
 	msg.STxIds = make([]*chainhash.Hash, 0, stakeTxCount)
 	for i := uint64(0); i < stakeTxCount; i++ {
-		stxId := &msg.STxIds[i]
-		readElement(r, stxId)
+		var stxId chainhash.Hash
+		readElement(r, &stxId)
 		if err != nil {
 			return err
 		}
-		msg.TxIds = append(msg.STxIds, *stxId)
+		msg.TxIds = append(msg.STxIds, &stxId)
 	}
 	msg.PrintMsgLightBlock("BtcDecode LightBlock")
 	return nil

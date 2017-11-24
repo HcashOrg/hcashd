@@ -40,6 +40,8 @@ var ivStrings = map[InvType]string{
 	InvTypeTx:            "MSG_TX",
 	InvTypeBlock:         "MSG_BLOCK",
 	InvTypeFilteredBlock: "MSG_FILTERED_BLOCK",
+	InvTypeMissedTx:	  "MSG_MISSED_TX",
+	InvTypeLightBlock:	  "MSG_LIGHT_BLOCK",
 }
 
 // String returns the InvType in human-readable form.
