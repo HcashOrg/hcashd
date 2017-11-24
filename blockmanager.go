@@ -1239,8 +1239,6 @@ func (b *blockManager) pushGetMissedTxMsg(missedTxIds []*chainhash.Hash, msgBloc
 func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	fmt.Printf("[test]handleLightBlockMsg msgLightBlock:%v \n", msgLightBlock.lightBlock.Header.BlockHash())
 
-	txs := make([]*wire.MsgTx, 0, len(msgLightBlock.lightBlock.TxIds))
-	stxs := make([]*wire.MsgTx, 0, len(msgLightBlock.lightBlock.STxIds))
 	missedTxIds := make([]*chainhash.Hash, 0, len(msgLightBlock.lightBlock.STxIds) + len(msgLightBlock.lightBlock.STxIds))
 	
 	peer := msgLightBlock.peer
@@ -1256,6 +1254,12 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		}
 	}
 
+	//create msgBlock
+	msgBlock := wire.NewMsgBlock(&msgLightBlock.lightBlock.Header)
+	for _, tx := range msgLightBlock.lightBlock.CoinbaseTx{
+		msgBlock.AddTransaction(tx)
+	}
+
 	for _, txId := range msgLightBlock.lightBlock.TxIds {
 		fmt.Printf("[test]LightBlock txid:%v \n", txId)		
 		tx, err := b.server.txMemPool.FetchTransaction(txId, true)
@@ -1266,7 +1270,8 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 			continue
 		}
 		fmt.Printf("[test]Find Tx: %v\n", txId)
-		txs = append(txs, tx.MsgTx())
+		
+		msgBlock.AddTransaction(tx.MsgTx())
 	}
 	
 	for _, stxId := range msgLightBlock.lightBlock.STxIds {
@@ -1279,30 +1284,26 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 			continue
 		}
 		fmt.Printf("[test]Find sTx: %v\n", stxId)
-		stxs = append(stxs, stx.MsgTx())
+
+		msgBlock.AddSTransaction(stx.MsgTx())
 	}
 
-	msgblock := &wire.MsgBlock{
-		Header:        msgLightBlock.lightBlock.Header,
-		Transactions:  txs,
-		STransactions: stxs,
-	}
 
 	if len(missedTxIds) != 0 {
 		fmt.Printf("[test]Contains MissedTx\n")
-		fmt.Printf("[test]Push Block: %v\n", msgblock.Header.BlockHash())
+		fmt.Printf("[test]Push Block: %v\n", msgBlock.Header.BlockHash())
 
-		b.pushGetMissedTxMsg(missedTxIds, msgblock, peer)
+		b.pushGetMissedTxMsg(missedTxIds, msgBlock, peer)
 
 		incompleteBlock := &IncompleteBlock{
-			block: msgblock,
+			block: msgBlock,
 			missedTx: missedTxIds}
 		b.incompleteBlocks = append(b.incompleteBlocks, incompleteBlock)
 		return
 	}
 
 	
-	block := hcashutil.NewBlock(msgblock)
+	block := hcashutil.NewBlock(msgBlock)
 	bmsg := &blockMsg{
 		block : block,
 		peer : peer}

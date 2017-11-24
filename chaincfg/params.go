@@ -476,7 +476,7 @@ var MainNetParams = Params{
 	PowLimit:                 mainPowLimit,
 	DifficultyRate:           16,
 	MaxMicroPerKey:           31,
-	PowLimitBits:             0x1d0fffff,
+	PowLimitBits:             0x1e00ffff,
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0, // Does not apply since ReduceMinDifficulty false
 	GenerateSupported:        false,
@@ -578,7 +578,7 @@ var MainNetParams = Params{
 	BlockRejectNumRequired:  950,
 	BlockUpgradeNumToCheck:  1000,
 
-	MicroBlockValidationHeight: 64,
+	MicroBlockValidationHeight: 20,
 
 	// Mempool parameters
 	RelayNonStdTxs: false,
@@ -604,9 +604,9 @@ var MainNetParams = Params{
 	MinimumStakeDiff:        2 * 1e8, // 2 Coin
 	TicketPoolSize:          8192,
 	TicketsPerBlock:         5,
-	TicketMaturity:          128/*256*/,
+	TicketMaturity:          20/*256*/,
 	TicketExpiry:            40960, // 5*TicketPoolSize
-	CoinbaseMaturity:        128/*256*/,
+	CoinbaseMaturity:        20/*256*/,
 	SStxChangeMaturity:      1,
 	TicketPoolSizeWeight:    4,
 	StakeDiffAlpha:          1, // Minimal
@@ -614,7 +614,7 @@ var MainNetParams = Params{
 	StakeDiffWindows:        20,
 	StakeVersionInterval:    144 * 2 * 7, // ~1 week
 	MaxFreshStakePerBlock:   20,          // 4*TicketsPerBlock
-	StakeEnabledHeight:      128 + 128/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
+	StakeEnabledHeight:      20 + 20/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
 	StakeValidationHeight:   512,        // ~14 days
 	StakeBaseSigScript:      []byte{0x00, 0x00},
 	StakeMajorityMultiplier: 3,

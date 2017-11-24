@@ -10,6 +10,8 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"math"
+	"math/big"
 
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 )
@@ -18,11 +20,13 @@ import (
 // header.
 const lightBlockHeaderLen = 180 + 32 + 4
 
+var zeroHash = &chainhash.Hash{}
 // MsgBlock implements the Message interface and represents a hypercash
 // block message.  It is used to deliver block and transaction information in
 // response to a getdata message (MsgGetData) for a given block hash.
 type MsgLightBlock struct {
 	Header        BlockHeader
+	CoinbaseTx  []*MsgTx
 	TxIds  []*chainhash.Hash
 	STxIds []*chainhash.Hash
 }
@@ -30,6 +34,10 @@ type MsgLightBlock struct {
 func (msg *MsgLightBlock) PrintMsgLightBlock(start string) {
 	fmt.Printf("[test]%v\n", start)
 	fmt.Printf("[test]block Hash:%v \n", msg.Header.BlockHash())
+
+	for _, tx := range msg.CoinbaseTx{
+		fmt.Printf("[test]coinbase Txid:%v \n", tx.TxHash())
+	}
 
 	for _, txid := range msg.TxIds{
 		fmt.Printf("[test]txid:%v \n", txid)
@@ -42,17 +50,38 @@ func (msg *MsgLightBlock) PrintMsgLightBlock(start string) {
 	fmt.Printf("[test]End Block\n")
 }
 
+// Add Coinbase Transaction adds a transaction to the message.
+func (msg *MsgLightBlock) AddCoinbaseTransaction(tx MsgTx) error {
+	// A coin base must only have one transaction input.
+	if len(tx.TxIn) != 1 {
+		return messageError("tx is Not a coinbase", tx.Command())
+	}
+
+	// The previous output of a coin base must have a max value index and a
+	// zero hash.
+	prevOut := &tx.TxIn[0].PreviousOutPoint
+	if prevOut.Index != math.MaxUint32 || !prevOut.Hash.IsEqual(zeroHash) {
+		return messageError("tx is Not a coinbase", tx.Command())
+	}
+
+	msg.CoinbaseTx = append(msg.CoinbaseTx, &tx)
+	return nil
+}
+
 // AddTransaction adds a transaction to the message.
 func (msg *MsgLightBlock) AddTransactionID(txid chainhash.Hash) error {
 	msg.TxIds = append(msg.TxIds, &txid)
 	return nil
-
 }
 
 // AddSTransaction adds a stake transaction to the message.
 func (msg *MsgLightBlock) AddSTransactionID(txid chainhash.Hash) error {
 	msg.STxIds = append(msg.STxIds, &txid)
 	return nil
+}
+// ClearTransactions removes all transactions from the message.
+func (msg *MsgLightBlock) ClearCoinbaseTransactions() {
+	msg.CoinbaseTx = make([]*MsgTx, 0, defaultTransactionAlloc)
 }
 
 // ClearTransactions removes all transactions from the message.
@@ -74,6 +103,28 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 	if err != nil {
 		return err
 	}
+
+	coinbaseTxCount, err := ReadVarInt(r, pver)
+	if err != nil {
+		return err
+	}
+	maxcoinbaseTxPerTree := MaxTxPerTxTree(pver)
+	if coinbaseTxCount > maxcoinbaseTxPerTree {
+		str := fmt.Sprintf("too many transactions to fit into a block "+
+			"[count %d, max %d]", coinbaseTxCount, maxcoinbaseTxPerTree)
+		return messageError("MsgBlock.BtcDecode", str)
+	}
+
+	msg.CoinbaseTx = make([]*MsgTx, 0, coinbaseTxCount)
+	for i := uint64(0); i < coinbaseTxCount; i++ {
+		var tx MsgTx
+		err := tx.BtcDecode(r, pver)
+		if err != nil {
+			return err
+		}
+		msg.CoinbaseTx = append(msg.CoinbaseTx, &tx)
+	}
+
 
 	txCount, err := ReadVarInt(r, pver)
 	if err != nil {
@@ -159,6 +210,17 @@ func (msg *MsgLightBlock) BtcEncode(w io.Writer, pver uint32) error {
 	err := writeBlockHeader(w, pver, &msg.Header)
 	if err != nil {
 		return err
+	}
+
+	err = WriteVarInt(w, pver, uint64(len(msg.CoinbaseTx)))
+	if err != nil {
+		return err
+	}
+	for _, tx := range msg.CoinbaseTx {
+		err = tx.BtcEncode(w, pver)
+		if err != nil {
+			return err
+		}
 	}
 
 	err = WriteVarInt(w, pver, uint64(len(msg.TxIds)))
@@ -261,9 +323,50 @@ func (msg *MsgLightBlock) BlockHash() chainhash.Hash {
 func NewMsgLightBlock(blockHeader *BlockHeader) *MsgLightBlock {
 	return &MsgLightBlock{
 		Header:        *blockHeader,
+		CoinbaseTx:  make([]*MsgTx, 0, defaultTransactionAlloc),
 		TxIds:  make([]*chainhash.Hash, 0, defaultTransactionAlloc),
 		STxIds: make([]*chainhash.Hash, 0, defaultTransactionAlloc),
 	}
+}
+// HashToBig converts a chainhash.Hash into a big.Int that can be used to
+// perform math comparisons.
+func HashToBig(hash *chainhash.Hash) *big.Int {
+	// A Hash is in little-endian, but the big package wants the bytes in
+	// big-endian, so reverse them.
+	buf := *hash
+	blen := len(buf)
+	for i := 0; i < blen/2; i++ {
+		buf[i], buf[blen-1-i] = buf[blen-1-i], buf[i]
+	}
+
+	return new(big.Int).SetBytes(buf[:])
+}
+func CompactToBig(compact uint32) *big.Int {
+	// Extract the mantissa, sign bit, and exponent.
+	mantissa := compact & 0x007fffff
+	isNegative := compact&0x00800000 != 0
+	exponent := uint(compact >> 24)
+
+	// Since the base for the exponent is 256, the exponent can be treated
+	// as the number of bytes to represent the full 256-bit number.  So,
+	// treat the exponent as the number of bytes and shift the mantissa
+	// right or left accordingly.  This is equivalent to:
+	// N = mantissa * 256^(exponent-3)
+	var bn *big.Int
+	if exponent <= 3 {
+		mantissa >>= 8 * (3 - exponent)
+		bn = big.NewInt(int64(mantissa))
+	} else {
+		bn = big.NewInt(int64(mantissa))
+		bn.Lsh(bn, 8*(exponent-3))
+	}
+
+	// Make it negative if the sign bit is set.
+	if isNegative {
+		bn = bn.Neg(bn)
+	}
+
+	return bn
 }
 
 // NewMsgBlock returns a new hypercash block message that conforms to the
@@ -271,14 +374,29 @@ func NewMsgLightBlock(blockHeader *BlockHeader) *MsgLightBlock {
 func NewMsgLightBlockFromMsgBlock(msgBlock *MsgBlock) *MsgLightBlock {
 	msgLightBlock := &MsgLightBlock{
 		Header:        msgBlock.Header,
+		CoinbaseTx:  make([]*MsgTx, 0, defaultTransactionAlloc),
 		TxIds:  make([]*chainhash.Hash, 0, defaultTransactionAlloc),
 		STxIds: make([]*chainhash.Hash, 0, defaultTransactionAlloc),
 	}
-	for _, tx := range msgBlock.Transactions {
-		msgLightBlock.AddTransactionID(tx.TxHash())
+
+	startTx := 1
+	msgLightBlock.AddCoinbaseTransaction(*msgBlock.Transactions[0])
+
+	header := &msgBlock.Header
+	targetDifficulty := CompactToBig(header.Bits)
+	blockHash := msgBlock.BlockHash()
+	if HashToBig(&blockHash).Cmp(targetDifficulty) <= 0 {
+		//Key Block
+		msgLightBlock.AddCoinbaseTransaction(*msgBlock.Transactions[1])
+		startTx = 2
+		
+		for _, stx := range msgBlock.STransactions {
+			msgLightBlock.AddSTransactionID(stx.TxHash())
+		}
 	}
-	for _, stx := range msgBlock.STransactions {
-		msgLightBlock.AddSTransactionID(stx.TxHash())
+
+	for _, tx := range msgBlock.Transactions[startTx:] {
+		msgLightBlock.AddTransactionID(tx.TxHash())
 	}
 
 	return msgLightBlock
