@@ -777,7 +777,11 @@ func (sp *serverPeer) OnGetMissedTxs(p *peer.Peer,msg *wire.MsgGetMissedTxs){
 
 	blockhash := msg.BlockInv.Hash
 
+	fmt.Println("MissedTx in block : " ,blockhash)
 	for i, iv := range msg.TxInvList {
+
+		fmt.Println("handle TxInv:  " , iv)
+
 		var c chan struct{}
 		// If this will be the last message we send.
 		if i == length-1 && len(notFound.InvList) == 0 {
@@ -787,6 +791,7 @@ func (sp *serverPeer) OnGetMissedTxs(p *peer.Peer,msg *wire.MsgGetMissedTxs){
 			c = make(chan struct{}, 1)
 		}
 		var err error
+		fmt.Println("Inv Type : " , iv.Type)
 		switch iv.Type {
 		case wire.InvTypeTx:
 			err = sp.server.pushMissedTxMsg(sp,&blockhash, &iv.Hash, c, waitChan)
