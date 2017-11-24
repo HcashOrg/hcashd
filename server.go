@@ -778,6 +778,7 @@ func (sp *serverPeer) OnGetMissedTxs(p *peer.Peer,msg *wire.MsgGetMissedTxs){
 	blockhash := msg.BlockInv.Hash
 
 	fmt.Println("MissedTx in block : " ,blockhash)
+
 	for i, iv := range msg.TxInvList {
 
 		fmt.Println("handle TxInv:  " , iv)
@@ -793,7 +794,7 @@ func (sp *serverPeer) OnGetMissedTxs(p *peer.Peer,msg *wire.MsgGetMissedTxs){
 		var err error
 		fmt.Println("Inv Type : " , iv.Type)
 		switch iv.Type {
-		case wire.InvTypeTx:
+		case wire.InvTypeMissedTx:
 			err = sp.server.pushMissedTxMsg(sp,&blockhash, &iv.Hash, c, waitChan)
 		default:
 			peerLog.Warnf("UnSupported type in txInvList request %d",
