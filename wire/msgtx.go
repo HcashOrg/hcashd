@@ -1218,15 +1218,29 @@ func (msg *MsgTx) SerializeSize() int {
 		// varint size for the number of transaction inputs (x2) and
 		// outputs. The number of inputs is added twice because it's
 		// encoded once in both the witness and the prefix.
+
+		// n = 12 + VarIntSerializeSize(uint64(len(msg.TxIn))) +
+		// 	VarIntSerializeSize(uint64(len(msg.TxIn))) +
+		// 	VarIntSerializeSize(uint64(len(msg.TxOut)))
+
+		// for _, txIn := range msg.TxIn {
+		// 	n += txIn.SerializeSizePrefix()
+		// }
+		// for _, txIn := range msg.TxIn {
+		// 	n += txIn.SerializeSizeWitness()
+		// }
+		// for _, txOut := range msg.TxOut {
+		// 	n += txOut.SerializeSize()
+		// }
+				
+		// Version 4 bytes + LockTime 4 bytes + Expiry 4 bytes +
+		// Serialized varint size for the number of transaction
+		// inputs and outputs.
 		n = 12 + VarIntSerializeSize(uint64(len(msg.TxIn))) +
-			VarIntSerializeSize(uint64(len(msg.TxIn))) +
 			VarIntSerializeSize(uint64(len(msg.TxOut)))
 
 		for _, txIn := range msg.TxIn {
 			n += txIn.SerializeSizePrefix()
-		}
-		for _, txIn := range msg.TxIn {
-			n += txIn.SerializeSizeWitness()
 		}
 		for _, txOut := range msg.TxOut {
 			n += txOut.SerializeSize()
