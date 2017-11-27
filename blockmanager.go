@@ -16,6 +16,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"sort"
 
 	"github.com/HcashOrg/hcashd/blockchain"
 	"github.com/HcashOrg/hcashd/blockchain/stake"
@@ -284,7 +285,10 @@ type processBlockMsg struct {
 
 type IncompleteBlock struct {
 	block *wire.MsgBlock
-	missedTx []*chainhash.Hash
+	missedTx map[int]*chainhash.Hash
+	missedSTx map[int]*chainhash.Hash
+	receivedTx  map[int]*wire.MsgTx
+	receivedSTx  map[int]*wire.MsgTx
 }
 
 // processTransactionResponse is a response sent to the reply channel of a
@@ -801,6 +805,32 @@ func (b *blockManager) handleDonePeerMsg(peers *list.List, sp *serverPeer) {
 	}
 }
 
+func (b *blockManager) packageBlockFromIncompleteBlock(incompleteBlock* IncompleteBlock)*wire.MsgBlock{
+	msgBlock := incompleteBlock.block
+		
+	// To store the keys in slice in sorted order
+	var keys []int
+	for k := range incompleteBlock.receivedTx {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	// To perform the opertion you want
+	for _, k := range keys {
+		msgBlock.AddTransaction(incompleteBlock.receivedTx[k])
+	}
+
+	var skeys []int
+	for k := range incompleteBlock.receivedSTx {
+		skeys = append(skeys, k)
+	}
+	sort.Ints(skeys)
+	// To perform the opertion you want
+	for _, k := range skeys {
+		msgBlock.AddSTransaction(incompleteBlock.receivedSTx[k])
+	}
+
+	return msgBlock
+}
 // handleTxMsg handles transaction messages from all peers.
 func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 	// NOTE:  BitcoinJ, and possibly other wallets, don't follow the spec of
@@ -829,7 +859,7 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 		txHash := txmsg.MsgTx().TxHash()
 
 		out:
-		for _,incompleteBlock := range b.incompleteBlocks{
+		for index,incompleteBlock := range b.incompleteBlocks{
 
 			for i,txid := range incompleteBlock.missedTx {
 				if txid.IsEqual(&txHash) {
@@ -837,22 +867,40 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 					//check tx
 					b.maybeAcceptMissedTransaction(txmsg)
 
-					txtype := stake.DetermineTxType(txmsg.MsgTx())
-					if txtype == stake.TxTypeRegular{
 
-						fmt.Println("[test] insert regular transaction to block(",incompleteBlock.block.BlockHash(),")" )
-						incompleteBlock.block.AddTransaction(txmsg.MsgTx())
-					}else {
-						fmt.Println("[test] insert regular stransaction to block(",incompleteBlock.block.BlockHash(),")" )
-						incompleteBlock.block.AddSTransaction(txmsg.MsgTx())
-					}
-					incompleteBlock.missedTx = append(incompleteBlock.missedTx[:i],incompleteBlock.missedTx[i+1:]...)
+					fmt.Println("[test] insert regular transaction to block(",incompleteBlock.block.BlockHash(),")" )
+					incompleteBlock.receivedTx[i] = txmsg.MsgTx()
+					delete(incompleteBlock.missedTx, i)
+					
 					fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
-					if len(incompleteBlock.missedTx) == 0 {
+					if len(incompleteBlock.missedTx) == 0 && len(incompleteBlock.missedSTx) == 0 {
 						fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
-						b.QueueBlock(hcashutil.NewBlock(incompleteBlock.block),tmsg.peer)
-					}
 
+						b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)
+						b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
+					}
+					break out
+				}
+			}
+
+			for i,txid := range incompleteBlock.missedSTx {
+				if txid.IsEqual(&txHash) {
+
+					//check tx
+					b.maybeAcceptMissedTransaction(txmsg)
+
+
+					fmt.Println("[test] insert stake transaction to block(",incompleteBlock.block.BlockHash(),")" )
+					incompleteBlock.receivedSTx[i] = txmsg.MsgTx()
+					delete(incompleteBlock.missedSTx, i)
+					
+					fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
+					if len(incompleteBlock.missedTx) == 0 && len(incompleteBlock.missedSTx) == 0 {
+						fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
+
+						b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)	
+						b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
+					}
 					break out
 				}
 			}
@@ -1236,10 +1284,25 @@ func (b *blockManager) pushGetMissedTxMsg(missedTxIds []*chainhash.Hash, msgBloc
 	}
 }
 
+func (b *blockManager) fetchMissedTxIds(missedTxIds, missedSTxIds map[int]*chainhash.Hash)[]*chainhash.Hash{
+    
+	getMissedTxs := make([]*chainhash.Hash, 0, len(missedTxIds) + len(missedSTxIds))
+
+	for _, txid := range missedTxIds {
+		getMissedTxs = append(getMissedTxs, txid)
+	}
+	for _, stxid := range missedSTxIds {
+		getMissedTxs = append(getMissedTxs, stxid)
+	}
+
+	return getMissedTxs
+}
+
 func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	fmt.Printf("[test]handleLightBlockMsg msgLightBlock:%v \n", msgLightBlock.lightBlock.Header.BlockHash())
 
-	missedTxIds := make([]*chainhash.Hash, 0, len(msgLightBlock.lightBlock.TxIds) + len(msgLightBlock.lightBlock.STxIds))
+	missedTxIds := make(map[int]*chainhash.Hash)
+	missedSTxIds := make(map[int]*chainhash.Hash)
 	
 	peer := msgLightBlock.peer
 	//check incompleteBlocks
@@ -1249,7 +1312,10 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		fmt.Printf("[test]incompleteBlock: %v \n", incompleteBlkHash)
 		if blkHash.IsEqual(&incompleteBlkHash){
 			fmt.Printf("[test]LightBlock in incompleteBlocks \n")
-			b.pushGetMissedTxMsg(incompleteBlock.missedTx, incompleteBlock.block, peer)
+
+			getMissedTxs := b.fetchMissedTxIds(incompleteBlock.missedTx, incompleteBlock.missedSTx)
+
+			b.pushGetMissedTxMsg(getMissedTxs, incompleteBlock.block, peer)
 			return
 		}
 	}
@@ -1260,13 +1326,13 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		msgBlock.AddTransaction(tx)
 	}
 
-	for _, txId := range msgLightBlock.lightBlock.TxIds {
+	for i, txId := range msgLightBlock.lightBlock.TxIds {
 		fmt.Printf("[test]LightBlock txid:%v \n", txId)		
 		tx, err := b.server.txMemPool.FetchTransaction(txId, true)
 		if err != nil {
 			//...
 			fmt.Printf("[test]Missed Tx: %v\n", txId)
-			missedTxIds = append(missedTxIds, txId)
+			missedTxIds[i] = txId
 			continue
 		}
 		fmt.Printf("[test]Find Tx: %v\n", txId)
@@ -1274,13 +1340,13 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		msgBlock.AddTransaction(tx.MsgTx())
 	}
 	
-	for _, stxId := range msgLightBlock.lightBlock.STxIds {
+	for i, stxId := range msgLightBlock.lightBlock.STxIds {
 		fmt.Printf("[test]LightBlock stxid:%v \n", stxId)		
 		stx, err := b.server.txMemPool.FetchTransaction(stxId, true)
 		if err != nil {
 			//...
 			fmt.Printf("[test]Missed sTx: %v\n", stxId)
-			missedTxIds = append(missedTxIds, stxId)
+			missedSTxIds[i] = stxId
 			continue
 		}
 		fmt.Printf("[test]Find sTx: %v\n", stxId)
@@ -1292,12 +1358,14 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	if len(missedTxIds) != 0 {
 		fmt.Printf("[test]Contains MissedTx\n")
 		fmt.Printf("[test]Push Block: %v\n", msgBlock.Header.BlockHash())
-
-		b.pushGetMissedTxMsg(missedTxIds, msgBlock, peer)
+		
+		getMissedTxs := b.fetchMissedTxIds(missedTxIds, missedSTxIds)
+		b.pushGetMissedTxMsg(getMissedTxs, msgBlock, peer)
 
 		incompleteBlock := &IncompleteBlock{
 			block: msgBlock,
-			missedTx: missedTxIds}
+			missedTx: missedTxIds,
+			missedSTx: missedSTxIds}
 		b.incompleteBlocks = append(b.incompleteBlocks, incompleteBlock)
 		return
 	}
@@ -1311,6 +1379,7 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	fmt.Printf("[test]Process normal Block\n")
 	b.handleBlockMsg(bmsg)
 }
+
 // handleBlockMsg handles block messages from all peers.
 func (b *blockManager) handleBlockMsg(bmsg *blockMsg) {
 	// If we didn't ask for this block then the peer is misbehaving.

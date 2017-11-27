@@ -336,6 +336,40 @@ func (msg *MsgBlock) SerializeSize() int {
 	return n
 }
 
+
+func (msg *MsgBlock) SerializeTxNoWitnessSize() int {
+	// Check to make sure that all transactions have the correct
+	// type and version to be included in a block.
+
+	// Block header bytes + Serialized varint size for the number of
+	// transactions + Serialized varint size for the number of
+	// stake transactions
+
+	n := blockHeaderLen + VarIntSerializeSize(uint64(len(msg.Transactions))) +
+		VarIntSerializeSize(uint64(len(msg.STransactions)))
+
+	for _, tx := range msg.Transactions {
+		sertype := tx.SerType
+		tx.SerType = TxSerializeNoWitness
+		n += tx.SerializeSize()
+
+		tx.SerType = sertype
+	}
+	if len(msg.STransactions) > 0 {
+		for _, tx := range msg.STransactions {
+			sertype := tx.SerType
+			tx.SerType = TxSerializeNoWitness
+			n += tx.SerializeSize()
+
+			tx.SerType = sertype
+		}
+	}
+
+
+	return n
+}
+
+
 // Command returns the protocol command string for the message.  This is part
 // of the Message interface implementation.
 func (msg *MsgBlock) Command() string {

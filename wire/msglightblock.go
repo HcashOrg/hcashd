@@ -181,7 +181,7 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 		if err != nil {
 			return err
 		}
-		msg.TxIds = append(msg.STxIds, &stxId)
+		msg.STxIds = append(msg.STxIds, &stxId)
 		fmt.Printf("[test]-->tx STx:%v \n", stxId)
 	}
 	msg.PrintMsgLightBlock("BtcDecode LightBlock")
