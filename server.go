@@ -1324,7 +1324,7 @@ func (s *server) pushMissedTxMsg(sp * serverPeer,blockhash *chainhash.Hash, hash
 	if waitChan != nil {
 		<-waitChan
 	}
-	mtx.SerType= wire.TxSerializeMissed
+
 	fmt.Println("[test] send a missedTx(",mtx.TxHash(),") to peer: ",sp)
 	sp.QueueMessage(mtx, doneChan)
 	return  nil

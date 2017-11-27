@@ -852,104 +852,97 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 		return
 	}
 
-	if tmsg.tx.MsgTx().SerType == wire.TxSerializeMissed {
 
-		fmt.Println("[test] received a missedtx(",txHash,") from remote peer " )
-		txmsg := tmsg.tx
-		txHash := txmsg.MsgTx().TxHash()
+	fmt.Println("[test] received a missedtx(",txHash,") from remote peer " )
+	txmsg := tmsg.tx
 
-		out:
-		for index,incompleteBlock := range b.incompleteBlocks{
+	for index,incompleteBlock := range b.incompleteBlocks{
 
-			for i,txid := range incompleteBlock.missedTx {
-				if txid.IsEqual(&txHash) {
+		for i,txid := range incompleteBlock.missedTx {
+			if txid.IsEqual(txHash) {
 
-					//check tx
-					b.maybeAcceptMissedTransaction(txmsg)
+				//check tx
+				b.maybeAcceptMissedTransaction(txmsg)
 
+				fmt.Println("[test] insert regular transaction to block(",incompleteBlock.block.BlockHash(),")" )
+				incompleteBlock.receivedTx[i] = txmsg.MsgTx()
+				delete(incompleteBlock.missedTx, i)
 
-					fmt.Println("[test] insert regular transaction to block(",incompleteBlock.block.BlockHash(),")" )
-					incompleteBlock.receivedTx[i] = txmsg.MsgTx()
-					delete(incompleteBlock.missedTx, i)
-					
-					fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
-					if len(incompleteBlock.missedTx) == 0 && len(incompleteBlock.missedSTx) == 0 {
-						fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
+				fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
+				if len(incompleteBlock.missedTx) == 0 && len(incompleteBlock.missedSTx) == 0 {
+					fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
 
-						b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)
-						b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
-					}
-					break out
+					b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)
+					b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
 				}
-			}
-
-			for i,txid := range incompleteBlock.missedSTx {
-				if txid.IsEqual(&txHash) {
-
-					//check tx
-					b.maybeAcceptMissedTransaction(txmsg)
-
-
-					fmt.Println("[test] insert stake transaction to block(",incompleteBlock.block.BlockHash(),")" )
-					incompleteBlock.receivedSTx[i] = txmsg.MsgTx()
-					delete(incompleteBlock.missedSTx, i)
-					
-					fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
-					if len(incompleteBlock.missedTx) == 0 && len(incompleteBlock.missedSTx) == 0 {
-						fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
-
-						b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)	
-						b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
-					}
-					break out
-				}
+				return
 			}
 		}
 
-	}else {
-		// Process the transaction to include validation, insertion in the
-		// memory pool, orphan handling, etc.
-		allowOrphans := cfg.MaxOrphanTxs > 0
+		for i,txid := range incompleteBlock.missedSTx {
+			if txid.IsEqual(txHash) {
 
-		acceptedTxs, err := b.server.txMemPool.ProcessTransaction(b.chain, tmsg.tx,
-			allowOrphans, true, true)
+				//check tx
+				b.maybeAcceptMissedTransaction(txmsg)
 
-		// Remove transaction from request maps. Either the mempool/chain
-		// already knows about it and as such we shouldn't have any more
-		// instances of trying to fetch it, or we failed to insert and thus
-		// we'll retry next time we get an inv.
-		delete(tmsg.peer.requestedTxns, *txHash)
-		delete(b.requestedTxns, *txHash)
 
-		if err != nil {
-			// Do not request this transaction again until a new block
-			// has been processed.
-			b.rejectedTxns[*txHash] = struct{}{}
-			b.limitMap(b.rejectedTxns, maxRejectedTxns)
+				fmt.Println("[test] insert stake transaction to block(",incompleteBlock.block.BlockHash(),")" )
+				incompleteBlock.receivedSTx[i] = txmsg.MsgTx()
+				delete(incompleteBlock.missedSTx, i)
 
-			// When the error is a rule error, it means the transaction was
-			// simply rejected as opposed to something actually going wrong,
-			// so log it as such.  Otherwise, something really did go wrong,
-			// so log it as an actual error.
-			if _, ok := err.(mempool.RuleError); ok {
-				bmgrLog.Debugf("Rejected transaction %v from %s: %v",
-					txHash, tmsg.peer, err)
-			} else {
-				bmgrLog.Errorf("Failed to process transaction %v: %v",
-					txHash, err)
+				fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
+				if len(incompleteBlock.missedTx) == 0 && len(incompleteBlock.missedSTx) == 0 {
+					fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
+
+					b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)
+					b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
+				}
+				return
 			}
-
-			// Convert the error into an appropriate reject message and
-			// send it.
-			code, reason := mempool.ErrToRejectErr(err)
-			tmsg.peer.PushRejectMsg(wire.CmdTx, code, reason, txHash,
-				false)
-			return
 		}
-
-		b.server.AnnounceNewTransactions(acceptedTxs)
 	}
 
+	// Process the transaction to include validation, insertion in the
+	// memory pool, orphan handling, etc.
+	allowOrphans := cfg.MaxOrphanTxs > 0
+
+	acceptedTxs, err := b.server.txMemPool.ProcessTransaction(b.chain, tmsg.tx,
+		allowOrphans, true, true)
+
+	// Remove transaction from request maps. Either the mempool/chain
+	// already knows about it and as such we shouldn't have any more
+	// instances of trying to fetch it, or we failed to insert and thus
+	// we'll retry next time we get an inv.
+	delete(tmsg.peer.requestedTxns, *txHash)
+	delete(b.requestedTxns, *txHash)
+
+	if err != nil {
+		// Do not request this transaction again until a new block
+		// has been processed.
+		b.rejectedTxns[*txHash] = struct{}{}
+		b.limitMap(b.rejectedTxns, maxRejectedTxns)
+
+		// When the error is a rule error, it means the transaction was
+		// simply rejected as opposed to something actually going wrong,
+		// so log it as such.  Otherwise, something really did go wrong,
+		// so log it as an actual error.
+		if _, ok := err.(mempool.RuleError); ok {
+			bmgrLog.Debugf("Rejected transaction %v from %s: %v",
+				txHash, tmsg.peer, err)
+		} else {
+			bmgrLog.Errorf("Failed to process transaction %v: %v",
+				txHash, err)
+		}
+
+		// Convert the error into an appropriate reject message and
+		// send it.
+		code, reason := mempool.ErrToRejectErr(err)
+		tmsg.peer.PushRejectMsg(wire.CmdTx, code, reason, txHash,
+			false)
+		return
+	}
+
+	b.server.AnnounceNewTransactions(acceptedTxs)
 }
 
 func (b *blockManager) needMissedTx(txid *chainhash.Hash) bool {
