@@ -125,6 +125,7 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 			return err
 		}
 		msg.CoinbaseTx = append(msg.CoinbaseTx, &tx)
+		fmt.Printf("[test]-->coinbase Txid:%v \n", tx.TxHash())
 	}
 
 
@@ -153,6 +154,7 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 			return err
 		}
 		msg.TxIds = append(msg.TxIds, &txId)
+		fmt.Printf("[test]-->tx Txid:%v \n", txId)
 	}
 
 	// Prevent more transactions than could possibly fit into the stake
@@ -180,6 +182,7 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 			return err
 		}
 		msg.TxIds = append(msg.STxIds, &stxId)
+		fmt.Printf("[test]-->tx STx:%v \n", stxId)
 	}
 	msg.PrintMsgLightBlock("BtcDecode LightBlock")
 	return nil
@@ -298,8 +301,11 @@ func (msg *MsgLightBlock) SerializeSize() int {
 	// Block header bytes + Serialized varint size for the number of
 	// transactions + Serialized varint size for the number of
 	// stake transactions
-
-	n := lightBlockHeaderLen + uint64(len(msg.TxIds)) * chainhash.HashSize +
+	var n uint64 = 0
+	for _, tx := range msg.CoinbaseTx {
+		n += uint64(tx.SerializeSize())
+	}
+	n += lightBlockHeaderLen + uint64(len(msg.TxIds)) * chainhash.HashSize +
 		uint64(len(msg.STxIds)) * chainhash.HashSize
 
 

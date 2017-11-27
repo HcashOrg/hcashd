@@ -1239,7 +1239,7 @@ func (b *blockManager) pushGetMissedTxMsg(missedTxIds []*chainhash.Hash, msgBloc
 func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	fmt.Printf("[test]handleLightBlockMsg msgLightBlock:%v \n", msgLightBlock.lightBlock.Header.BlockHash())
 
-	missedTxIds := make([]*chainhash.Hash, 0, len(msgLightBlock.lightBlock.STxIds) + len(msgLightBlock.lightBlock.STxIds))
+	missedTxIds := make([]*chainhash.Hash, 0, len(msgLightBlock.lightBlock.TxIds) + len(msgLightBlock.lightBlock.STxIds))
 	
 	peer := msgLightBlock.peer
 	//check incompleteBlocks
