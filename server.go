@@ -582,6 +582,16 @@ func (sp *serverPeer) OnLightBlock(p *peer.Peer, msg *wire.MsgLightBlock, buf []
 	
 	// Add the block to the known inventory for the peer.
 	fmt.Printf("[test] OnLightBlock \n")
+	for _, coinbase := range msg.CoinbaseTx{
+		fmt.Printf("[test] Coinbase: %v \n", coinbase.TxHash())
+	}
+	for _, txid := range msg.TxIds{
+		fmt.Printf("[test] txid: %v \n", txid)
+	}
+	for _, stxid := range msg.STxIds{
+		fmt.Printf("[test] stxid: %v \n", stxid)
+	}
+
 	blockHash := msg.Header.BlockHash()
 	iv := wire.NewInvVect(wire.InvTypeLightBlock, &blockHash)
 	p.AddKnownInventory(iv)
@@ -628,7 +638,7 @@ func (sp *serverPeer) OnBlock(p *peer.Peer, msg *wire.MsgBlock, buf []byte) {
 // accordingly.  We pass the message down to blockmanager which will call
 // QueueMessage with any appropriate responses.
 func (sp *serverPeer) OnInv(p *peer.Peer, msg *wire.MsgInv) {
-	fmt.Printf("[test] OnInv \n")
+	fmt.Printf("[test] OnInv peer: %v\n", p.Addr())
 	if !cfg.BlocksOnly {
 		if len(msg.InvList) > 0 {
 			sp.server.blockManager.QueueInv(msg, sp)
@@ -719,6 +729,7 @@ func (sp *serverPeer) OnGetData(p *peer.Peer, msg *wire.MsgGetData) {
 			continue
 		}
 		if err != nil {
+			fmt.Println("[test]Send Not Found Msg", iv.Type)
 			notFound.AddInvVect(iv)
 
 			// When there is a failure fetching the final entry
@@ -1378,9 +1389,29 @@ func (s *server) pushLightBlockMsg(sp *serverPeer, hash *chainhash.Hash, doneCha
 		dc = doneChan
 	}
 
+	fmt.Printf("[test] Push Block \n")
+	
+	for _, tx := range block.MsgBlock().Transactions{
+		fmt.Printf("[test] txid: %v \n", tx.TxHash())
+	}
+	for _, stx := range block.MsgBlock().STransactions{
+		fmt.Printf("[test] stxid: %v \n", stx.TxHash())
+	}
+
 	lightBlock := wire.NewMsgLightBlockFromMsgBlock(block.MsgBlock())
 	
 	fmt.Printf("[test] Push LightBlock \n")
+
+	for _, coinbase := range lightBlock.CoinbaseTx{
+		fmt.Printf("[test] Coinbase: %v \n", coinbase.TxHash())
+	}
+	for _, txid := range lightBlock.TxIds{
+		fmt.Printf("[test] txid: %v \n", txid)
+	}
+	for _, stxid := range lightBlock.STxIds{
+		fmt.Printf("[test] stxid: %v \n", stxid)
+	}
+
 	sp.QueueMessage(lightBlock, dc)
 
 	// When the peer requests the final block that was advertised in

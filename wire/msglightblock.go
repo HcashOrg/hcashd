@@ -75,8 +75,8 @@ func (msg *MsgLightBlock) AddTransactionID(txid chainhash.Hash) error {
 }
 
 // AddSTransaction adds a stake transaction to the message.
-func (msg *MsgLightBlock) AddSTransactionID(txid chainhash.Hash) error {
-	msg.STxIds = append(msg.STxIds, &txid)
+func (msg *MsgLightBlock) AddSTransactionID(stxid chainhash.Hash) error {
+	msg.STxIds = append(msg.STxIds, &stxid)
 	return nil
 }
 // ClearTransactions removes all transactions from the message.
@@ -108,6 +108,8 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("[test]coinbaseTxCount count : %v\n", coinbaseTxCount)
+
 	maxcoinbaseTxPerTree := MaxTxPerTxTree(pver)
 	if coinbaseTxCount > maxcoinbaseTxPerTree {
 		str := fmt.Sprintf("too many transactions to fit into a block "+
@@ -130,6 +132,7 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("[test]txCount count : %v\n", txCount)
 
 	// Prevent more transactions than could possibly fit into the regular
 	// tx tree.
@@ -160,6 +163,9 @@ func (msg *MsgLightBlock) BtcDecode(r io.Reader, pver uint32) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("[test]stakeTxCount count : %v\n", stakeTxCount)
+
 	if stakeTxCount > maxTxPerTree {
 		str := fmt.Sprintf("too many stransactions to fit into a block "+
 			"[count %d, max %d]", stakeTxCount, maxTxPerTree)
@@ -213,6 +219,9 @@ func (msg *MsgLightBlock) BtcEncode(w io.Writer, pver uint32) error {
 	}
 
 	err = WriteVarInt(w, pver, uint64(len(msg.CoinbaseTx)))
+	
+	fmt.Printf("[test]Coinbase count : %v\n", len(msg.CoinbaseTx))
+
 	if err != nil {
 		return err
 	}
@@ -228,6 +237,8 @@ func (msg *MsgLightBlock) BtcEncode(w io.Writer, pver uint32) error {
 		return err
 	}
 
+	fmt.Printf("[test]tx count : %v\n", len(msg.TxIds))
+
 	for _, txid := range msg.TxIds {
 		err := writeElement(w, txid)
 		if err != nil {
@@ -239,6 +250,8 @@ func (msg *MsgLightBlock) BtcEncode(w io.Writer, pver uint32) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Printf("[test]stx count : %v\n", len(msg.STxIds))
 
 	for _, stxid := range msg.STxIds {
 		err := writeElement(w, stxid)

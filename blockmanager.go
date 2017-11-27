@@ -2023,7 +2023,7 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 			continue
 		}
 
-		if iv.Type == wire.InvTypeBlock || iv.Type == wire.InvTypeLightBlock {
+		if iv.Type == wire.InvTypeBlock {
 			// The block is an orphan block that we already have.
 			// When the existing orphan was processed, it requested
 			// the missing parent blocks.  When this scenario
@@ -2084,6 +2084,8 @@ func (b *blockManager) handleInvMsg(imsg *invMsg) {
 		requestQueue[0] = nil
 		requestQueue = requestQueue[1:]
 
+		fmt.Printf("[test]GetData IvType:%v\n", iv.Type)
+		fmt.Printf("[test]GetData IvHash:%v\n", iv.Hash)
 		switch iv.Type {
 		case wire.InvTypeBlock:
 			// Request the block if there is not already a pending

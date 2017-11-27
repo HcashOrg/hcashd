@@ -1293,10 +1293,16 @@ out:
 					fallthrough
 				case wire.CmdTx:
 					fallthrough
+				case wire.CmdLightBlock:
+					fallthrough
+				case wire.CmdMemPool:
+					fallthrough
 				case wire.CmdNotFound:
 					delete(pendingResponses, wire.CmdBlock)
 					delete(pendingResponses, wire.CmdTx)
 					delete(pendingResponses, wire.CmdNotFound)
+					delete(pendingResponses, wire.CmdLightBlock)
+					delete(pendingResponses, wire.CmdMemPool)
 
 				default:
 					delete(pendingResponses, msgCmd)
