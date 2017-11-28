@@ -3876,6 +3876,15 @@ func handleRemovePoolTransaction(s *rpcServer, cmd interface{}, closeChan <-chan
 	c := cmd.(*hcashjson.RemovePoolTransactionCmd)
 	// Convert the provided transaction hash hex to a Hash.
 	txHash, err := chainhash.NewHashFromStr(c.Txid)
+
+	if *txHash == zeroHash{
+		descs := s.server.txMemPool.TxDescs()
+		for _, desc := range descs{
+			s.server.txMemPool.RemoveTransaction(desc.Tx, false)
+		}
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, rpcDecodeHexError(c.Txid)
 	}
