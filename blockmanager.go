@@ -75,6 +75,9 @@ const (
 	// do expensive lottery data look ups for these blocks.  It is
 	// equivalent to 24 hours of work on mainnet.
 	maxLotteryDataBlockDelta = 288
+
+
+	maxIncompleteBlockHeightLimit = 50
 )
 
 // zeroHash is the zero value hash (all zeros).  It is defined as a convenience.
@@ -1355,6 +1358,13 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		fmt.Printf("[test]Contains MissedTx\n")
 		fmt.Printf("[test]Push Block: %v\n", msgBlock.Header.BlockHash())
 		
+		//Remove old incompleteBlocks
+		for i, icblock := range b.incompleteBlocks{
+			if (b.chainState.newestKeyHeight - int64(icblock.block.Header.KeyHeight)) > int64(maxIncompleteBlockHeightLimit) {
+				b.incompleteBlocks = append(b.incompleteBlocks[:i], b.incompleteBlocks[i + 1:]...)
+			}
+		}
+
 		getMissedTxs := b.fetchMissedTxIds(missedTxIds, missedSTxIds)
 		b.pushGetMissedTxMsg(getMissedTxs, msgBlock, peer)
 
