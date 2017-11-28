@@ -808,6 +808,32 @@ func (b *blockManager) handleDonePeerMsg(peers *list.List, sp *serverPeer) {
 	}
 }
 
+func (b *blockManager) packageBlockFromMap(msgBlock *wire.MsgBlock, receivedTx , receivedSTx map[int]*wire.MsgTx)*wire.MsgBlock{
+		
+	// To store the keys in slice in sorted order
+	var keys []int
+	for k := range receivedTx {
+		keys = append(keys, k)
+	}
+	sort.Ints(keys)
+	// To perform the opertion you want
+	for _, k := range keys {
+		msgBlock.AddTransaction(receivedTx[k])
+	}
+
+	var skeys []int
+	for k := range receivedSTx {
+		skeys = append(skeys, k)
+	}
+	sort.Ints(skeys)
+	// To perform the opertion you want
+	for _, k := range skeys {
+		msgBlock.AddSTransaction(receivedSTx[k])
+	}
+
+	return msgBlock
+}
+
 func (b *blockManager) packageBlockFromIncompleteBlock(incompleteBlock* IncompleteBlock)*wire.MsgBlock{
 	msgBlock := incompleteBlock.block
 		
@@ -1302,6 +1328,8 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 
 	missedTxIds := make(map[int]*chainhash.Hash)
 	missedSTxIds := make(map[int]*chainhash.Hash)
+	receivedTx := make(map[int]*wire.MsgTx)
+	receivedSTx := make(map[int]*wire.MsgTx)
 	
 	peer := msgLightBlock.peer
 	//check incompleteBlocks
@@ -1320,9 +1348,11 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 	}
 
 	//create msgBlock
+	startTx := 0
 	msgBlock := wire.NewMsgBlock(&msgLightBlock.lightBlock.Header)
 	for _, tx := range msgLightBlock.lightBlock.CoinbaseTx{
 		msgBlock.AddTransaction(tx)
+		startTx ++
 	}
 
 	for i, txId := range msgLightBlock.lightBlock.TxIds {
@@ -1331,12 +1361,12 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		if err != nil {
 			//...
 			fmt.Printf("[test]Missed Tx: %v\n", txId)
-			missedTxIds[i] = txId
+			missedTxIds[i + startTx] = txId
 			continue
 		}
 		fmt.Printf("[test]Find Tx: %v\n", txId)
 		
-		msgBlock.AddTransaction(tx.MsgTx())
+		receivedTx[i] = tx.MsgTx()
 	}
 	
 	for i, stxId := range msgLightBlock.lightBlock.STxIds {
@@ -1350,11 +1380,11 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		}
 		fmt.Printf("[test]Find sTx: %v\n", stxId)
 
-		msgBlock.AddSTransaction(stx.MsgTx())
+		receivedSTx[i] = stx.MsgTx()
 	}
 
 
-	if len(missedTxIds) != 0 {
+	if len(missedTxIds) != 0 || len(missedSTxIds) != 0 {
 		fmt.Printf("[test]Contains MissedTx\n")
 		fmt.Printf("[test]Push Block: %v\n", msgBlock.Header.BlockHash())
 		
@@ -1376,6 +1406,8 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 			receivedSTx: make(map[int]*wire.MsgTx)}
 		b.incompleteBlocks = append(b.incompleteBlocks, incompleteBlock)
 		return
+	}else{
+		msgBlock = b.packageBlockFromMap(msgBlock, receivedTx, receivedSTx)
 	}
 
 	
