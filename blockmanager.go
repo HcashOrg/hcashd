@@ -853,7 +853,6 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 	}
 
 
-	fmt.Println("[test] received a missedtx(",txHash,") from remote peer " )
 	txmsg := tmsg.tx
 
 	for index,incompleteBlock := range b.incompleteBlocks{
@@ -871,10 +870,12 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 				fmt.Println("[test] update block(",incompleteBlock.block.BlockHash(),")'s missedTx")
 				if len(incompleteBlock.missedTx) == 0 && len(incompleteBlock.missedSTx) == 0 {
 					fmt.Println("submit block(",incompleteBlock.block.BlockHash(),") to blockmanager")
-
+    
 					b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)
 					b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
 				}
+				
+				fmt.Println("[test] received a missedtx(",txHash,") from remote peer " )
 				return
 			}
 		}
@@ -897,6 +898,8 @@ func (b *blockManager) handleTxMsg(tmsg *txMsg) {
 					b.QueueBlock(hcashutil.NewBlock(b.packageBlockFromIncompleteBlock(incompleteBlock)),tmsg.peer)
 					b.incompleteBlocks = append(b.incompleteBlocks[:index], b.incompleteBlocks[index + 1:]...)
 				}
+				
+				fmt.Println("[test] received a missedtx(",txHash,") from remote peer " )
 				return
 			}
 		}
@@ -1358,7 +1361,9 @@ func (b *blockManager) handleLightBlockMsg(msgLightBlock *lightBlockMsg){
 		incompleteBlock := &IncompleteBlock{
 			block: msgBlock,
 			missedTx: missedTxIds,
-			missedSTx: missedSTxIds}
+			missedSTx: missedSTxIds,
+			receivedTx: make(map[int]*wire.MsgTx),
+			receivedSTx: make(map[int]*wire.MsgTx)}
 		b.incompleteBlocks = append(b.incompleteBlocks, incompleteBlock)
 		return
 	}
