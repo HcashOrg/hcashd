@@ -219,6 +219,7 @@ var rpcHandlersBeforeInit = map[string]commandHandler{
 	"getpeerinfo":           handleGetPeerInfo,
 	"getrawmempool":         handleGetRawMempool,
 	"getrawtransaction":     handleGetRawTransaction,
+	"removepooltransaction": handleRemovePoolTransaction,
 	"getstakedifficulty":    handleGetStakeDifficulty,
 	"getstakeversioninfo":   handleGetStakeVersionInfo,
 	"getstakeversions":      handleGetStakeVersions,
@@ -3869,6 +3870,34 @@ func handleGetRawTransaction(s *rpcServer, cmd interface{}, closeChan <-chan str
 	}
 	return *rawTxn, nil
 }
+
+// handleRemovePoolTransaction implements the removepooltransaction command.
+func handleRemovePoolTransaction(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
+	c := cmd.(*hcashjson.RemovePoolTransactionCmd)
+	// Convert the provided transaction hash hex to a Hash.
+	txHash, err := chainhash.NewHashFromStr(c.Txid)
+	if err != nil {
+		return nil, rpcDecodeHexError(c.Txid)
+	}
+	in := s.server.txMemPool.IsTransactionInPool(txHash)
+	if !in{
+		//fmt.Printf("Transaction not found in the pool\n")
+		return nil, fmt.Errorf("Transaction not found in the pool\n")
+	}
+
+	tx, err := s.server.txMemPool.FetchTransaction(txHash, false)
+	if err != nil{
+		//fmt.Printf("Transaction not fetched in the pool\n")
+		return nil, fmt.Errorf("Transaction not fetched in the pool\n")
+	}
+
+	s.server.txMemPool.RemoveTransaction(tx, false)
+	//fmt.Println("Transaction removed")
+
+	return nil, nil
+}
+
+
 
 // handleGetStakeDifficulty implements the getstakedifficulty command.
 func handleGetStakeDifficulty(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {

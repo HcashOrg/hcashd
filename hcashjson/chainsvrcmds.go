@@ -515,6 +515,10 @@ type GetRawTransactionCmd struct {
 	Verbose *int `jsonrpcdefault:"0"`
 }
 
+type RemovePoolTransactionCmd struct {
+	Txid    string
+}
+
 // NewGetRawTransactionCmd returns a new instance which can be used to issue a
 // getrawtransaction JSON-RPC command.
 //
@@ -524,6 +528,12 @@ func NewGetRawTransactionCmd(txHash string, verbose *int) *GetRawTransactionCmd 
 	return &GetRawTransactionCmd{
 		Txid:    txHash,
 		Verbose: verbose,
+	}
+}
+
+func NewRemovePoolTransactionCmd(txHash string) *RemovePoolTransactionCmd {
+	return &RemovePoolTransactionCmd{
+		Txid:    txHash,
 	}
 }
 
@@ -778,6 +788,7 @@ func init() {
 	MustRegisterCmd("getpeerinfo", (*GetPeerInfoCmd)(nil), flags)
 	MustRegisterCmd("getrawmempool", (*GetRawMempoolCmd)(nil), flags)
 	MustRegisterCmd("getrawtransaction", (*GetRawTransactionCmd)(nil), flags)
+	MustRegisterCmd("removepooltransaction", (*RemovePoolTransactionCmd)(nil), flags)
 	MustRegisterCmd("gettxout", (*GetTxOutCmd)(nil), flags)
 	MustRegisterCmd("gettxoutsetinfo", (*GetTxOutSetInfoCmd)(nil), flags)
 	MustRegisterCmd("getwork", (*GetWorkCmd)(nil), flags)
