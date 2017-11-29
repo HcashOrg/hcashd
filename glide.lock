@@ -1,5 +1,5 @@
-hash: 928175486fbf3a330cf1fdb26e11eb194ab31c4d2b48eee677bd01eb654816b1
-updated: 2017-11-23T17:41:31.83221538+08:00
+hash: a6634aa7b503954da4cac5082c3bc61900206197ad778b029d4c78d257f48cfd
+updated: 2017-11-29T11:33:18.840033217+08:00
 imports:
 - name: github.com/agl/ed25519
   version: 5312a61534124124185d41f09206b9fef1d88403
@@ -61,12 +61,12 @@ imports:
   subpackages:
   - rotator
 - name: golang.org/x/crypto
-  version: 2509b142fb2b797aa7587dad548f113b2c0f20ce
+  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
   subpackages:
   - ripemd160
   - ssh/terminal
 - name: golang.org/x/sys
-  version: 661970f62f5897bc0cd5fdca7e087ba8a98a8fa1
+  version: 1006bb3484c92b19a5b6612452e038b554fadb9c
   subpackages:
   - unix
   - windows
