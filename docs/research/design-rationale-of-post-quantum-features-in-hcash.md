@@ -1,6 +1,6 @@
 # Design Rationale of Post-Quantum Features in Hcash
 
-Copyright (c) 2017-2018 [LoCCS](https://loccs.sjtu.edu.cn/) and HcashOrg.  
+Copyright (c) 2017-2018 [LoCCS](https://loccs.sjtu.edu.cn/) and [HcashOrg](https://h.cash).  
 
 ## Research and Design of Post-Quantum Technology Solution
 + Security and Performance Analysis and Assessment of existing post-quantum signature solution   
