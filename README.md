@@ -36,7 +36,7 @@ To address security issues stemming from quantum computers, we design and implem
 + **Security**: the post-quantum solution must be proved secure in theory, and side-channel attack proof in practice;  
 + **High performance**: Signing and signature verification must be fast. Most importantly, the public key and signature must be short.
 
-Please refer to our [detailed report](docs/research/design-rationale-of-post-quantum-features-in-hcash.md) for more information.
+Please refer to our [design rationale](docs/research/design-rationale-of-post-quantum-features-in-hcash.md)  and [technical report](docs/research/post-quantum-signature-schemes-in-hcash.pdf) for more information.
 
 <a name="starting-hcashd"></a>
 ## Starting Hcashd
