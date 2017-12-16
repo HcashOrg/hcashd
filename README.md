@@ -39,7 +39,7 @@ To address security issues stemming from quantum computers, we design and implem
 Please refer to our [detailed report](docs/research/design-rationale-of-post-quantum-features-in-hcash.md) for more information.
 
 <a name="starting-hcashd"></a>
-# Starting Hcashd
+## Starting Hcashd
 Hcashd is a Hypercash full node implementation written in Go (golang).
 
 This acts as a chain daemon for the [Hypercash](https://h.cash) cryptocurrency. Hcashd maintains the entire past transactional ledger of Hypercash and allows relaying of transactions to other Hypercash nodes across the world.
@@ -82,12 +82,12 @@ The installation of hcashd requires Go 1.7 or newer.
 	hcashctl setgenerate false
 	```
 <a name="using-hcashwallet-ui-version"></a>
-# Using HcashWallet UI Version
+## Using HcashWallet UI Version
 
 HcashWallet UI version is a graphical wallet for HCASH. With it, you can send and receive HCASH, purchase tickets for PoS voting, get a history of all your transactions and more.
 
 HcashWallet UI version is located here: https://github.com/HcashOrg/hcashwallet/releases. It could be extracted and used directly.
 
 <a name="license"></a>
-# License  
+## License  
 hcashd is licensed under the [copyfree](http://copyfree.org) ISC License.
