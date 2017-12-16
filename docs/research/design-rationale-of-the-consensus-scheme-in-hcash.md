@@ -33,14 +33,12 @@ First of all, we present a novel hybrid consensus scheme with strong robustness,
 Our brand-new consensus mechanism inherits the merits of Decred and Bitcoin-NG, based on which we propose key innovations to make our scheme more secure, efficient and flexible. Firstly, with the methodology from Bitcoin-NG's keyblock/microblock structure, we offer a two-layer chain structure. To tackle the aforementioned security issue existed in Bitcoin-NG, we present two-level mining mechanism and incorporate this mechanism into the two-layer chain structure. More specifically, two level of difficulties of PoW hash puzzle are set and these difficulties can be adjusted dynamically. When solving a hash puzzle, PoW miner can create a keyblock once the hard-level difficulty is met, and publish a microblock in the case that the low-level difficulty is satisfied. In this way, the system throughput could be enhanced significantly, and the security of the system is not compromised since malicious miners can not spawn massive microblocks freely. Furthermore, to tackle the selfish mining issue, strengthen the robustness against “the 51% attack” of PoW miners, and offer the sufficient flexibility (supporting both PoW and PoS mining), we borrow the idea of Decred's ticket-voting mechanism (a practical and flexible PoS scheme) and combine it with our newly-proposed two-layer chain structure delicately to devise a secure, efficient and flexible hybrid consensus scheme. In Hcash, keyblocks should be confirmed by certain voting tickets, and both PoW and PoS miners play important roles on the consensus of the system. With this novel hybrid scheme, we further implement basic DAO to provide PoW and PoS miners an effective mechanism for future protocol updating and project investments. Meanwhile, our scheme supports the segregated witness scheme, which facilitates the implementation of the lightning network and post-quantum signature schemes in the future. The schematic framework of our consensus scheme is shown in Figure I.
 
 <p align="center">
-	<img src ="docs/pic/Figure1.png" />
+	<img src ="docs/images/research/the-schematic-framework-of-our-consensus-scheme.png" />
 	<br/>
 	Figure I: The schematic framework of our consensus scheme
-	<br/>
-	<br/>
 </p>
-     
-
+<br>
+<br>
 
 In Table I, comparisons are made between Hcash and a few well-known decentralized cryptocurrencies. Table I also includes throughputs of Hcash with different parameters for keyblock/microblock generations. The current release of Hcash corresponds to the row marked with bold font.
 
@@ -63,13 +61,11 @@ In Table I, comparisons are made between Hcash and a few well-known decentralize
 Table II offers the relation between adversary’s PoW power and PoS capabilities (measured in proportion over all PoW power or PoS capabilities) and the success possibility of adversary undermining the system (α denotes the proportion of adversary's PoW power, β denotes the proportion of adversary's PoS capabilities).
 
 <p align="center">
-	<img src ="docs/pic/Table2.png" />
+	<img src ="docs/images/research/probability-of-successful-attacks-under-alpha-hashing-power-and-beta-stake-rate.png" />
 	<br/>
 	Table II:  Probability of adversary's succeeding in an attack with α fraction of total hash power and β fraction of total stake
-	<br/>
-	<br/>
 </p>
-
-
+<br>
+<br>
 
 The detailed description and analysis (including security and efficiency analysis) of the novel hybrid consensus scheme implemented in Hcash will be given in our research paper which will appear in the near future.
