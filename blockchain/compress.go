@@ -294,6 +294,10 @@ func compressedScriptSize(scriptVersion uint16, pkScript []byte,
 		return 21
 	}
 
+	if valid, _ := isPubKeyHashAlt(pkScript); valid {
+		return 21
+	}
+
 	// Pay-to-script-hash script.
 	if valid, _ := isScriptHash(pkScript); valid {
 		return 21
