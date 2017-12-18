@@ -1,5 +1,5 @@
 hash: 928175486fbf3a330cf1fdb26e11eb194ab31c4d2b48eee677bd01eb654816b1
-updated: 2017-11-23T17:41:31.83221538+08:00
+updated: 2017-12-18T13:20:13.522954388Z
 imports:
 - name: github.com/agl/ed25519
   version: 5312a61534124124185d41f09206b9fef1d88403
@@ -39,7 +39,7 @@ imports:
   - svc
   - winapi
 - name: github.com/davecgh/go-spew
-  version: 04cdfd42973bb9c8589fd6a731800cf222fde1a9
+  version: ecdeabc65495df2dec95d7c4a4c3e021903035e5
   subpackages:
   - spew
 - name: github.com/dchest/blake256
@@ -47,9 +47,9 @@ imports:
 - name: github.com/HcashOrg/bitset
   version: 3b5f0c752dfbeeda856fd6af60e997257ca399fc
 - name: github.com/HcashOrg/hcashrpcclient
-  version: 10a6a2003c21f36a846afb600ebbbfe00831b01b
+  version: 72cabf1da64ce4b1546d89abd3fd0ee8326bcb7e
 - name: github.com/HcashOrg/hcashutil
-  version: 5d9d38730c6f9eb3eceb4543ccc6c5f86c7e85f9
+  version: 33116a23bf37f5b77967a01bfa983091b5d76ef3
   subpackages:
   - base58
   - bloom
@@ -60,13 +60,21 @@ imports:
   version: a93b200c26cbae3bb09dd0dc2c7c7fe1468a034a
   subpackages:
   - rotator
+- name: github.com/LoCCS/bliss
+  version: af95adf044a518c61dc6dac90dcafa2b2c002b45
+  subpackages:
+  - huffman
+  - params
+  - poly
+  - sampler
 - name: golang.org/x/crypto
-  version: 9419663f5a44be8b34ca85f08abc5fe1be11f8a3
+  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
   subpackages:
   - ripemd160
+  - sha3
   - ssh/terminal
 - name: golang.org/x/sys
-  version: 314a259e304ff91bd6985da2a7149bbf91237993
+  version: 571f7bbbe08da2a8955aed9d4db316e78630e9a3
   subpackages:
   - unix
   - windows
