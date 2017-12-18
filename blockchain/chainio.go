@@ -542,16 +542,13 @@ func dbFetchSpendJournalEntry(dbTx database.Tx, block *hcashutil.Block,
 	// Exclude the coinbase transaction since it can't spend anything.
 	spendBucket := dbTx.Metadata().Bucket(dbnamespace.SpendJournalBucketName)
 	serialized := spendBucket.Get(block.Hash()[:])
-
 	var blockTxns []*wire.MsgTx
 	regularTxTreeValid := hcashutil.IsFlagSet16(block.MsgBlock().Header.VoteBits,
 		hcashutil.BlockValid)
-
 	startTx := 1
 	if HashToBig(parent.Hash()).Cmp(CompactToBig(parent.MsgBlock().Header.Bits)) <= 0 {
 		startTx = 2
 	}
-
 
 	if regularTxTreeValid {
 		blockTxns = append(blockTxns, parent.MsgBlock().Transactions[startTx:]...)

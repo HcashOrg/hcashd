@@ -1070,6 +1070,7 @@ func (mp *TxPool) maybeAcceptTransaction(chain *blockchain.BlockChain, tx *hcash
 	serializedSize := int64(msgTx.SerializeSize())
 	minFee := calcMinRequiredTxRelayFee(serializedSize,
 		mp.cfg.Policy.MinRelayTxFee)
+		
 	if txType == stake.TxTypeRegular { // Non-stake only
 		if serializedSize >= (DefaultBlockPrioritySize-1000) &&
 			txFee < minFee {

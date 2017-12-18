@@ -84,6 +84,7 @@ out:
 
 			// Create a new script engine for the script pair.
 			sigScript := txIn.SignatureScript
+			
 			version := txEntry.ScriptVersionByIndex(originTxIndex)
 
 			vm, err := txscript.NewEngine(pkScript, txVI.tx.MsgTx(),

@@ -247,6 +247,7 @@ func CheckTransactionSanity(tx *wire.MsgTx, params *chaincfg.Params) error {
 		// this transaction must not be null except in the case of
 		// stake bases for SSGen tx.
 		for _, txIn := range tx.TxIn {
+			
 			prevOut := &txIn.PreviousOutPoint
 			if isNullOutpoint(prevOut) {
 				return ruleError(ErrBadTxInput, "transaction "+

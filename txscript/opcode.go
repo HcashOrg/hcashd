@@ -19,6 +19,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg/chainec"
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashd/wire"
+	bs "github.com/HcashOrg/hcashd/crypto/bliss"
 )
 
 var optimizeSigVerification = chaincfg.SigHashOptimization
@@ -2725,6 +2726,7 @@ type sigTypes uint8
 
 var edwards = sigTypes(chainec.ECTypeEdwards)
 var secSchnorr = sigTypes(chainec.ECTypeSecSchnorr)
+var bliss = sigTypes(bs.BSTypeBliss)
 
 // opcodeCheckSigAlt accepts a three item stack and pops off the first three
 // items. The first item is a signature type (1-255, can not be zero or the
@@ -2751,6 +2753,8 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		break
 	case secSchnorr:
 		break
+	case bliss:
+		break
 	default:
 		// Caveat: All unknown signature types return true, allowing for future
 		// softforks with other new signature types.
@@ -2774,6 +2778,12 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		}
 	case secSchnorr:
 		if len(pkBytes) != 33 {
+			vm.dstack.PushBool(false)
+			return nil
+		}
+	case bliss:
+		if len(pkBytes) !=  897 {
+			fmt.Printf("pub key length is not 417, length:%v\n", len(pkBytes))
 			vm.dstack.PushBool(false)
 			return nil
 		}
@@ -2856,10 +2866,18 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 			return nil
 		}
 		pubKey = pubKeySec
+	case bliss:
+		pubKeySec, err := bs.Bliss.ParsePubKey(pkBytes)
+		if err != nil {
+			vm.dstack.PushBool(false)
+			return nil
+		}
+		pubKey = pubKeySec
 	}
 
 	// Get the signature from bytes.
 	var signature chainec.Signature
+	
 	switch sigTypes(sigType) {
 	case edwards:
 		sigEd, err := chainec.Edwards.ParseSignature(sigBytes)
@@ -2870,6 +2888,13 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		signature = sigEd
 	case secSchnorr:
 		sigSec, err := chainec.SecSchnorr.ParseSignature(sigBytes)
+		if err != nil {
+			vm.dstack.PushBool(false)
+			return nil
+		}
+		signature = sigSec
+	case bliss:
+		sigSec, err := bs.Bliss.ParseSignature(sigBytes)
 		if err != nil {
 			vm.dstack.PushBool(false)
 			return nil
@@ -2890,6 +2915,10 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 	case secSchnorr:
 		ok := chainec.SecSchnorr.Verify(pubKey, hash, signature.GetR(),
 			signature.GetS())
+		vm.dstack.PushBool(ok)
+		return nil
+	case bliss:
+		ok := bs.Bliss.Verify(pubKey, hash, signature)
 		vm.dstack.PushBool(ok)
 		return nil
 	}

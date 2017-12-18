@@ -19,6 +19,7 @@ import (
 	"github.com/HcashOrg/hcashd/txscript"
 	"github.com/HcashOrg/hcashd/wire"
 	"github.com/HcashOrg/hcashutil"
+	"github.com/HcashOrg/hcashd/crypto/bliss"
 )
 
 const (
@@ -67,6 +68,8 @@ const (
 	// the hash of a pubkey address might be the same as that of a script
 	// hash.
 	addrKeyTypeScriptHash = 3
+
+	addrKeyTypePubKeyHashBliss = 4
 
 	// Size of a transaction entry.  It consists of 4 bytes block id + 4
 	// bytes offset + 4 bytes length.
@@ -551,6 +554,11 @@ func addrToKey(addr hcashutil.Address, params *chaincfg.Params) ([addrKeySize]by
 			result[0] = addrKeyTypePubKeyHashSchnorr
 			copy(result[1:], addr.Hash160()[:])
 			return result, nil
+		case bliss.BSTypeBliss:
+			var result [addrKeySize]byte
+			result[0] = addrKeyTypePubKeyHashBliss
+			copy(result[1:], addr.Hash160()[:])
+			return result, nil
 		}
 
 	case *hcashutil.AddressScriptHash:
@@ -574,6 +582,12 @@ func addrToKey(addr hcashutil.Address, params *chaincfg.Params) ([addrKeySize]by
 	case *hcashutil.AddressSecSchnorrPubKey:
 		var result [addrKeySize]byte
 		result[0] = addrKeyTypePubKeyHashSchnorr
+		copy(result[1:], addr.AddressPubKeyHash().Hash160()[:])
+		return result, nil
+
+	case *hcashutil.AddressBlissPubKey:
+		var result [addrKeySize]byte
+		result[0] = addrKeyTypePubKeyHashBliss
 		copy(result[1:], addr.AddressPubKeyHash().Hash160()[:])
 		return result, nil
 	}

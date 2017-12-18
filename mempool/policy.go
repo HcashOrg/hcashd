@@ -68,6 +68,7 @@ func calcMinRequiredTxRelayFee(serializedSize int64, minRelayTxFee hcashutil.Amo
 	// get minimum Atoms.
 	minFee := (serializedSize * int64(minRelayTxFee)) / 1000
 
+
 	if minFee == 0 && minRelayTxFee > 0 {
 		minFee = int64(minRelayTxFee)
 	}
@@ -113,6 +114,7 @@ func CalcPriority(tx *wire.MsgTx, utxoView *blockchain.UtxoViewpoint, nextBlockH
 	}
 
 	serializedTxSize := tx.SerializeSize()
+	
 	if overhead >= serializedTxSize {
 		return 0.0
 	}
@@ -184,7 +186,10 @@ func checkInputsStandard(tx *hcashutil.Tx, txType stake.TxType, utxoView *blockc
 		entry := utxoView.LookupEntry(&prevOut.Hash)
 		originPkScriptVer := entry.ScriptVersionByIndex(prevOut.Index)
 		originPkScript := entry.PkScriptByIndex(prevOut.Index)
-		switch txscript.GetScriptClass(originPkScriptVer, originPkScript) {
+		
+		scriptClass := txscript.GetScriptClass(originPkScriptVer, originPkScript)
+
+		switch  scriptClass{
 		case txscript.ScriptHashTy:
 			numSigOps := txscript.GetPreciseSigOpCount(
 				txIn.SignatureScript, originPkScript, true)
