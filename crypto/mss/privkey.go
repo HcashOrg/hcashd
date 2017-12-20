@@ -28,5 +28,5 @@ func (p PrivateKey) GetType() int {
 }
 
 func (p PrivateKey) Serialize() []byte{
-	return p.MerkleAgent.SerializeSecret()
+	return p.MerkleAgent.SerializeSecretKey()
 }

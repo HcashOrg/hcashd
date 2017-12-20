@@ -1,7 +1,6 @@
 package mss
 
 import (
-	"github.com/LoCCS/bliss"
 	hcashcrypto "github.com/HcashOrg/hcashd/crypto"
 )
 

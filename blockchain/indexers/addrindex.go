@@ -20,6 +20,7 @@ import (
 	"github.com/HcashOrg/hcashd/wire"
 	"github.com/HcashOrg/hcashutil"
 	"github.com/HcashOrg/hcashd/crypto/bliss"
+	"github.com/HcashOrg/hcashd/crypto/mss"
 )
 
 const (
@@ -70,6 +71,8 @@ const (
 	addrKeyTypeScriptHash = 3
 
 	addrKeyTypePubKeyHashBliss = 4
+
+	addrKeyTypePubKeyHashMss = 5
 
 	// Size of a transaction entry.  It consists of 4 bytes block id + 4
 	// bytes offset + 4 bytes length.
@@ -559,6 +562,11 @@ func addrToKey(addr hcashutil.Address, params *chaincfg.Params) ([addrKeySize]by
 			result[0] = addrKeyTypePubKeyHashBliss
 			copy(result[1:], addr.Hash160()[:])
 			return result, nil
+		case mss.MSSTypeMSS:
+			var result [addrKeySize]byte
+			result[0] = addrKeyTypePubKeyHashMss
+			copy(result[1:], addr.Hash160()[:])
+			return result, nil
 		}
 
 	case *hcashutil.AddressScriptHash:
@@ -588,6 +596,11 @@ func addrToKey(addr hcashutil.Address, params *chaincfg.Params) ([addrKeySize]by
 	case *hcashutil.AddressBlissPubKey:
 		var result [addrKeySize]byte
 		result[0] = addrKeyTypePubKeyHashBliss
+		copy(result[1:], addr.AddressPubKeyHash().Hash160()[:])
+		return result, nil
+	case *hcashutil.AddressMssPubKey:
+		var result [addrKeySize]byte
+		result[0] = addrKeyTypePubKeyHashMss
 		copy(result[1:], addr.AddressPubKeyHash().Hash160()[:])
 		return result, nil
 	}

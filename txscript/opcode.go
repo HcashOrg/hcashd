@@ -20,6 +20,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashd/wire"
 	bs "github.com/HcashOrg/hcashd/crypto/bliss"
+	"github.com/HcashOrg/hcashd/crypto/mss"
 )
 
 var optimizeSigVerification = chaincfg.SigHashOptimization
@@ -2727,6 +2728,7 @@ type sigTypes uint8
 var edwards = sigTypes(chainec.ECTypeEdwards)
 var secSchnorr = sigTypes(chainec.ECTypeSecSchnorr)
 var bliss = sigTypes(bs.BSTypeBliss)
+var ms = sigTypes(mss.MSSTypeMSS)
 
 // opcodeCheckSigAlt accepts a three item stack and pops off the first three
 // items. The first item is a signature type (1-255, can not be zero or the
@@ -2755,6 +2757,8 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		break
 	case bliss:
 		break
+	case ms:
+		break
 	default:
 		// Caveat: All unknown signature types return true, allowing for future
 		// softforks with other new signature types.
@@ -2782,6 +2786,13 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 			return nil
 		}
 	case bliss:
+		if len(pkBytes) !=  897 {
+			fmt.Printf("pub key length is not 417, length:%v\n", len(pkBytes))
+			vm.dstack.PushBool(false)
+			return nil
+		}
+		//TODO: the size of pk should alter later
+	case ms:
 		if len(pkBytes) !=  897 {
 			fmt.Printf("pub key length is not 417, length:%v\n", len(pkBytes))
 			vm.dstack.PushBool(false)
@@ -2867,12 +2878,19 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		}
 		pubKey = pubKeySec
 	case bliss:
-		pubKeySec, err := bs.Bliss.ParsePubKey(pkBytes)
+		pubKeyBliss, err := bs.Bliss.ParsePubKey(pkBytes)
 		if err != nil {
 			vm.dstack.PushBool(false)
 			return nil
 		}
-		pubKey = pubKeySec
+		pubKey = pubKeyBliss
+	case ms:
+		pubKeyMss, err := mss.MSS.ParsePubKey(pkBytes)
+		if err != nil {
+			vm.dstack.PushBool(false)
+			return nil
+		}
+		pubKey = pubKeyMss
 	}
 
 	// Get the signature from bytes.
@@ -2894,12 +2912,19 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		}
 		signature = sigSec
 	case bliss:
-		sigSec, err := bs.Bliss.ParseSignature(sigBytes)
+		sigBliss, err := bs.Bliss.ParseSignature(sigBytes)
 		if err != nil {
 			vm.dstack.PushBool(false)
 			return nil
 		}
-		signature = sigSec
+		signature = sigBliss
+	case ms:
+		sigMss, err := mss.MSS.ParseSignature(sigBytes)
+		if err != nil {
+			vm.dstack.PushBool(false)
+			return nil
+		}
+		signature = sigMss
 	default:
 		vm.dstack.PushBool(false)
 		return nil
@@ -2919,6 +2944,10 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		return nil
 	case bliss:
 		ok := bs.Bliss.Verify(pubKey, hash, signature)
+		vm.dstack.PushBool(ok)
+		return nil
+	case ms:
+		ok := mss.MSS.Verify(pubKey, hash, signature)
 		vm.dstack.PushBool(ok)
 		return nil
 	}

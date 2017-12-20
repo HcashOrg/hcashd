@@ -15,6 +15,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashutil"
 	bs "github.com/HcashOrg/hcashd/crypto/bliss"
+	"github.com/HcashOrg/hcashd/crypto/mss"
 )
 
 const (
@@ -699,6 +700,13 @@ func payToPubKeyHashBlissScript(pubKeyHash []byte) ([]byte, error) {
 		AddOp(OP_CHECKSIGALT).Script()
 }
 
+func payToPubKeyHashMssScript(pubKeyHash []byte) ([]byte, error) {
+	mssData := []byte{byte(ms)}
+	return NewScriptBuilder().AddOp(OP_DUP).AddOp(OP_HASH160).
+		AddData(pubKeyHash).AddOp(OP_EQUALVERIFY).AddData(mssData).
+		AddOp(OP_CHECKSIGALT).Script()
+}
+
 // payToScriptHashScript creates a new script to pay a transaction output to a
 // script hash. It is expected that the input is a valid hash.
 func payToScriptHashScript(scriptHash []byte) ([]byte, error) {
@@ -765,11 +773,17 @@ func payToBlissPubKeyScript(serializedPubKey []byte) ([]byte, error) {
 		AddOp(OP_CHECKSIGALT).Script()
 }
 
+func payToMssPubKeyScript(serializedPubKey []byte) ([]byte, error) {
+	mssData := []byte{byte(ms)}
+	return NewScriptBuilder().AddData(serializedPubKey).AddData(mssData).
+		AddOp(OP_CHECKSIGALT).Script()
+}
+
 // PayToSStx creates a new script to pay a transaction output to a script hash or
 // public key hash, but tags the output with OP_SSTX. For use in constructing
 // valid SStxs.
 func PayToSStx(addr hcashutil.Address) ([]byte, error) {
-	blissData := []byte{byte(bliss)}
+	altData := []byte{byte(bliss)}
 
 	if addr == nil {
 		return nil, ErrUnsupportedAddress
@@ -789,6 +803,13 @@ func PayToSStx(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
+		break
+	case *hcashutil.AddressMssPubKey:
+		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+			return nil, ErrUnsupportedAddress
+		}
+		scriptType = PubkeyHashAltTy
+		altData = []byte{byte(ms)}
 		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy
@@ -807,7 +828,7 @@ func PayToSStx(addr hcashutil.Address) ([]byte, error) {
 	if scriptType == PubkeyHashAltTy {
 		return NewScriptBuilder().AddOp(OP_SSGEN).AddOp(OP_DUP).
 			AddOp(OP_HASH160).AddData(hash).AddOp(OP_EQUALVERIFY).
-			AddData(blissData).AddOp(OP_CHECKSIG).Script()
+			AddData(altData).AddOp(OP_CHECKSIG).Script()
 	}
 	return NewScriptBuilder().AddOp(OP_SSTX).AddOp(OP_HASH160).
 		AddData(hash).AddOp(OP_EQUAL).Script()
@@ -817,7 +838,7 @@ func PayToSStx(addr hcashutil.Address) ([]byte, error) {
 // public key hash, but tags the output with OP_SSTXCHANGE. For use in constructing
 // valid SStxs.
 func PayToSStxChange(addr hcashutil.Address) ([]byte, error) {
-	blissData := []byte{byte(bliss)}
+	altData := []byte{byte(bliss)}
 
 	if addr == nil {
 		return nil, ErrUnsupportedAddress
@@ -837,6 +858,13 @@ func PayToSStxChange(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
+		break
+	case *hcashutil.AddressMssPubKey:
+		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+			return nil, ErrUnsupportedAddress
+		}
+		scriptType = PubkeyHashAltTy
+		altData = []byte{byte(ms)}
 		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy
@@ -855,7 +883,7 @@ func PayToSStxChange(addr hcashutil.Address) ([]byte, error) {
 	if scriptType == PubkeyHashAltTy {
 		return NewScriptBuilder().AddOp(OP_SSGEN).AddOp(OP_DUP).
 			AddOp(OP_HASH160).AddData(hash).AddOp(OP_EQUALVERIFY).
-			AddData(blissData).AddOp(OP_CHECKSIG).Script()
+			AddData(altData).AddOp(OP_CHECKSIG).Script()
 	}
 	return NewScriptBuilder().AddOp(OP_SSTXCHANGE).AddOp(OP_HASH160).
 		AddData(hash).AddOp(OP_EQUAL).Script()
@@ -865,7 +893,7 @@ func PayToSStxChange(addr hcashutil.Address) ([]byte, error) {
 // hash or script hash, but tags the output with OP_SSGEN. For use in constructing
 // valid SSGen txs.
 func PayToSSGen(addr hcashutil.Address) ([]byte, error) {
-	blissData := []byte{byte(bliss)}
+	altData := []byte{byte(bliss)}
 
 	if addr == nil {
 		return nil, ErrUnsupportedAddress
@@ -886,6 +914,13 @@ func PayToSSGen(addr hcashutil.Address) ([]byte, error) {
 		}
 		scriptType = PubkeyHashAltTy
 		break
+	case *hcashutil.AddressMssPubKey:
+		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+			return nil, ErrUnsupportedAddress
+		}
+		scriptType = PubkeyHashAltTy
+		altData = []byte{byte(ms)}
+		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy
 		break
@@ -903,7 +938,7 @@ func PayToSSGen(addr hcashutil.Address) ([]byte, error) {
 	if scriptType == PubkeyHashAltTy {
 		return NewScriptBuilder().AddOp(OP_SSGEN).AddOp(OP_DUP).
 			AddOp(OP_HASH160).AddData(hash).AddOp(OP_EQUALVERIFY).
-			AddData(blissData).AddOp(OP_CHECKSIG).Script()
+			AddData(altData).AddOp(OP_CHECKSIG).Script()
 	}
 	return NewScriptBuilder().AddOp(OP_SSGEN).AddOp(OP_HASH160).
 		AddData(hash).AddOp(OP_EQUAL).Script()
@@ -940,7 +975,7 @@ func PayToSSGenSHDirect(sh []byte) ([]byte, error) {
 // public key hash, but tags the output with OP_SSRTX. For use in constructing
 // valid SSRtx.
 func PayToSSRtx(addr hcashutil.Address) ([]byte, error) {
-	blissData := []byte{byte(bliss)}
+	altData := []byte{byte(bliss)}
 
 	if addr == nil {
 		return nil, ErrUnsupportedAddress
@@ -961,6 +996,13 @@ func PayToSSRtx(addr hcashutil.Address) ([]byte, error) {
 		}
 		scriptType = PubkeyHashAltTy
 		break
+	case *hcashutil.AddressMssPubKey:
+		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+			return nil, ErrUnsupportedAddress
+		}
+		scriptType = PubkeyHashAltTy
+		altData = []byte{byte(ms)}
+		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy
 		break
@@ -978,7 +1020,7 @@ func PayToSSRtx(addr hcashutil.Address) ([]byte, error) {
 	if scriptType == PubkeyHashAltTy {
 		return NewScriptBuilder().AddOp(OP_SSGEN).AddOp(OP_DUP).
 			AddOp(OP_HASH160).AddData(hash).AddOp(OP_EQUALVERIFY).
-			AddData(blissData).AddOp(OP_CHECKSIG).Script()
+			AddData(altData).AddOp(OP_CHECKSIG).Script()
 	}
 	return NewScriptBuilder().AddOp(OP_SSRTX).AddOp(OP_HASH160).
 		AddData(hash).AddOp(OP_EQUAL).Script()
@@ -1030,6 +1072,12 @@ func GenerateSStxAddrPush(addr hcashutil.Address, amount hcashutil.Amount,
 		break
 	case *hcashutil.AddressBlissPubKey:
 		if addr.DSA(addr.Net()) != bs.BSTypeBliss {
+			return nil, ErrUnsupportedAddress
+		}
+		scriptType = PubkeyHashAltTy
+		break
+	case *hcashutil.AddressMssPubKey:
+		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
@@ -1132,6 +1180,8 @@ func PayToAddrScript(addr hcashutil.Address) ([]byte, error) {
 			return payToPubKeyHashSchnorrScript(addr.ScriptAddress())
 		case bs.BSTypeBliss:
 			return payToPubKeyHashBlissScript(addr.ScriptAddress())
+		case mss.MSSTypeMSS:
+			return payToPubKeyHashMssScript(addr.ScriptAddress())
 		}
 
 	case *hcashutil.AddressScriptHash:
@@ -1163,6 +1213,11 @@ func PayToAddrScript(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		return payToBlissPubKeyScript(addr.ScriptAddress())
+	case *hcashutil.AddressMssPubKey:
+		if addr == nil {
+			return nil, ErrUnsupportedAddress
+		}
+		return payToMssPubKeyScript(addr.ScriptAddress())
 	}
 
 	return nil, ErrUnsupportedAddress
@@ -1304,6 +1359,9 @@ func ExtractPkScriptAddrs(version uint16, pkScript []byte,
 				chainParams)
 		case bs.BSTypeBliss:
 			addr, err = hcashutil.NewAddressBlissPubKey(pops[0].data,
+				chainParams)
+		case mss.MSSTypeMSS:
+			addr, err = hcashutil.NewAddressMssPubKey(pops[0].data,
 				chainParams)
 		}
 		if err == nil {
@@ -1457,6 +1515,8 @@ func ExtractPkScriptAltSigType(pkScript []byte) (int, error) {
 	case secSchnorr:
 		return int(val), nil
 	case bliss:
+		return int(val), nil
+	case ms:
 		return int(val), nil
 	default:
 		break

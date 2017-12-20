@@ -11,6 +11,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg/chainec"
 	"github.com/HcashOrg/hcashd/txscript"
 	"github.com/HcashOrg/hcashd/crypto/bliss"
+	"github.com/HcashOrg/hcashd/crypto/mss"
 )
 
 // currentCompressionVersion is the current script compression version of the
@@ -172,6 +173,8 @@ const (
 
 	cstPayToPubKeyHashBliss = 6
 
+	cstPayToPubKeyHashMss = 7
+
 	// numSpecialScripts is the number of special scripts possibly recognized
 	// by the domain-specific script compression algorithm. It is one more
 	// than half the number required to overflow a single byte in VLQ format
@@ -199,7 +202,7 @@ func isPubKeyHash(script []byte) (bool, []byte) {
 	return false, nil
 }
 
-func isPubKeyHashAlt(script []byte) (bool, []byte) {
+func isPubKeyHashAlt(script []byte) (bool, []byte, byte) {
 	if len(script) == 26 && script[0] == txscript.OP_DUP &&
 		script[1] == txscript.OP_HASH160 &&
 		script[2] == txscript.OP_DATA_20 &&
@@ -207,10 +210,10 @@ func isPubKeyHashAlt(script []byte) (bool, []byte) {
 		isOneByteMaxDataPush(script[24]) &&
 		script[25] == txscript.OP_CHECKSIGALT {
 
-		return true, script[3:23]
+		return true, script[3:23], script[24]
 	}
 
-	return false, nil
+	return false, nil, 0x00
 }
 
 func isOneByteMaxDataPush(op byte) bool {
@@ -294,7 +297,7 @@ func compressedScriptSize(scriptVersion uint16, pkScript []byte,
 		return 21
 	}
 
-	if valid, _ := isPubKeyHashAlt(pkScript); valid {
+	if valid, _, _ := isPubKeyHashAlt(pkScript); valid {
 		return 21
 	}
 
@@ -333,6 +336,9 @@ func decodeCompressedScriptSize(serialized []byte, compressionVersion uint32) in
 		return 21
 
 	case cstPayToPubKeyHashBliss:
+		return 21
+
+	case cstPayToPubKeyHashMss:
 		return 21
 
 	case cstPayToPubKeyCompEven, cstPayToPubKeyCompOdd,
@@ -396,8 +402,11 @@ func putCompressedScript(target []byte, scriptVersion uint16, pkScript []byte,
 		}
 	}
 
-	if valid, hash := isPubKeyHashAlt(pkScript); valid {
+	if valid, hash, tp := isPubKeyHashAlt(pkScript); valid {
 		target[0] = cstPayToPubKeyHashBliss
+		if tp == 0x05 {
+			target[0] = cstPayToPubKeyHashMss
+		}
 		copy(target[1:21], hash)
 		return 21
 	}
@@ -497,6 +506,17 @@ func decompressScript(compressedPkScript []byte,
 		copy(pkScript[3:], compressedPkScript[bytesRead:bytesRead+20])
 		pkScript[23] = txscript.OP_EQUALVERIFY
 		pkScript[24] = byte(bliss.BSTypeBliss)
+		pkScript[25] = txscript.OP_CHECKSIGALT
+		return pkScript
+
+	case cstPayToPubKeyHashMss:
+		pkScript := make([]byte, 26)
+		pkScript[0] = txscript.OP_DUP
+		pkScript[1] = txscript.OP_HASH160
+		pkScript[2] = txscript.OP_DATA_20
+		copy(pkScript[3:], compressedPkScript[bytesRead:bytesRead+20])
+		pkScript[23] = txscript.OP_EQUALVERIFY
+		pkScript[24] = byte(mss.MSSTypeMSS)
 		pkScript[25] = txscript.OP_CHECKSIGALT
 		return pkScript
 	}
