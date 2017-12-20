@@ -75,7 +75,7 @@ const (
 
 	MSSPubKeyLen = 897
 
-	MSSPrivKeyLen = 385
+	MSSPrivKeyLen = 32
 )
 
 var MSS = newMSSDSA()
