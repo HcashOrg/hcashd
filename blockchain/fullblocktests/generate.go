@@ -30,7 +30,7 @@ const (
 	minCoinbaseScriptLen = 2
 	maxCoinbaseScriptLen = 100
 	medianTimeBlocks     = 11
-	maxScriptElementSize = 2048
+	maxScriptElementSize = 4096
 
 	// numLargeReorgBlocks is the number of blocks to use in the large block
 	// reorg test (when enabled).  This is the equivalent of 2 day's worth

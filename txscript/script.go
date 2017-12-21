@@ -36,7 +36,7 @@ const (
 const (
 	MaxOpsPerScript       = 255  // Max number of non-push operations.
 	MaxPubKeysPerMultiSig = 20   // Multisig can't have more sigs than this.
-	MaxScriptElementSize  = 2048 // Max bytes pushable to the stack.
+	MaxScriptElementSize  = 4096 // Max bytes pushable to the stack.
 )
 
 // isSmallInt returns whether or not the opcode is considered a small integer,
