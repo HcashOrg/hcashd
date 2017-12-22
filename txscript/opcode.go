@@ -20,7 +20,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashd/wire"
 	bs "github.com/HcashOrg/hcashd/crypto/bliss"
-	"github.com/HcashOrg/hcashd/crypto/mss"
+	"github.com/HcashOrg/hcashd/crypto/lms"
 )
 
 var optimizeSigVerification = chaincfg.SigHashOptimization
@@ -2728,7 +2728,7 @@ type sigTypes uint8
 var edwards = sigTypes(chainec.ECTypeEdwards)
 var secSchnorr = sigTypes(chainec.ECTypeSecSchnorr)
 var bliss = sigTypes(bs.BSTypeBliss)
-var ms = sigTypes(mss.MSSTypeMSS)
+var lm = sigTypes(lms.LMSTypeLMS)
 
 // opcodeCheckSigAlt accepts a three item stack and pops off the first three
 // items. The first item is a signature type (1-255, can not be zero or the
@@ -2792,7 +2792,7 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 			return nil
 		}
 		//TODO: the size of pk should alter later
-	case ms:
+	case lm:
 		if len(pkBytes) !=  897 {
 			fmt.Printf("pub key length is not 417, length:%v\n", len(pkBytes))
 			vm.dstack.PushBool(false)
@@ -2884,8 +2884,8 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 			return nil
 		}
 		pubKey = pubKeyBliss
-	case ms:
-		pubKeyMss, err := mss.MSS.ParsePubKey(pkBytes)
+	case lm:
+		pubKeyMss, err := lms.LMS.ParsePubKey(pkBytes)
 		if err != nil {
 			vm.dstack.PushBool(false)
 			return nil
@@ -2918,8 +2918,8 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 			return nil
 		}
 		signature = sigBliss
-	case ms:
-		sigMss, err := mss.MSS.ParseSignature(sigBytes)
+	case lm:
+		sigMss, err := lms.LMS.ParseSignature(sigBytes)
 		if err != nil {
 			vm.dstack.PushBool(false)
 			return nil
@@ -2946,8 +2946,8 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		ok := bs.Bliss.Verify(pubKey, hash, signature)
 		vm.dstack.PushBool(ok)
 		return nil
-	case ms:
-		ok := mss.MSS.Verify(pubKey, hash, signature)
+	case lm:
+		ok := lms.LMS.Verify(pubKey, hash, signature)
 		vm.dstack.PushBool(ok)
 		return nil
 	}

@@ -54,16 +54,16 @@ type DSA interface {
 	RecoverCompact(signature , hash []byte) (hcashcrypto.PublicKey, bool, error)
 
 	// ----------------------------------------------------------------------------
-	// MSS
+	// LMS
 	//
 	// GenerateKey generates a new private and public keypair from the
 	// given reader.
 	GenerateKey(rand io.Reader) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey, error)
 
-	// Sign produces a MSS signature using a private key and a message.
+	// Sign produces a LMS signature using a private key and a message.
 	Sign(priv hcashcrypto.PrivateKey, hash []byte) (hcashcrypto.Signature, error)
 
-	// Verify verifies a MSS signature against a given message and
+	// Verify verifies a LMS signature against a given message and
 	// public key.
 	Verify(pub hcashcrypto.PublicKey, hash []byte, sig hcashcrypto.Signature) bool
 }

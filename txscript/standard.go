@@ -15,7 +15,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashutil"
 	bs "github.com/HcashOrg/hcashd/crypto/bliss"
-	"github.com/HcashOrg/hcashd/crypto/mss"
+	"github.com/HcashOrg/hcashd/crypto/lms"
 )
 
 const (
@@ -700,10 +700,10 @@ func payToPubKeyHashBlissScript(pubKeyHash []byte) ([]byte, error) {
 		AddOp(OP_CHECKSIGALT).Script()
 }
 
-func payToPubKeyHashMssScript(pubKeyHash []byte) ([]byte, error) {
-	mssData := []byte{byte(ms)}
+func payToPubKeyHashLmsScript(pubKeyHash []byte) ([]byte, error) {
+	lmsData := []byte{byte(lm)}
 	return NewScriptBuilder().AddOp(OP_DUP).AddOp(OP_HASH160).
-		AddData(pubKeyHash).AddOp(OP_EQUALVERIFY).AddData(mssData).
+		AddData(pubKeyHash).AddOp(OP_EQUALVERIFY).AddData(lmsData).
 		AddOp(OP_CHECKSIGALT).Script()
 }
 
@@ -773,9 +773,9 @@ func payToBlissPubKeyScript(serializedPubKey []byte) ([]byte, error) {
 		AddOp(OP_CHECKSIGALT).Script()
 }
 
-func payToMssPubKeyScript(serializedPubKey []byte) ([]byte, error) {
-	mssData := []byte{byte(ms)}
-	return NewScriptBuilder().AddData(serializedPubKey).AddData(mssData).
+func payToLmsPubKeyScript(serializedPubKey []byte) ([]byte, error) {
+	lmsData := []byte{byte(lm)}
+	return NewScriptBuilder().AddData(serializedPubKey).AddData(lmsData).
 		AddOp(OP_CHECKSIGALT).Script()
 }
 
@@ -804,8 +804,8 @@ func PayToSStx(addr hcashutil.Address) ([]byte, error) {
 		}
 		scriptType = PubkeyHashAltTy
 		break
-	case *hcashutil.AddressMssPubKey:
-		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+	case *hcashutil.AddressLmsPubKey:
+		if addr.DSA(addr.Net()) != lms.LMSTypeLMS {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
@@ -859,8 +859,8 @@ func PayToSStxChange(addr hcashutil.Address) ([]byte, error) {
 		}
 		scriptType = PubkeyHashAltTy
 		break
-	case *hcashutil.AddressMssPubKey:
-		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+	case *hcashutil.AddressLmsPubKey:
+		if addr.DSA(addr.Net()) != lms.LMSTypeLMS {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
@@ -914,8 +914,8 @@ func PayToSSGen(addr hcashutil.Address) ([]byte, error) {
 		}
 		scriptType = PubkeyHashAltTy
 		break
-	case *hcashutil.AddressMssPubKey:
-		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+	case *hcashutil.AddressLmsPubKey:
+		if addr.DSA(addr.Net()) != lms.LMSTypeLMS {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
@@ -996,8 +996,8 @@ func PayToSSRtx(addr hcashutil.Address) ([]byte, error) {
 		}
 		scriptType = PubkeyHashAltTy
 		break
-	case *hcashutil.AddressMssPubKey:
-		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+	case *hcashutil.AddressLmsPubKey:
+		if addr.DSA(addr.Net()) != lms.LMSTypeLMS {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
@@ -1076,8 +1076,8 @@ func GenerateSStxAddrPush(addr hcashutil.Address, amount hcashutil.Amount,
 		}
 		scriptType = PubkeyHashAltTy
 		break
-	case *hcashutil.AddressMssPubKey:
-		if addr.DSA(addr.Net()) != mss.MSSTypeMSS {
+	case *hcashutil.AddressLmsPubKey:
+		if addr.DSA(addr.Net()) != lms.LMSTypeLMS {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
@@ -1180,8 +1180,8 @@ func PayToAddrScript(addr hcashutil.Address) ([]byte, error) {
 			return payToPubKeyHashSchnorrScript(addr.ScriptAddress())
 		case bs.BSTypeBliss:
 			return payToPubKeyHashBlissScript(addr.ScriptAddress())
-		case mss.MSSTypeMSS:
-			return payToPubKeyHashMssScript(addr.ScriptAddress())
+		case lms.LMSTypeLMS:
+			return payToPubKeyHashLmsScript(addr.ScriptAddress())
 		}
 
 	case *hcashutil.AddressScriptHash:
@@ -1213,11 +1213,11 @@ func PayToAddrScript(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		return payToBlissPubKeyScript(addr.ScriptAddress())
-	case *hcashutil.AddressMssPubKey:
+	case *hcashutil.AddressLmsPubKey:
 		if addr == nil {
 			return nil, ErrUnsupportedAddress
 		}
-		return payToMssPubKeyScript(addr.ScriptAddress())
+		return payToLmsPubKeyScript(addr.ScriptAddress())
 	}
 
 	return nil, ErrUnsupportedAddress
@@ -1360,8 +1360,8 @@ func ExtractPkScriptAddrs(version uint16, pkScript []byte,
 		case bs.BSTypeBliss:
 			addr, err = hcashutil.NewAddressBlissPubKey(pops[0].data,
 				chainParams)
-		case mss.MSSTypeMSS:
-			addr, err = hcashutil.NewAddressMssPubKey(pops[0].data,
+		case lms.LMSTypeLMS:
+			addr, err = hcashutil.NewAddressLmsPubKey(pops[0].data,
 				chainParams)
 		}
 		if err == nil {
@@ -1516,7 +1516,7 @@ func ExtractPkScriptAltSigType(pkScript []byte) (int, error) {
 		return int(val), nil
 	case bliss:
 		return int(val), nil
-	case ms:
+	case lm:
 		return int(val), nil
 	default:
 		break

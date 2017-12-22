@@ -89,7 +89,7 @@ func (sp lmsDSA) Verify(pub hcashcrypto.PublicKey, hash []byte, sig hcashcrypto.
 }
 
 func newLMSDSA() DSA {
-	var mss DSA = &lmsDSA{
+	var lms DSA = &lmsDSA{
 		privKeyFromBytes: func(pk []byte) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey) {
 			fmt.Println("privKeyFromBytes is called")
 			return nil, nil
@@ -129,8 +129,8 @@ func newLMSDSA() DSA {
 			sha3.New256()
 			messageHash := sha3.Sum256(hash)
 
-			mssPrv := priv.(PrivateKey).MerkleAgent
-			_, sig, err := lms.Sign(&mssPrv, messageHash[:])
+			lmsPrv := priv.(PrivateKey).MerkleAgent
+			_, sig, err := lms.Sign(&lmsPrv, messageHash[:])
 			if err != nil{
 				return nil, err
 			}
@@ -144,11 +144,11 @@ func newLMSDSA() DSA {
 			messageHash := sha3.Sum256(hash)
 			pbBytes := pub.(PublicKey).root
 			signature := sig.(*Signature)
-			mssSig := signature.MerkleSig
-			result := lms.Verify(pbBytes, messageHash[:], &mssSig)
+			lmsSig := signature.MerkleSig
+			result := lms.Verify(pbBytes, messageHash[:], &lmsSig)
 			return result
 		},
 	}
 
-	return mss.(DSA)
+	return lms.(DSA)
 }

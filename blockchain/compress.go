@@ -11,7 +11,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg/chainec"
 	"github.com/HcashOrg/hcashd/txscript"
 	"github.com/HcashOrg/hcashd/crypto/bliss"
-	"github.com/HcashOrg/hcashd/crypto/mss"
+	"github.com/HcashOrg/hcashd/crypto/lms"
 )
 
 // currentCompressionVersion is the current script compression version of the
@@ -173,7 +173,7 @@ const (
 
 	cstPayToPubKeyHashBliss = 6
 
-	cstPayToPubKeyHashMss = 7
+	cstPayToPubKeyHashLms = 7
 
 	// numSpecialScripts is the number of special scripts possibly recognized
 	// by the domain-specific script compression algorithm. It is one more
@@ -338,7 +338,7 @@ func decodeCompressedScriptSize(serialized []byte, compressionVersion uint32) in
 	case cstPayToPubKeyHashBliss:
 		return 21
 
-	case cstPayToPubKeyHashMss:
+	case cstPayToPubKeyHashLms:
 		return 21
 
 	case cstPayToPubKeyCompEven, cstPayToPubKeyCompOdd,
@@ -405,7 +405,7 @@ func putCompressedScript(target []byte, scriptVersion uint16, pkScript []byte,
 	if valid, hash, tp := isPubKeyHashAlt(pkScript); valid {
 		target[0] = cstPayToPubKeyHashBliss
 		if tp == 0x05 {
-			target[0] = cstPayToPubKeyHashMss
+			target[0] = cstPayToPubKeyHashLms
 		}
 		copy(target[1:21], hash)
 		return 21
@@ -509,14 +509,14 @@ func decompressScript(compressedPkScript []byte,
 		pkScript[25] = txscript.OP_CHECKSIGALT
 		return pkScript
 
-	case cstPayToPubKeyHashMss:
+	case cstPayToPubKeyHashLms:
 		pkScript := make([]byte, 26)
 		pkScript[0] = txscript.OP_DUP
 		pkScript[1] = txscript.OP_HASH160
 		pkScript[2] = txscript.OP_DATA_20
 		copy(pkScript[3:], compressedPkScript[bytesRead:bytesRead+20])
 		pkScript[23] = txscript.OP_EQUALVERIFY
-		pkScript[24] = byte(mss.MSSTypeMSS)
+		pkScript[24] = byte(lms.LMSTypeLMS)
 		pkScript[25] = txscript.OP_CHECKSIGALT
 		return pkScript
 	}
