@@ -1,5 +1,4 @@
-package mss
-
+package lms
 
 import (
 	"io"
@@ -12,6 +11,7 @@ type DSA interface {
 	// Private keys
 	//
 	// NewPrivateKey instantiates a new private key for the given data
+	NewPrivateKey() hcashcrypto.PrivateKey
 
 	// PrivKeyFromBytes calculates the public key from serialized bytes,
 	// and returns both it and the private key.
@@ -24,7 +24,7 @@ type DSA interface {
 	// Public keys
 	//
 	// NewPublicKey instantiates a new public key (point) for the given data.
-	//NewPublicKey(a *poly.PolyArray) hcashcrypto.PublicKey
+	NewPublicKey() hcashcrypto.PublicKey
 
 	// ParsePubKey parses a serialized public key for the given
 	// curve and returns a public key.
@@ -38,7 +38,7 @@ type DSA interface {
 	// Signatures
 	//
 	// NewSignature instantiates a new signature
-	//NewSignature(z1, z2 *poly.PolyArray, c []uint32) hcashcrypto.Signature
+	NewSignature() hcashcrypto.Signature
 
 	// ParseDERSignature parses a DER encoded signature .
 	// If the method doesn't support DER signatures, it
@@ -69,13 +69,13 @@ type DSA interface {
 }
 
 const (
-	MSSTypeMSS = 5
+	LMSTypeLMS = 5
 
-	MSSVersion = 1
+	LMSVersion = 1
 
-	MSSPubKeyLen = 32
+	LMSPubKeyLen = 32
 
-	MSSPrivKeyLen = 417
+	LMSPrivKeyLen = 4691
 )
 
-var MSS = newMSSDSA()
+var LMS = newLMSDSA()

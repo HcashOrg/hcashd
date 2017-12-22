@@ -1,17 +1,17 @@
-package mss
+package lms
 
 import (
-	"github.com/LoCCS/mss"
+	"github.com/LoCCS/lms"
 	hcashcrypto "github.com/HcashOrg/hcashd/crypto"
 )
 
 type Signature struct{
 	hcashcrypto.SignatureAdapter
-	mss.MerkleSig
+	lms.MerkleSig
 }
 
 func (s Signature) GetType() int {
-	return pqcTypeMSS
+	return pqcTypeLMS
 }
 
 func (s Signature) Serialize() []byte{

@@ -1,29 +1,29 @@
-package mss
-
+package lms
 
 import (
 	"io"
 	hcashcrypto "github.com/HcashOrg/hcashd/crypto"
-	"github.com/LoCCS/mss"
+	"github.com/LoCCS/lms"
 	"fmt"
+	"golang.org/x/crypto/sha3"
 )
 
-var pqcTypeMSS = 5
+var pqcTypeLMS = 5
 
-type mssDSA struct {
+type lmsDSA struct {
 
 	// Private keys
-	//newPrivateKey     func(s1, s2, a *poly.PolyArray) hcashcrypto.PrivateKey
+	newPrivateKey     func() hcashcrypto.PrivateKey
 	privKeyFromBytes  func(pk []byte) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey)
 	privKeyBytesLen   func() int
 
 	// Public keys
-	//newPublicKey               func(a *poly.PolyArray) hcashcrypto.PublicKey
+	newPublicKey               func() hcashcrypto.PublicKey
 	parsePubKey                func(pubKeyStr []byte) (hcashcrypto.PublicKey, error)
 	pubKeyBytesLen             func() int
 
 	// Signatures
-	//newSignature      func(z1, z2 *poly.PolyArray, c []uint32) hcashcrypto.Signature
+	newSignature      func() hcashcrypto.Signature
 	parseDERSignature func(sigStr []byte) (hcashcrypto.Signature, error)
 	parseSignature    func(sigStr []byte) (hcashcrypto.Signature, error)
 	recoverCompact    func(signature, hash []byte) (hcashcrypto.PublicKey, bool, error)
@@ -40,62 +40,62 @@ type mssDSA struct {
 }
 
 // Private keys
-//func (sp mssDSA) NewPrivateKey(s1, s2, a *poly.PolyArray) hcashcrypto.PrivateKey {
-//	return sp.newPrivateKey(s1, s2, a)
-//}
-func (sp mssDSA) PrivKeyFromBytes(pk []byte) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey) {
+func (sp lmsDSA) NewPrivateKey() hcashcrypto.PrivateKey {
+	return sp.newPrivateKey()
+}
+func (sp lmsDSA) PrivKeyFromBytes(pk []byte) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey) {
 	return sp.privKeyFromBytes(pk)
 }
-func (sp mssDSA) PrivKeyBytesLen() int {
+func (sp lmsDSA) PrivKeyBytesLen() int {
 	return sp.privKeyBytesLen()
 }
 
 // Public keys
-//func (sp mssDSA) NewPublicKey(a *poly.PolyArray) hcashcrypto.PublicKey {
-//	return sp.newPublicKey(a)
-//}
-func (sp mssDSA) ParsePubKey(pubKeyStr []byte) (hcashcrypto.PublicKey, error) {
+func (sp lmsDSA) NewPublicKey() hcashcrypto.PublicKey {
+	return sp.newPublicKey()
+}
+func (sp lmsDSA) ParsePubKey(pubKeyStr []byte) (hcashcrypto.PublicKey, error) {
 	return sp.parsePubKey(pubKeyStr)
 }
-func (sp mssDSA) PubKeyBytesLen() int {
+func (sp lmsDSA) PubKeyBytesLen() int {
 	return sp.pubKeyBytesLen()
 }
 
 // Signatures
-//func (sp mssDSA) NewSignature(z1, z2 *poly.PolyArray, c []uint32) hcashcrypto.Signature {
-//	return sp.newSignature(z1, z2, c)
-//}
-func (sp mssDSA) ParseDERSignature(sigStr []byte) (hcashcrypto.Signature, error) {
+func (sp lmsDSA) NewSignature() hcashcrypto.Signature {
+	return sp.newSignature()
+}
+func (sp lmsDSA) ParseDERSignature(sigStr []byte) (hcashcrypto.Signature, error) {
 	return sp.parseDERSignature(sigStr)
 }
-func (sp mssDSA) ParseSignature(sigStr []byte) (hcashcrypto.Signature, error) {
+func (sp lmsDSA) ParseSignature(sigStr []byte) (hcashcrypto.Signature, error) {
 	return sp.parseSignature(sigStr)
 }
-func (sp mssDSA) RecoverCompact(signature, hash []byte) (hcashcrypto.PublicKey, bool,
+func (sp lmsDSA) RecoverCompact(signature, hash []byte) (hcashcrypto.PublicKey, bool,
 	error) {
 	return sp.recoverCompact(signature, hash)
 }
 
-// MSS
-func (sp mssDSA) GenerateKey(rand io.Reader) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey,
+// LMS
+func (sp lmsDSA) GenerateKey(rand io.Reader) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey,
 	error) {
 	return sp.generateKey(rand)
 }
-func (sp mssDSA) Sign(priv hcashcrypto.PrivateKey, hash []byte) (hcashcrypto.Signature, error) {
+func (sp lmsDSA) Sign(priv hcashcrypto.PrivateKey, hash []byte) (hcashcrypto.Signature, error) {
 	return sp.sign(priv, hash)
 }
-func (sp mssDSA) Verify(pub hcashcrypto.PublicKey, hash []byte, sig hcashcrypto.Signature) bool {
+func (sp lmsDSA) Verify(pub hcashcrypto.PublicKey, hash []byte, sig hcashcrypto.Signature) bool {
 	return sp.verify(pub, hash, sig)
 }
 
-func newMSSDSA() DSA {
-	var mss DSA = &mssDSA{
+func newLMSDSA() DSA {
+	var mss DSA = &lmsDSA{
 		privKeyFromBytes: func(pk []byte) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey) {
 			fmt.Println("privKeyFromBytes is called")
 			return nil, nil
 		},
 		privKeyBytesLen: func() int {
-			return MSSPrivKeyLen
+			return LMSPrivKeyLen
 		},
 		parsePubKey: func(pubKeyStr []byte) (hcashcrypto.PublicKey, error) {
 			return &PublicKey{
@@ -103,16 +103,16 @@ func newMSSDSA() DSA {
 			}, nil
 		},
 		pubKeyBytesLen: func() int {
-			return MSSPubKeyLen
+			return LMSPubKeyLen
 		},
 		parseDERSignature: func(sigStr []byte) (hcashcrypto.Signature, error) {
-			sig := mss.DeserializeMerkleSig(sigStr)
+			sig := lms.DeserializeMerkleSig(sigStr)
 			return &Signature{
 				MerkleSig: *sig,
 			}, nil
 		},
 		parseSignature: func(sigStr []byte) (hcashcrypto.Signature, error) {
-			sig := mss.DeserializeMerkleSig(sigStr)
+			sig := lms.DeserializeMerkleSig(sigStr)
 			return &Signature{
 				MerkleSig: *sig,
 			}, nil
@@ -125,8 +125,12 @@ func newMSSDSA() DSA {
 			return nil, nil, nil
 		},
 		sign: func(priv hcashcrypto.PrivateKey, hash []byte) (hcashcrypto.Signature, error) {
+
+			sha3.New256()
+			messageHash := sha3.Sum256(hash)
+
 			mssPrv := priv.(PrivateKey).MerkleAgent
-			_, sig, err := mss.Sign(&mssPrv, hash)
+			_, sig, err := lms.Sign(&mssPrv, messageHash[:])
 			if err != nil{
 				return nil, err
 			}
@@ -136,10 +140,12 @@ func newMSSDSA() DSA {
 		},
 
 		verify: func(pub hcashcrypto.PublicKey, hash []byte, sig hcashcrypto.Signature) bool {
+			sha3.New256()
+			messageHash := sha3.Sum256(hash)
 			pbBytes := pub.(PublicKey).root
 			signature := sig.(*Signature)
 			mssSig := signature.MerkleSig
-			result := mss.Verify(pbBytes, hash, &mssSig)
+			result := lms.Verify(pbBytes, messageHash[:], &mssSig)
 			return result
 		},
 	}

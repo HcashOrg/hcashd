@@ -1,15 +1,13 @@
-package mss
-
+package lms
 
 import (
-	"github.com/LoCCS/mss"
-	//wots "github.com/LoCCS/mss/ots/winternitz"
+	"github.com/LoCCS/lms"
 	hcashcrypto "github.com/HcashOrg/hcashd/crypto"
 )
 
 type PrivateKey struct{
 	hcashcrypto.PrivateKeyAdapter
-	mss.MerkleAgent
+	lms.MerkleAgent
 }
 
 
@@ -24,7 +22,7 @@ func (p PrivateKey) PublicKey() (hcashcrypto.PublicKey) {
 
 // GetType satisfies the bliss PrivateKey interface.
 func (p PrivateKey) GetType() int {
-	return pqcTypeMSS
+	return pqcTypeLMS
 }
 
 func (p PrivateKey) Serialize() []byte{

@@ -1,4 +1,4 @@
-package mss
+package lms
 
 import (
 	hcashcrypto "github.com/HcashOrg/hcashd/crypto"
@@ -10,7 +10,7 @@ type PublicKey struct{
 }
 
 func (p PublicKey) GetType() int {
-	return pqcTypeMSS
+	return pqcTypeLMS
 }
 
 func (p PublicKey) Serialize() []byte{
