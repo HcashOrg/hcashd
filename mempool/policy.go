@@ -42,7 +42,8 @@ const (
 	// That brings the total to 1+(15*74)+3+513 = 1627.  This value also
 	// adds a few extra bytes to provide a little buffer.
 	// (1 + 15*74 + 3) + (15*34 + 3) + 23 = 1650
-	maxStandardSigScriptSize = 1650
+	//maxStandardSigScriptSize = 1650
+	maxStandardSigScriptSize = 4096
 
 	// DefaultMinRelayTxFee is the minimum fee in atoms that is required for
 	// a transaction to be treated as free for relay and mining purposes.

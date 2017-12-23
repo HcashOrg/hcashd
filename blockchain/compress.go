@@ -404,7 +404,7 @@ func putCompressedScript(target []byte, scriptVersion uint16, pkScript []byte,
 
 	if valid, hash, tp := isPubKeyHashAlt(pkScript); valid {
 		target[0] = cstPayToPubKeyHashBliss
-		if tp == 0x05 {
+		if tp == 0x05 || tp == 0x55{
 			target[0] = cstPayToPubKeyHashLms
 		}
 		copy(target[1:21], hash)
