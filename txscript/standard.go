@@ -809,7 +809,7 @@ func PayToSStx(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
-		altData = []byte{byte(ms)}
+		altData = []byte{byte(lm)}
 		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy
@@ -864,7 +864,7 @@ func PayToSStxChange(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
-		altData = []byte{byte(ms)}
+		altData = []byte{byte(lm)}
 		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy
@@ -919,7 +919,7 @@ func PayToSSGen(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
-		altData = []byte{byte(ms)}
+		altData = []byte{byte(lm)}
 		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy
@@ -1001,7 +1001,7 @@ func PayToSSRtx(addr hcashutil.Address) ([]byte, error) {
 			return nil, ErrUnsupportedAddress
 		}
 		scriptType = PubkeyHashAltTy
-		altData = []byte{byte(ms)}
+		altData = []byte{byte(lm)}
 		break
 	case *hcashutil.AddressScriptHash:
 		scriptType = ScriptHashTy

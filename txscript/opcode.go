@@ -2757,7 +2757,7 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		break
 	case bliss:
 		break
-	case ms:
+	case lm:
 		break
 	default:
 		// Caveat: All unknown signature types return true, allowing for future
