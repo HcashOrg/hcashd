@@ -97,9 +97,9 @@ const FileContents = `[Application Options]
 ; You may specify each IP address with or without a port.  The default port will
 ; be added automatically if one is not specified here.
 ; addpeer=192.168.1.1
-; addpeer=10.0.0.2:14008
+; addpeer=10.0.0.2:18008
 ; addpeer=fe80::1
-; addpeer=[fe80::2]:14008
+; addpeer=[fe80::2]:18008
 
 ; Add persistent peers that you ONLY want to connect to as desired.  One peer
 ; per line.  You may specify each IP address with or without a port.  The
@@ -107,9 +107,9 @@ const FileContents = `[Application Options]
 ; NOTE: Specifying this option has other side effects as described above in
 ; the 'addpeer' versus 'connect' summary section.
 ; connect=192.168.1.1
-; connect=10.0.0.2:14008
+; connect=10.0.0.2:18008
 ; connect=fe80::1
-; connect=[fe80::2]:14008
+; connect=[fe80::2]:18008
 
 ; Maximum number of inbound and outbound peers.
 ; maxpeers=8
@@ -146,16 +146,16 @@ const FileContents = `[Application Options]
 ;  listen=0.0.0.0
 ; All ipv6 interfaces on default port:
 ;   listen=::
-; All interfaces on port 14008:
-;   listen=:14008
-; All ipv4 interfaces on port 14008:
-;   listen=0.0.0.0:14008
-; All ipv6 interfaces on port 14008:
-;   listen=[::]:14008
-; Only ipv4 localhost on port 14008:
-;   listen=127.0.0.1:14008
-; Only ipv6 localhost on port 14008:
-;   listen=[::1]:14008
+; All interfaces on port 18008:
+;   listen=:18008
+; All ipv4 interfaces on port 18008:
+;   listen=0.0.0.0:18008
+; All ipv6 interfaces on port 18008:
+;   listen=[::]:18008
+; Only ipv4 localhost on port 18008:
+;   listen=127.0.0.1:18008
+; Only ipv6 localhost on port 18008:
+;   listen=[::1]:18008
 ; Only ipv4 localhost on non-standard port 8336:
 ;   listen=127.0.0.1:8336
 ; All interfaces on non-standard port 8336:
@@ -196,16 +196,16 @@ const FileContents = `[Application Options]
 ;   rpclisten=0.0.0.0
 ; All ipv6 interfaces on default port:
 ;   rpclisten=::
-; All interfaces on port 14009:
-;   rpclisten=:14009
-; All ipv4 interfaces on port 14009:
-;   rpclisten=0.0.0.0:14009
-; All ipv6 interfaces on port 14009:
-;   rpclisten=[::]:14009
-; Only ipv4 localhost on port 14009:
-;   rpclisten=127.0.0.1:14009
-; Only ipv6 localhost on port 14009:
-;   rpclisten=[::1]:14009
+; All interfaces on port 18009:
+;   rpclisten=:18009
+; All ipv4 interfaces on port 18009:
+;   rpclisten=0.0.0.0:18009
+; All ipv6 interfaces on port 18009:
+;   rpclisten=[::]:18009
+; Only ipv4 localhost on port 18009:
+;   rpclisten=127.0.0.1:18009
+; Only ipv6 localhost on port 18009:
+;   rpclisten=[::1]:18009
 ; Only ipv4 localhost on non-standard port 8337:
 ;   rpclisten=127.0.0.1:8337
 ; All interfaces on non-standard port 8337:

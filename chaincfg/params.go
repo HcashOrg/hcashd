@@ -27,7 +27,7 @@ var (
 
 	// mainPowLimit is the highest proof of work value a Hypercash block can
 	// have for the main network.  It is the value 2^224 - 1.
-	mainPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 228), bigOne)
+	mainPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 220), bigOne)
 
 	// testNetPowLimit is the highest proof of work value a Hypercash block
 	// can have for the test network.  It is the value 2^232 - 1.
@@ -469,7 +469,7 @@ type Params struct {
 var MainNetParams = Params{
 	Name:        "testdata2",
 	Net:         wire.MainNet,
-	DefaultPort: "14008",
+	DefaultPort: "18008",
 	DNSSeeds: []string{
 		"testnet-seeds.hcashtech.org",
 	},
@@ -480,7 +480,7 @@ var MainNetParams = Params{
 	PowLimit:                 mainPowLimit,
 	DifficultyRate:           16,
 	MaxMicroPerKey:           31,
-	PowLimitBits:             0x1d0fffff,
+	PowLimitBits:             0x1e0fffff,
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0, // Does not apply since ReduceMinDifficulty false
 	GenerateSupported:        false,
@@ -582,7 +582,7 @@ var MainNetParams = Params{
 	BlockRejectNumRequired:  950,
 	BlockUpgradeNumToCheck:  1000,
 
-	MicroBlockValidationHeight: 64,
+	MicroBlockValidationHeight: 16,
 
 	// Mempool parameters
 	RelayNonStdTxs: false,
@@ -610,20 +610,20 @@ var MainNetParams = Params{
 
 	// Hypercash PoS parameters
 	MinimumStakeDiff:        2 * 1e8, // 2 Coin
-	TicketPoolSize:          8192,
+	TicketPoolSize:          256,
 	TicketsPerBlock:         5,
-	TicketMaturity:          128/*256*/,
-	TicketExpiry:            40960, // 5*TicketPoolSize
-	CoinbaseMaturity:        128/*256*/,
+	TicketMaturity:          8/*256*/,
+	TicketExpiry:            1280, // 5*TicketPoolSize
+	CoinbaseMaturity:        8/*256*/,
 	SStxChangeMaturity:      1,
 	TicketPoolSizeWeight:    4,
 	StakeDiffAlpha:          1, // Minimal
-	StakeDiffWindowSize:     144,
+	StakeDiffWindowSize:     7,
 	StakeDiffWindows:        20,
-	StakeVersionInterval:    144 * 2 * 7, // ~1 week
+	StakeVersionInterval:    7 * 2 * 7, // ~1 week
 	MaxFreshStakePerBlock:   20,          // 4*TicketsPerBlock
-	StakeEnabledHeight:      128 + 128/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
-	StakeValidationHeight:   512,        // ~14 days
+	StakeEnabledHeight:      8 + 8/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
+	StakeValidationHeight:   118,        // ~14 days
 	StakeBaseSigScript:      []byte{0x00, 0x00},
 	StakeMajorityMultiplier: 3,
 	StakeMajorityDivisor:    4,

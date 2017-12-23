@@ -11,5 +11,5 @@ configurations.
 
 |Name|Port|
 |----|----|
-|Default Hypercash peer-to-peer port|TCP 14008|
-|Default RPC port|TCP 14009|
+|Default Hypercash peer-to-peer port|TCP 18008|
+|Default RPC port|TCP 18009|

@@ -44,7 +44,7 @@ type config struct {
 func normalizeAddress(addr string) string {
 	_, _, err := net.SplitHostPort(addr)
 	if err != nil {
-		return net.JoinHostPort(addr, "14009")
+		return net.JoinHostPort(addr, "18009")
 	}
 	return addr
 }
