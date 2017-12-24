@@ -1,5 +1,5 @@
-hash: 928175486fbf3a330cf1fdb26e11eb194ab31c4d2b48eee677bd01eb654816b1
-updated: 2017-12-18T13:20:13.522954388Z
+hash: a6634aa7b503954da4cac5082c3bc61900206197ad778b029d4c78d257f48cfd
+updated: 2017-12-24T16:33:32.361694927+08:00
 imports:
 - name: github.com/agl/ed25519
   version: 5312a61534124124185d41f09206b9fef1d88403
@@ -49,7 +49,7 @@ imports:
 - name: github.com/HcashOrg/hcashrpcclient
   version: 72cabf1da64ce4b1546d89abd3fd0ee8326bcb7e
 - name: github.com/HcashOrg/hcashutil
-  version: 33116a23bf37f5b77967a01bfa983091b5d76ef3
+  version: 83693977162be767e8e700dfb14218445a327273
   subpackages:
   - base58
   - bloom
@@ -61,20 +61,29 @@ imports:
   subpackages:
   - rotator
 - name: github.com/LoCCS/bliss
-  version: af95adf044a518c61dc6dac90dcafa2b2c002b45
+  version: ff6e5ed7483bbd2ad67146db5ceebf70b1b9e7bd
   subpackages:
   - huffman
   - params
   - poly
   - sampler
+- name: github.com/LoCCS/lmots
+  version: a5066dbdb2245a4fb5058ad33fb98c41596d2c09
+  subpackages:
+  - hash
+  - rand
+- name: github.com/LoCCS/lms
+  version: fa019d2cc8d79e57b2fdf9258aee53bacea05b53
+  subpackages:
+  - container/stack
 - name: golang.org/x/crypto
-  version: 94eea52f7b742c7cbe0b03b22f0c4c8631ece122
+  version: d585fd2cc9195196078f516b69daff6744ef5e84
   subpackages:
   - ripemd160
   - sha3
   - ssh/terminal
 - name: golang.org/x/sys
-  version: 571f7bbbe08da2a8955aed9d4db316e78630e9a3
+  version: 83801418e1b59fb1880e363299581ee543af32ca
   subpackages:
   - unix
   - windows
