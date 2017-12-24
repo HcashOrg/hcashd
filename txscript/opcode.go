@@ -2787,14 +2787,14 @@ func opcodeCheckSigAlt(op *parsedOpcode, vm *Engine) error {
 		}
 	case bliss:
 		if len(pkBytes) !=  897 {
-			fmt.Printf("pub key length is not 417, length:%v\n", len(pkBytes))
+			fmt.Printf("pub key length is not 897, length:%v\n", len(pkBytes))
 			vm.dstack.PushBool(false)
 			return nil
 		}
 		//TODO: the size of pk should alter later
 	case lm:
-		if len(pkBytes) !=  897 {
-			fmt.Printf("pub key length is not 417, length:%v\n", len(pkBytes))
+		if len(pkBytes) !=  32 {
+			fmt.Printf("pub key length is not 32, length:%v\n", len(pkBytes))
 			vm.dstack.PushBool(false)
 			return nil
 		}

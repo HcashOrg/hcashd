@@ -142,7 +142,7 @@ func newLMSDSA() DSA {
 		verify: func(pub hcashcrypto.PublicKey, hash []byte, sig hcashcrypto.Signature) bool {
 			sha3.New256()
 			messageHash := sha3.Sum256(hash)
-			pbBytes := pub.(PublicKey).root
+			pbBytes := pub.(*PublicKey).root
 			signature := sig.(*Signature)
 			lmsSig := signature.MerkleSig
 			result := lms.Verify(pbBytes, messageHash[:], &lmsSig)
