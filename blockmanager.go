@@ -1521,8 +1521,7 @@ func (b *blockManager) handleHeadersMsg(hmsg *headersMsg) {
 	receivedCheckpoint := false
 	var finalHash *chainhash.Hash
 
-	var prevHeader wire.BlockHeader
-	for i, blockHeader := range msg.Headers {
+	for _, blockHeader := range msg.Headers {
 		blockHash := blockHeader.BlockHash()
 		finalHash = &blockHash
 
@@ -1539,39 +1538,11 @@ func (b *blockManager) handleHeadersMsg(hmsg *headersMsg) {
 		node := headerNode{hash: &blockHash}
 		prevNode := prevNodeEl.Value.(*headerNode)
 
-		if i == 0 {
-			// check the first block's prevKeyHash in the header list
-			prevBlock,err := b.chain.BlockByHash(prevNode.hash)
-			if err != nil{
-				bmgrLog.Warnf(" Header's prevKeyHash : %v is not found " +
-					"element as expected -- disconnecting peer",prevNode.hash)
-				return
-			}
-			prevHeader = prevBlock.MsgBlock().Header
-		}
+		
 		if prevNode.hash.IsEqual(&blockHeader.PrevBlock) {
 			// judgeed prevBlock's type (KeyBlock or MicroBlock)
-			blockHashBigInt:=blockchain.HashToBig(prevNode.hash)
-			if blockHashBigInt.Cmp(blockchain.CompactToBig(prevHeader.Bits)) <= 0 {
-				// check first Header's prevKeyHash
-				if !prevNode.hash.IsEqual(&blockHeader.PrevKeyBlock) {
-					bmgrLog.Warnf("KeyBlock : Header's prevKeyHash : %v is dismatched with PrevBlock's Hash : %v " +
-						"element as expected -- disconnecting peer",blockHeader.PrevKeyBlock, prevNode.hash)
-					return
-				}
-			}else {
-				// check first Header's prevKeyHash
-				if !prevHeader.PrevKeyBlock.IsEqual(&blockHeader.PrevKeyBlock) {
-					bmgrLog.Warnf("MicroBlock : Header's prevKeyHash : %v is dismatched with PrevBlock's Hash : %v " +
-						"element as expected -- disconnecting peer",blockHeader.PrevKeyBlock,prevHeader.PrevKeyBlock )
-					return
-				}
-			}
-			prevHeader = *blockHeader
-
 			node.height = prevNode.height + 1
 			e := b.headerList.PushBack(&node)
-
 			if b.startHeader == nil {
 				b.startHeader = e
 			}

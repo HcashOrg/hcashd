@@ -506,7 +506,8 @@ var MainNetParams = Params{
 	Checkpoints: []Checkpoint{
 	//	{30,newHashFromStr("00000df9e4054bd941145c7ea9dbefc29e47ed564cc2fdb254720ab07a016938")},
 	//	{200,newHashFromStr("00000019ed43fba03c72b03cbd7a706c50b56819379b478da57184363fd90a68")},
-		},
+		{28952,newHashFromStr("00000005f6263ebb38395fcdc810bc462f34f063454056a4965cca9c3d280d70")},	
+	},
 
 	// The miner confirmation window is defined as:
 	//   target proof of work timespan / target proof of work spacing
