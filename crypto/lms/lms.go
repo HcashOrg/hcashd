@@ -106,13 +106,15 @@ func newLMSDSA() DSA {
 			return LMSPubKeyLen
 		},
 		parseDERSignature: func(sigStr []byte) (hcashcrypto.Signature, error) {
-			sig := lms.DeserializeMerkleSig(sigStr)
+			sig := new(lms.MerkleSig)
+			sig.Deserialize(sigStr)
 			return &Signature{
 				MerkleSig: *sig,
 			}, nil
 		},
 		parseSignature: func(sigStr []byte) (hcashcrypto.Signature, error) {
-			sig := lms.DeserializeMerkleSig(sigStr)
+			sig := new(lms.MerkleSig)
+			sig.Deserialize(sigStr)
 			return &Signature{
 				MerkleSig: *sig,
 			}, nil

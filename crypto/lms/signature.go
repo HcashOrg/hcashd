@@ -15,5 +15,9 @@ func (s Signature) GetType() int {
 }
 
 func (s Signature) Serialize() []byte{
-	return s.MerkleSig.Serialize()
+	sigBytes, err := s.MerkleSig.Serialize()
+	if err != nil{
+		return nil
+	}
+	return sigBytes
 }

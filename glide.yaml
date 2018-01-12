@@ -43,6 +43,8 @@ import:
   subpackages:
   - ripemd160
   - ssh/terminal
-- package: github.com/jrick/logrotate
-  subpackages:
-  - rotator
+- package: github.com/LoCCS/bliss
+- package: github.com/LoCCS/lmots
+  version: ^v1.5
+- package: github.com/LoCCS/lms
+  version: ^v1.5
