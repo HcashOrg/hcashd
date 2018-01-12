@@ -9,7 +9,7 @@
 	- [Novel Consensus Scheme](#novel-consensus-scheme)  
 	- [Post-Quantum Features](#post-quantum-features)  
 + [Starting-Hcashd](#starting-hcashd)  
-+ [Using HcashWallet UI Version](#using-hcashwallet-ui-version)  
++ [Using HcashWallet GUI Version](#using-hcashwallet-gui-version)  
 + [License](#license)  
 
 <a name="web"></a>
