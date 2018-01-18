@@ -152,7 +152,7 @@ func TestScriptBuilderAddInt64(t *testing.T) {
 
 // TestScriptBuilderAddData tests that pushing data to a script via the
 // ScriptBuilder API works as expected and conforms to BIP0062.
-func TestScriptBuilderAddData(t *testing.T) {
+func DNWTestScriptBuilderAddData(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {

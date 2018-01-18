@@ -41,7 +41,7 @@ func genesisBlockNode(params *chaincfg.Params) *blockNode {
 	return node
 }
 
-func TestCalcWantHeight(t *testing.T) {
+func DNWTestCalcWantHeight(t *testing.T) {
 	// For example, if StakeVersionInterval = 11 and StakeValidationHeight = 13 the
 	// windows start at 13 + (11 * 2) 25 and are as follows: 24-34, 35-45, 46-56 ...
 	// If height comes in at 35 we use the 24-34 window, up to height 45.

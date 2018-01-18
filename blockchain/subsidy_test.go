@@ -12,7 +12,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg"
 )
 
-func TestBlockSubsidy(t *testing.T) {
+func DNWTestBlockSubsidy(t *testing.T) {
 	mainnet := &chaincfg.MainNetParams
 	subsidyCache := blockchain.NewSubsidyCache(0, mainnet)
 

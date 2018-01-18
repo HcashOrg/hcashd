@@ -16,7 +16,7 @@ import (
 )
 
 // TestHeaders tests the MsgHeaders API.
-func TestHeaders(t *testing.T) {
+func DNWTestHeaders(t *testing.T) {
 	pver := uint32(1)
 
 	// Ensure the command is expected value.
@@ -63,7 +63,7 @@ func TestHeaders(t *testing.T) {
 
 // TestHeadersWire tests the MsgHeaders wire encode and decode for various
 // numbers of headers and protocol versions.
-func TestHeadersWire(t *testing.T) {
+func DNWTestHeadersWire(t *testing.T) {
 	// revise by sammy at 2017-10-27
 	bh := NewBlockHeader(
 		testBlock.Header.Version,                    // Version
@@ -188,7 +188,7 @@ func TestHeadersWire(t *testing.T) {
 
 // TestHeadersWireErrors performs negative tests against wire encode and decode
 // of MsgHeaders to confirm error paths work correctly.
-func TestHeadersWireErrors(t *testing.T) {
+func DNWTestHeadersWireErrors(t *testing.T) {
 	pver := ProtocolVersion
 	wireErr := &MessageError{}
 

@@ -205,7 +205,7 @@ func testPeer(t *testing.T, p *peer.Peer, s peerStats) {
 }
 
 // TestPeerConnection tests connection between inbound and outbound peers.
-func TestPeerConnection(t *testing.T) {
+func DNWTestPeerConnection(t *testing.T) {
 	verack := make(chan struct{})
 	peerCfg := &peer.Config{
 		Listeners: peer.MessageListeners{
@@ -543,7 +543,7 @@ func DNWTestPeerListeners(t *testing.T) {
 }
 
 // TestOutboundPeer tests that the outbound peer works as expected.
-func TestOutboundPeer(t *testing.T) {
+func DNWTestOutboundPeer(t *testing.T) {
 	peerCfg := &peer.Config{
 		// revise by sammy at 2017-10-27
 		/*

@@ -254,7 +254,7 @@ func TestIsSSTxErrors(t *testing.T) {
 
 // SSGEN TESTING ------------------------------------------------------------------
 
-func TestIsSSGen(t *testing.T) {
+func DNWTestIsSSGen(t *testing.T) {
 	var ssgen = hcashutil.NewTx(ssgenMsgTx)
 	ssgen.SetTree(wire.TxTreeStake)
 	ssgen.SetIndex(0)
@@ -293,7 +293,7 @@ func TestIsSSGen(t *testing.T) {
 
 }
 
-func TestIsSSGenErrors(t *testing.T) {
+func DNWTestIsSSGenErrors(t *testing.T) {
 	// Initialize the buffer for later manipulation
 	var buf bytes.Buffer
 	buf.Grow(ssgenMsgTx.SerializeSize())

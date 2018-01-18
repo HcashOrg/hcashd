@@ -17,7 +17,7 @@ import (
 )
 
 // TestBlock tests the MsgBlock API.
-func TestBlock(t *testing.T) {
+func DNWTestBlock(t *testing.T) {
 	pver := ProtocolVersion
 
 	// revise by sammy at 2017-10-27
@@ -151,7 +151,7 @@ func TestBlockSTxHashes(t *testing.T) {
 }
 
 // TestBlockHash tests the ability to generate the hash of a block accurately.
-func TestBlockHash(t *testing.T) {
+func DNWTestBlockHash(t *testing.T) {
 	// Block 1 hash.
 	hashStr := "6b73b6f6faebbfd6a541f38820593e43c50ce1abf64602ab8ac7d5502991c37f"
 	wantHash, err := chainhash.NewHashFromStr(hashStr)
@@ -169,7 +169,7 @@ func TestBlockHash(t *testing.T) {
 
 // TestBlockWire tests the MsgBlock wire encode and decode for various numbers
 // of transaction inputs and outputs and protocol versions.
-func TestBlockWire(t *testing.T) {
+func DNWTestBlockWire(t *testing.T) {
 	tests := []struct {
 		in      *MsgBlock // Message to encode
 		out     *MsgBlock // Expected decoded message
@@ -222,7 +222,7 @@ func TestBlockWire(t *testing.T) {
 
 // TestBlockWireErrors performs negative tests against wire encode and decode
 // of MsgBlock to confirm error paths work correctly.
-func TestBlockWireErrors(t *testing.T) {
+func DNWTestBlockWireErrors(t *testing.T) {
 	// Use protocol version 60002 specifically here instead of the latest
 	// because the test data is using bytes encoded with that protocol
 	// version.
@@ -297,7 +297,7 @@ func TestBlockWireErrors(t *testing.T) {
 }
 
 // TestBlockSerialize tests MsgBlock serialize and deserialize.
-func TestBlockSerialize(t *testing.T) {
+func DNWTestBlockSerialize(t *testing.T) {
 	tests := []struct {
 		in      *MsgBlock // Message to encode
 		out     *MsgBlock // Expected decoded message
@@ -372,7 +372,7 @@ func TestBlockSerialize(t *testing.T) {
 
 // TestBlockSerializeErrors performs negative tests against wire encode and
 // decode of MsgBlock to confirm error paths work correctly.
-func TestBlockSerializeErrors(t *testing.T) {
+func DNWTestBlockSerializeErrors(t *testing.T) {
 	tests := []struct {
 		in       *MsgBlock // Value to encode
 		buf      []byte    // Serialized data
@@ -453,7 +453,7 @@ func TestBlockSerializeErrors(t *testing.T) {
 // are intentionally crafted to use large values for the number of transactions
 // are handled properly.  This could otherwise potentially be used as an attack
 // vector.
-func TestBlockOverflowErrors(t *testing.T) {
+func DNWTestBlockOverflowErrors(t *testing.T) {
 	// Use protocol version 70001 specifically here instead of the latest
 	// protocol version because the test data is using bytes encoded with
 	// that version.
@@ -537,7 +537,7 @@ func TestBlockOverflowErrors(t *testing.T) {
 
 // TestBlockSerializeSize performs tests to ensure the serialize size for
 // various blocks is accurate.
-func TestBlockSerializeSize(t *testing.T) {
+func DNWTestBlockSerializeSize(t *testing.T) {
 	// Block with no transactions.
 	noTxBlock := NewMsgBlock(&testBlock.Header)
 

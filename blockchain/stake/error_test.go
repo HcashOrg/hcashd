@@ -12,7 +12,7 @@ import (
 )
 
 // TestErrorCodeStringer tests the stringized output for the ErrorCode type.
-func TestErrorCodeStringer(t *testing.T) {
+func DNWTestErrorCodeStringer(t *testing.T) {
 	tests := []struct {
 		in   stake.ErrorCode
 		want string
@@ -71,7 +71,7 @@ func TestErrorCodeStringer(t *testing.T) {
 }
 
 // TestRuleError tests the error output for the RuleError type.
-func TestRuleError(t *testing.T) {
+func DNWTestRuleError(t *testing.T) {
 	tests := []struct {
 		in   stake.RuleError
 		want string

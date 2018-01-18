@@ -181,7 +181,7 @@ func createSpendingTx(sigScript, pkScript []byte) *wire.MsgTx {
 
 // TestScriptInvalidTests ensures all of the tests in script_invalid.json fail
 // as expected.
-func TestScriptInvalidTests(t *testing.T) {
+func DNWTestScriptInvalidTests(t *testing.T) {
 	file, err := ioutil.ReadFile("data/script_invalid.json")
 	if err != nil {
 		t.Errorf("TestScriptInvalidTests: %v\n", err)
@@ -249,7 +249,7 @@ func TestScriptInvalidTests(t *testing.T) {
 
 // TestScriptValidTests ensures all of the tests in script_valid.json pass as
 // expected.
-func TestScriptValidTests(t *testing.T) {
+func DNWTestScriptValidTests(t *testing.T) {
 	file, err := ioutil.ReadFile("data/script_valid.json")
 	if err != nil {
 		t.Errorf("TestScriptValidTests: %v\n", err)

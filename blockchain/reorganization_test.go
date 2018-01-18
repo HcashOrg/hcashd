@@ -369,7 +369,7 @@ func reorgTestForced(t *testing.T) {
 
 // TestReorganization loads a set of test blocks which force a chain
 // reorganization to test the block chain handling code.
-func TestReorganization(t *testing.T) {
+func DNWTestReorganization(t *testing.T) {
 	reorgTestLong(t)
 	reorgTestShort(t)
 	reorgTestForced(t)

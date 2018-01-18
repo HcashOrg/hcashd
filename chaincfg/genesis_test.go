@@ -15,7 +15,7 @@ import (
 
 // TestGenesisBlock tests the genesis block of the main network for validity by
 // checking the encoded bytes and hashes.
-func TestGenesisBlock(t *testing.T) {
+func DNWTestGenesisBlock(t *testing.T) {
 
 	genesisBlockBytes, _ := hex.DecodeString("0100000000000000000000000000" +
 		"000000000000000000000000000000000000000000000dc101dfc3c6a2eb10ca0" +
@@ -53,7 +53,7 @@ func TestGenesisBlock(t *testing.T) {
 
 // TestTestNetGenesisBlock tests the genesis block of the test network (version
 // 9) for validity by checking the encoded bytes and hashes.
-func TestTestNetGenesisBlock(t *testing.T) {
+func DNWTestTestNetGenesisBlock(t *testing.T) {
 	// Encode the genesis block to raw bytes.
 	var buf bytes.Buffer
 	err := TestNet2Params.GenesisBlock.Serialize(&buf)
@@ -95,7 +95,7 @@ func TestTestNetGenesisBlock(t *testing.T) {
 
 // TestSimNetGenesisBlock tests the genesis block of the simulation test network
 // for validity by checking the encoded bytes and hashes.
-func TestSimNetGenesisBlock(t *testing.T) {
+func DNWTestSimNetGenesisBlock(t *testing.T) {
 	// Encode the genesis block to raw bytes.
 	var buf bytes.Buffer
 	err := SimNetParams.GenesisBlock.Serialize(&buf)

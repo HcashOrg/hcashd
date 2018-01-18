@@ -111,7 +111,7 @@ func Example_basicUsage() {
 // This example demonstrates creating a new database, using a managed read-write
 // transaction to store a block, and using a managed read-only transaction to
 // fetch the block.
-func Example_blockStorageAndRetrieval() {
+func DNWExample_blockStorageAndRetrieval() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
