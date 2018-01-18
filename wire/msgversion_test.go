@@ -180,7 +180,7 @@ func TestVersion(t *testing.T) {
 
 // TestVersionWire tests the MsgVersion wire encode and decode for various
 // protocol versions.
-func TestVersionWire(t *testing.T) {
+func DNWTestVersionWire(t *testing.T) {
 	// verRelayTxFalse and verRelayTxFalseEncoded is a version message as of
 	// BIP0037Version with the transaction relay disabled.
 	baseVersionBIP0037Copy := *baseVersionBIP0037
@@ -352,7 +352,7 @@ func TestVersionWireErrors(t *testing.T) {
 
 // TestVersionOptionalFields performs tests to ensure that an encoded version
 // messages that omit optional fields are handled correctly.
-func TestVersionOptionalFields(t *testing.T) {
+func DNWTestVersionOptionalFields(t *testing.T) {
 	// onlyRequiredVersion is a version message that only contains the
 	// required versions and all other values set to their default values.
 	onlyRequiredVersion := MsgVersion{

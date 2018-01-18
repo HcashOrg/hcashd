@@ -1901,7 +1901,7 @@ func DNWTestBlockValidationRules(t *testing.T) {
 
 // TestBlockchainSpendJournal tests for whether or not the spend journal is being
 // written to disk correctly on a live blockchain.
-func TestBlockchainSpendJournal(t *testing.T) {
+func DNWTestBlockchainSpendJournal(t *testing.T) {
 	// Create a new database and chain instance to run tests against.
 	chain, teardownFunc, err := blockchain.SetupTestChain("reorgunittest",
 		simNetParams)

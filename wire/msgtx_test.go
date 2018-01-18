@@ -17,7 +17,7 @@ import (
 )
 
 // TestTx tests the MsgTx API.
-func TestTx(t *testing.T) {
+func DNWTestTx(t *testing.T) {
 	pver := ProtocolVersion
 
 	// Block 100000 hash.

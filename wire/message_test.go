@@ -35,7 +35,7 @@ func makeHeader(hcashnet CurrencyNet, command string,
 }
 
 // TestMessage tests the Read/WriteMessage and Read/WriteMessageN API.
-func TestMessage(t *testing.T) {
+func DNWTestMessage(t *testing.T) {
 	pver := ProtocolVersion
 
 	// Create the various types of messages to test.

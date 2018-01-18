@@ -19,7 +19,7 @@ import (
 // unmarshal into valid results include handling of optional fields being
 // omitted in the marshalled command, while optional fields with defaults have
 // the default assigned on unmarshalled commands.
-func TestWalletSvrCmds(t *testing.T) {
+func DNWTestWalletSvrCmds(t *testing.T) {
 	t.Parallel()
 
 	testID := int(1)

@@ -24,7 +24,7 @@ var secSchnorr = 2
 // This example demonstrates creating a script which pays to a hypercash address.
 // It also prints the created script hex and uses the DisasmString function to
 // display the disassembled script.
-func ExamplePayToAddrScript() {
+func DNWExamplePayToAddrScript() {
 	// Parse the address to send the coins to into a hcashutil.Address
 	// which is useful to ensure the accuracy of the address and determine
 	// the address type.  It is also required for the upcoming call to
@@ -58,7 +58,7 @@ func ExamplePayToAddrScript() {
 
 // This example demonstrates extracting information from a standard public key
 // script.
-func ExampleExtractPkScriptAddrs() {
+func DNWExampleExtractPkScriptAddrs() {
 	// Start with a standard pay-to-pubkey-hash script.
 	scriptHex := "76a914128004ff2fcaf13b2b91eb654b1dc2b674f7ec6188ac"
 	script, err := hex.DecodeString(scriptHex)

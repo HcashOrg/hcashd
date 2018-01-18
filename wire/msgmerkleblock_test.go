@@ -18,7 +18,7 @@ import (
 )
 
 // TestMerkleBlock tests the MsgMerkleBlock API.
-func TestMerkleBlock(t *testing.T) {
+func DNWTestMerkleBlock(t *testing.T) {
 	pver := ProtocolVersion
 
 	// Test block header.
@@ -154,7 +154,7 @@ func TestMerkleBlock(t *testing.T) {
 
 // TestMerkleBlockWire tests the MsgMerkleBlock wire encode and decode for
 // various numbers of transaction hashes and protocol versions.
-func TestMerkleBlockWire(t *testing.T) {
+func DNWTestMerkleBlockWire(t *testing.T) {
 	tests := []struct {
 		in   *MsgMerkleBlock // Message to encode
 		out  *MsgMerkleBlock // Expected decoded message
