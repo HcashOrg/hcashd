@@ -8,10 +8,6 @@ import (
 )
 
 func TestPrivateKey(t *testing.T) {
-
-
-=======
->>>>>>> dev-test-postquantum
 	sk, pk, err := Bliss.GenerateKey(rand.Reader)
 	if err != nil{
 		t.Fatal("Error in Generate keys")

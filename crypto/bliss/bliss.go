@@ -77,7 +77,7 @@ func (sp blissDSA) RecoverCompact(signature, hash []byte) (hcashcrypto.PublicKey
 	return sp.recoverCompact(signature, hash)
 }
 
-// ECDSA
+// bliss
 func (sp blissDSA) GenerateKey(rand io.Reader) (hcashcrypto.PrivateKey, hcashcrypto.PublicKey,
 	error) {
 	return sp.generateKey(rand)
