@@ -17,7 +17,7 @@ import (
 )
 
 // TestBlock tests the MsgBlock API.
-func DNWTestBlock(t *testing.T) {
+func TestBlock(t *testing.T) {
 	pver := ProtocolVersion
 
 	// revise by sammy at 2017-10-27
@@ -54,7 +54,7 @@ func DNWTestBlock(t *testing.T) {
 
 	// Ensure max payload is expected value for latest protocol version.
 	// Num addresses (varInt) + max allowed addresses.
-	wantPayload := uint32(1310720)
+	wantPayload := uint32(2048000)
 	maxPayload := msg.MaxPayloadLength(pver)
 	if maxPayload != wantPayload {
 		t.Errorf("MaxPayloadLength: wrong max payload length for "+
@@ -63,7 +63,7 @@ func DNWTestBlock(t *testing.T) {
 	}
 
 	// Ensure max payload is expected value for protocol version 3.
-	wantPayload = uint32(1000000)
+	wantPayload = uint32(2048000)
 	maxPayload = msg.MaxPayloadLength(3)
 	if maxPayload != wantPayload {
 		t.Errorf("MaxPayloadLength: wrong max payload length for "+
@@ -151,9 +151,9 @@ func TestBlockSTxHashes(t *testing.T) {
 }
 
 // TestBlockHash tests the ability to generate the hash of a block accurately.
-func DNWTestBlockHash(t *testing.T) {
+func TestBlockHash(t *testing.T) {
 	// Block 1 hash.
-	hashStr := "6b73b6f6faebbfd6a541f38820593e43c50ce1abf64602ab8ac7d5502991c37f"
+	hashStr := "db892f5ef5dc421828351a754acbe411862846d9de8cdb9b4fd684904ffe548e"
 	wantHash, err := chainhash.NewHashFromStr(hashStr)
 	if err != nil {
 		t.Errorf("NewHashFromStr: %v", err)
@@ -169,7 +169,7 @@ func DNWTestBlockHash(t *testing.T) {
 
 // TestBlockWire tests the MsgBlock wire encode and decode for various numbers
 // of transaction inputs and outputs and protocol versions.
-func DNWTestBlockWire(t *testing.T) {
+func TestBlockWire(t *testing.T) {
 	tests := []struct {
 		in      *MsgBlock // Message to encode
 		out     *MsgBlock // Expected decoded message
@@ -222,7 +222,7 @@ func DNWTestBlockWire(t *testing.T) {
 
 // TestBlockWireErrors performs negative tests against wire encode and decode
 // of MsgBlock to confirm error paths work correctly.
-func DNWTestBlockWireErrors(t *testing.T) {
+func TestBlockWireErrors(t *testing.T) {
 	// Use protocol version 60002 specifically here instead of the latest
 	// because the test data is using bytes encoded with that protocol
 	// version.
@@ -235,42 +235,46 @@ func DNWTestBlockWireErrors(t *testing.T) {
 		max      int       // Max size of fixed buffer to induce errors
 		writeErr error     // Expected write error
 		readErr  error     // Expected read error
-	}{ // Force error in version.
+	}{
 		{&testBlock, testBlockBytes, pver, 0, io.ErrShortWrite, io.EOF}, // 0
 		// Force error in prev block hash.
 		{&testBlock, testBlockBytes, pver, 4, io.ErrShortWrite, io.EOF}, // 1
-		// Force error in merkle root.
+		// Force error in prev key block hash
 		{&testBlock, testBlockBytes, pver, 36, io.ErrShortWrite, io.EOF}, // 2
-		// Force error in stake root.
+		// Force error in merkle root.
 		{&testBlock, testBlockBytes, pver, 68, io.ErrShortWrite, io.EOF}, // 3
-		// Force error in vote bits.
+		// Force error in stake root.
 		{&testBlock, testBlockBytes, pver, 100, io.ErrShortWrite, io.EOF}, // 4
+		// Force error in vote bits.
+		{&testBlock, testBlockBytes, pver, 132, io.ErrShortWrite, io.EOF}, // 5
 		// Force error in finalState.
-		{&testBlock, testBlockBytes, pver, 102, io.ErrShortWrite, io.EOF}, // 5
+		{&testBlock, testBlockBytes, pver, 134, io.ErrShortWrite, io.EOF}, // 6
 		// Force error in voters.
-		{&testBlock, testBlockBytes, pver, 108, io.ErrShortWrite, io.EOF}, // 6
+		{&testBlock, testBlockBytes, pver, 140, io.ErrShortWrite, io.EOF}, // 7
 		// Force error in freshstake.
-		{&testBlock, testBlockBytes, pver, 110, io.ErrShortWrite, io.EOF}, // 7
+		{&testBlock, testBlockBytes, pver, 142, io.ErrShortWrite, io.EOF}, // 8
 		// Force error in revocations.
-		{&testBlock, testBlockBytes, pver, 111, io.ErrShortWrite, io.EOF}, // 8
+		{&testBlock, testBlockBytes, pver, 143, io.ErrShortWrite, io.EOF}, // 9
 		// Force error in poolsize.
-		{&testBlock, testBlockBytes, pver, 112, io.ErrShortWrite, io.EOF}, // 9
+		{&testBlock, testBlockBytes, pver, 144, io.ErrShortWrite, io.EOF}, // 10
 		// Force error in difficulty bits.
-		{&testBlock, testBlockBytes, pver, 116, io.ErrShortWrite, io.EOF}, // 10
+		{&testBlock, testBlockBytes, pver, 148, io.ErrShortWrite, io.EOF}, // 11
 		// Force error in stake difficulty bits.
-		{&testBlock, testBlockBytes, pver, 120, io.ErrShortWrite, io.EOF}, // 11
+		{&testBlock, testBlockBytes, pver, 152, io.ErrShortWrite, io.EOF}, // 12
 		// Force error in height.
-		{&testBlock, testBlockBytes, pver, 128, io.ErrShortWrite, io.EOF}, // 12
+		{&testBlock, testBlockBytes, pver, 160, io.ErrShortWrite, io.EOF}, // 13
+		// Force error in key height.
+		{&testBlock, testBlockBytes, pver, 164, io.ErrShortWrite, io.EOF}, // 14
 		// Force error in size.
-		{&testBlock, testBlockBytes, pver, 132, io.ErrShortWrite, io.EOF}, // 13
+		{&testBlock, testBlockBytes, pver, 168, io.ErrShortWrite, io.EOF}, // 15
 		// Force error in timestamp.
-		{&testBlock, testBlockBytes, pver, 136, io.ErrShortWrite, io.EOF}, // 14
+		{&testBlock, testBlockBytes, pver, 172, io.ErrShortWrite, io.EOF}, // 16
 		// Force error in nonce.
-		{&testBlock, testBlockBytes, pver, 140, io.ErrShortWrite, io.EOF}, // 15
+		{&testBlock, testBlockBytes, pver, 208, io.ErrShortWrite, io.EOF}, // 17
 		// Force error in tx count.
-		{&testBlock, testBlockBytes, pver, 180, io.ErrShortWrite, io.EOF}, // 16
+		{&testBlock, testBlockBytes, pver, 216, io.ErrShortWrite, io.EOF}, // 18
 		// Force error in tx.
-		{&testBlock, testBlockBytes, pver, 181, io.ErrShortWrite, io.EOF}, // 17
+		{&testBlock, testBlockBytes, pver, 217, io.ErrShortWrite, io.EOF}, // 19
 	}
 
 	t.Logf("Running %d tests", len(tests))
@@ -297,7 +301,7 @@ func DNWTestBlockWireErrors(t *testing.T) {
 }
 
 // TestBlockSerialize tests MsgBlock serialize and deserialize.
-func DNWTestBlockSerialize(t *testing.T) {
+func TestBlockSerialize(t *testing.T) {
 	tests := []struct {
 		in      *MsgBlock // Message to encode
 		out     *MsgBlock // Expected decoded message
@@ -372,7 +376,7 @@ func DNWTestBlockSerialize(t *testing.T) {
 
 // TestBlockSerializeErrors performs negative tests against wire encode and
 // decode of MsgBlock to confirm error paths work correctly.
-func DNWTestBlockSerializeErrors(t *testing.T) {
+func TestBlockSerializeErrors(t *testing.T) {
 	tests := []struct {
 		in       *MsgBlock // Value to encode
 		buf      []byte    // Serialized data
@@ -383,38 +387,42 @@ func DNWTestBlockSerializeErrors(t *testing.T) {
 		{&testBlock, testBlockBytes, 0, io.ErrShortWrite, io.EOF}, // 0
 		// Force error in prev block hash.
 		{&testBlock, testBlockBytes, 4, io.ErrShortWrite, io.EOF}, // 1
-		// Force error in merkle root.
+		// Force error in prev key block hash
 		{&testBlock, testBlockBytes, 36, io.ErrShortWrite, io.EOF}, // 2
-		// Force error in stake root.
+		// Force error in merkle root.
 		{&testBlock, testBlockBytes, 68, io.ErrShortWrite, io.EOF}, // 3
-		// Force error in vote bits.
+		// Force error in stake root.
 		{&testBlock, testBlockBytes, 100, io.ErrShortWrite, io.EOF}, // 4
+		// Force error in vote bits.
+		{&testBlock, testBlockBytes, 132, io.ErrShortWrite, io.EOF}, // 5
 		// Force error in finalState.
-		{&testBlock, testBlockBytes, 102, io.ErrShortWrite, io.EOF}, // 5
+		{&testBlock, testBlockBytes, 134, io.ErrShortWrite, io.EOF}, // 6
 		// Force error in voters.
-		{&testBlock, testBlockBytes, 108, io.ErrShortWrite, io.EOF}, // 8
+		{&testBlock, testBlockBytes, 140, io.ErrShortWrite, io.EOF}, // 7
 		// Force error in freshstake.
-		{&testBlock, testBlockBytes, 110, io.ErrShortWrite, io.EOF}, // 9
+		{&testBlock, testBlockBytes, 142, io.ErrShortWrite, io.EOF}, // 8
 		// Force error in revocations.
-		{&testBlock, testBlockBytes, 111, io.ErrShortWrite, io.EOF}, // 10
+		{&testBlock, testBlockBytes, 143, io.ErrShortWrite, io.EOF}, // 9
 		// Force error in poolsize.
-		{&testBlock, testBlockBytes, 112, io.ErrShortWrite, io.EOF}, // 11
+		{&testBlock, testBlockBytes, 144, io.ErrShortWrite, io.EOF}, // 10
 		// Force error in difficulty bits.
-		{&testBlock, testBlockBytes, 116, io.ErrShortWrite, io.EOF}, // 12
+		{&testBlock, testBlockBytes, 148, io.ErrShortWrite, io.EOF}, // 11
 		// Force error in stake difficulty bits.
-		{&testBlock, testBlockBytes, 120, io.ErrShortWrite, io.EOF}, // 13
+		{&testBlock, testBlockBytes, 152, io.ErrShortWrite, io.EOF}, // 12
 		// Force error in height.
-		{&testBlock, testBlockBytes, 128, io.ErrShortWrite, io.EOF}, // 14
+		{&testBlock, testBlockBytes, 160, io.ErrShortWrite, io.EOF}, // 13
+		// Force error in key height.
+		{&testBlock, testBlockBytes, 164, io.ErrShortWrite, io.EOF}, // 14
 		// Force error in size.
-		{&testBlock, testBlockBytes, 132, io.ErrShortWrite, io.EOF}, // 15
+		{&testBlock, testBlockBytes, 168, io.ErrShortWrite, io.EOF}, // 15
 		// Force error in timestamp.
-		{&testBlock, testBlockBytes, 136, io.ErrShortWrite, io.EOF}, // 16
+		{&testBlock, testBlockBytes, 172, io.ErrShortWrite, io.EOF}, // 16
 		// Force error in nonce.
-		{&testBlock, testBlockBytes, 140, io.ErrShortWrite, io.EOF}, // 17
+		{&testBlock, testBlockBytes, 208, io.ErrShortWrite, io.EOF}, // 17
 		// Force error in tx count.
-		{&testBlock, testBlockBytes, 180, io.ErrShortWrite, io.EOF}, // 18
+		{&testBlock, testBlockBytes, 216, io.ErrShortWrite, io.EOF}, // 18
 		// Force error in tx.
-		{&testBlock, testBlockBytes, 181, io.ErrShortWrite, io.EOF}, // 19
+		{&testBlock, testBlockBytes, 217, io.ErrShortWrite, io.EOF}, // 19
 	}
 
 	t.Logf("Running %d tests", len(tests))
@@ -453,7 +461,7 @@ func DNWTestBlockSerializeErrors(t *testing.T) {
 // are intentionally crafted to use large values for the number of transactions
 // are handled properly.  This could otherwise potentially be used as an attack
 // vector.
-func DNWTestBlockOverflowErrors(t *testing.T) {
+func TestBlockOverflowErrors(t *testing.T) {
 	// Use protocol version 70001 specifically here instead of the latest
 	// protocol version because the test data is using bytes encoded with
 	// that version.
@@ -472,6 +480,10 @@ func DNWTestBlockOverflowErrors(t *testing.T) {
 				0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
 				0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
 				0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevBlock
+				0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,
+				0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
+				0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
+				0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevKeyBlock
 				0x98, 0x20, 0x51, 0xfd, 0x1e, 0x4b, 0xa7, 0x44,
 				0xbb, 0xbe, 0x68, 0x0e, 0x1f, 0xee, 0x14, 0x67,
 				0x7b, 0xa1, 0xa3, 0xc3, 0x54, 0x0b, 0xf7, 0xb1,
@@ -489,14 +501,15 @@ func DNWTestBlockOverflowErrors(t *testing.T) {
 				0xff, 0xff, 0x00, 0x1d, // Bits
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // SBits
 				0x01, 0x00, 0x00, 0x00, // Height
+				0x01, 0x00, 0x00, 0x00, // Key Height
 				0x01, 0x00, 0x00, 0x00, // Size
 				0x61, 0xbc, 0x66, 0x49, // Timestamp
-				0x01, 0xe3, 0x62, 0x99, // Nonce
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ExtraData
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 				0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+				0x01, 0xe3, 0x62, 0x99, // Nonce
 				0x5c, 0xa1, 0xab, 0x1e, //StakeVersion
 				0xff, // TxnCount
 			}, pver, &MessageError{},
@@ -537,7 +550,7 @@ func DNWTestBlockOverflowErrors(t *testing.T) {
 
 // TestBlockSerializeSize performs tests to ensure the serialize size for
 // various blocks is accurate.
-func DNWTestBlockSerializeSize(t *testing.T) {
+func TestBlockSerializeSize(t *testing.T) {
 	// Block with no transactions.
 	noTxBlock := NewMsgBlock(&testBlock.Header)
 
@@ -546,7 +559,7 @@ func DNWTestBlockSerializeSize(t *testing.T) {
 		size int       // Expected serialized size
 	}{
 		// Block with no transactions (header + 2x numtx)
-		{noTxBlock, 182},
+		{noTxBlock, 218},
 
 		// First block in the mainnet block chain.
 		{&testBlock, len(testBlockBytes)},
@@ -573,6 +586,12 @@ var testBlock = MsgBlock{
 			0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
 			0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00,
 		}),
+		PrevKeyBlock: chainhash.Hash([chainhash.HashSize]byte{ // Make go vet happy.
+			0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,
+			0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
+			0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
+			0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00,
+		}),
 		MerkleRoot: chainhash.Hash([chainhash.HashSize]byte{ // Make go vet happy.
 			0x98, 0x20, 0x51, 0xfd, 0x1e, 0x4b, 0xa7, 0x44,
 			0xbb, 0xbe, 0x68, 0x0e, 0x1f, 0xee, 0x14, 0x67,
@@ -594,6 +613,7 @@ var testBlock = MsgBlock{
 		Bits:         0x1d00ffff,         // 486604799
 		SBits:        int64(0x0000000000000000),
 		Height:       uint32(1),
+		KeyHeight:    uint32(0),
 		Size:         uint32(1),
 		Timestamp:    time.Unix(0x4966bc61, 0), // 2009-01-08 20:54:25 -0600 CST
 		Nonce:        0x9962e301,               // 2573394689
@@ -696,43 +716,48 @@ var testBlockBytes = []byte{
 	0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
 	0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
 	0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevBlock [4]
+	0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,
+	0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
+	0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
+	0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevKeyBlock [36]
 	0x98, 0x20, 0x51, 0xfd, 0x1e, 0x4b, 0xa7, 0x44,
 	0xbb, 0xbe, 0x68, 0x0e, 0x1f, 0xee, 0x14, 0x67,
 	0x7b, 0xa1, 0xa3, 0xc3, 0x54, 0x0b, 0xf7, 0xb1,
-	0xcd, 0xb6, 0x06, 0xe8, 0x57, 0x23, 0x3e, 0x0e, // MerkleRoot [36]
+	0xcd, 0xb6, 0x06, 0xe8, 0x57, 0x23, 0x3e, 0x0e, // MerkleRoot [68]
 	0x98, 0x20, 0x51, 0xfd, 0x1e, 0x4b, 0xa7, 0x44,
 	0xbb, 0xbe, 0x68, 0x0e, 0x1f, 0xee, 0x14, 0x67,
 	0x7b, 0xa1, 0xa3, 0xc3, 0x54, 0x0b, 0xf7, 0xb1,
-	0xcd, 0xb6, 0x06, 0xe8, 0x57, 0x23, 0x3e, 0x0e, // StakeRoot [68]
-	0x00, 0x00, // VoteBits [100]
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // FinalState [102]
-	0x00, 0x00, // Voters [108]
-	0x00,                   // FreshStake [110]
-	0x00,                   // Revocations [111]
-	0x00, 0x00, 0x00, 0x00, // Poolsize [112]
-	0xff, 0xff, 0x00, 0x1d, // Bits [116]
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // SBits [120]
-	0x01, 0x00, 0x00, 0x00, // Height [128]
-	0x01, 0x00, 0x00, 0x00, // Size [132]
-	0x61, 0xbc, 0x66, 0x49, // Timestamp [136]
-	0x01, 0xe3, 0x62, 0x99, // Nonce [140]
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ExtraData [144]
+	0xcd, 0xb6, 0x06, 0xe8, 0x57, 0x23, 0x3e, 0x0e, // StakeRoot [100]
+	0x00, 0x00, // VoteBits [132]
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // FinalState [134]
+	0x00, 0x00, // Voters [140]
+	0x00,                   // FreshStake [142]
+	0x00,                   // Revocations [143]
+	0x00, 0x00, 0x00, 0x00, // Poolsize [144]
+	0xff, 0xff, 0x00, 0x1d, // Bits [148]
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // SBits [152]
+	0x01, 0x00, 0x00, 0x00, // Height [160]
+	0x00, 0x00, 0x00, 0x00, // KeyHeight [164]
+	0x01, 0x00, 0x00, 0x00, // Size [168]
+	0x61, 0xbc, 0x66, 0x49, // Timestamp [172]
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ExtraData [176]
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+	0x01, 0xe3, 0x62, 0x99, // Nonce [208]
 	0x1e, 0xab, 0xa1, 0x5c, // StakeVersion
 	// Announce number of txs
-	0x01, // TxnCount [180]
+	0x01, // TxnCount [216]
 	// Begin bogus normal txs
-	0x01, 0x00, 0x00, 0x00, // Version [181]
-	0x01, // Varint for number of transaction inputs [185]
+	0x01, 0x00, 0x00, 0x00, // Version [217]
+	0x01, // Varint for number of transaction inputs [221]
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // Previous output hash [186]
-	0xff, 0xff, 0xff, 0xff, // Prevous output index [218]
-	0x00,                   // Previous output tree [222]
-	0xff, 0xff, 0xff, 0xff, // Sequence [223]
+	0xff, 0xff, 0xff, 0xff, // Prevous output index [254]
+	0x00,                   // Previous output tree [258]
+	0xff, 0xff, 0xff, 0xff, // Sequence [259]
 	0x01,                                           // Varint for number of transaction outputs [227]
 	0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x33, // Transaction amount [228]
 	0x98, 0x98, // Script version
@@ -795,10 +820,10 @@ var testBlockBytes = []byte{
 
 // Transaction location information for the test block transactions.
 var testBlockTxLocs = []TxLoc{
-	{TxStart: 181, TxLen: 158},
+	{TxStart: 217, TxLen: 158},
 }
 
 // Transaction location information for the test block stake transactions.
 var testBlockSTxLocs = []TxLoc{
-	{TxStart: 340, TxLen: 158},
+	{TxStart: 376, TxLen: 158},
 }

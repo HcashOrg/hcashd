@@ -12,7 +12,7 @@ import (
 )
 
 // TestErrorCodeStringer tests the stringized output for the ErrorCode type.
-func DNWTestErrorCodeStringer(t *testing.T) {
+func TestErrorCodeStringer(t *testing.T) {
 	tests := []struct {
 		in   blockchain.ErrorCode
 		want string
@@ -69,7 +69,7 @@ func DNWTestErrorCodeStringer(t *testing.T) {
 }
 
 // TestRuleError tests the error output for the RuleError type.
-func DNWTestRuleError(t *testing.T) {
+func TestRuleError(t *testing.T) {
 	tests := []struct {
 		in   blockchain.RuleError
 		want string

@@ -111,7 +111,7 @@ func Example_basicUsage() {
 // This example demonstrates creating a new database, using a managed read-write
 // transaction to store a block, and using a managed read-only transaction to
 // fetch the block.
-func DNWExample_blockStorageAndRetrieval() {
+func Example_blockStorageAndRetrieval() {
 	// This example assumes the ffldb driver is imported.
 	//
 	// import (
@@ -174,5 +174,5 @@ func DNWExample_blockStorageAndRetrieval() {
 	fmt.Printf("Serialized block size: %d bytes\n", len(loadedBlockBytes))
 
 	// Output:
-	// Serialized block size: 300 bytes
+	// Serialized block size: 336 bytes
 }

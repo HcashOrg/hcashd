@@ -10,7 +10,7 @@ import "testing"
 // TestHelp ensures the help is reasonably accurate by checking that every
 // command specified also has result types defined and the one-line usage and
 // help text can be generated for them.
-func DNWTestHelp(t *testing.T) {
+func TestHelp(t *testing.T) {
 	// Ensure there are result types specified for every handler.
 	for k := range rpcHandlers {
 		if _, ok := rpcResultTypes[k]; !ok {

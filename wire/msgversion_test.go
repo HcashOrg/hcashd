@@ -1,6 +1,7 @@
 // Copyright (c) 2013-2016 The btcsuite developers
 // Copyright (c) 2015-2016 The Decred developers
 // Use of this source code is governed by an ISC
+// Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
 package wire
@@ -180,7 +181,7 @@ func TestVersion(t *testing.T) {
 
 // TestVersionWire tests the MsgVersion wire encode and decode for various
 // protocol versions.
-func DNWTestVersionWire(t *testing.T) {
+func TestVersionWire(t *testing.T) {
 	// verRelayTxFalse and verRelayTxFalseEncoded is a version message as of
 	// BIP0037Version with the transaction relay disabled.
 	baseVersionBIP0037Copy := *baseVersionBIP0037
@@ -352,7 +353,7 @@ func TestVersionWireErrors(t *testing.T) {
 
 // TestVersionOptionalFields performs tests to ensure that an encoded version
 // messages that omit optional fields are handled correctly.
-func DNWTestVersionOptionalFields(t *testing.T) {
+func TestVersionOptionalFields(t *testing.T) {
 	// onlyRequiredVersion is a version message that only contains the
 	// required versions and all other values set to their default values.
 	onlyRequiredVersion := MsgVersion{
@@ -366,7 +367,7 @@ func DNWTestVersionOptionalFields(t *testing.T) {
 			Port:      8333,
 		},
 	}
-	onlyRequiredVersionEncoded := make([]byte, len(baseVersionEncoded)-55)
+	onlyRequiredVersionEncoded := make([]byte, len(baseVersionEncoded)-61)
 	copy(onlyRequiredVersionEncoded, baseVersionEncoded)
 
 	// addrMeVersion is a version message that contains all fields through
@@ -378,29 +379,34 @@ func DNWTestVersionOptionalFields(t *testing.T) {
 		IP:        net.ParseIP("127.0.0.1"),
 		Port:      8333,
 	}
-	addrMeVersionEncoded := make([]byte, len(baseVersionEncoded)-29)
+	addrMeVersionEncoded := make([]byte, len(baseVersionEncoded)-35)
 	copy(addrMeVersionEncoded, baseVersionEncoded)
 
 	// nonceVersion is a version message that contains all fields through
 	// the Nonce field.
 	nonceVersion := addrMeVersion
 	nonceVersion.Nonce = 123123 // 0x1e0f3
-	nonceVersionEncoded := make([]byte, len(baseVersionEncoded)-21)
+	nonceVersionEncoded := make([]byte, len(baseVersionEncoded)-27)
 	copy(nonceVersionEncoded, baseVersionEncoded)
 
 	// uaVersion is a version message that contains all fields through
 	// the UserAgent field.
 	uaVersion := nonceVersion
 	uaVersion.UserAgent = "/hcashdtest:0.0.1/"
-	uaVersionEncoded := make([]byte, len(baseVersionEncoded)-4)
+	uaVersionEncoded := make([]byte, len(baseVersionEncoded)-8)
 	copy(uaVersionEncoded, baseVersionEncoded)
 
 	// lastBlockVersion is a version message that contains all fields
 	// through the LastBlock field.
 	lastBlockVersion := uaVersion
 	lastBlockVersion.LastBlock = 234234 // 0x392fa
-	lastBlockVersionEncoded := make([]byte, len(baseVersionEncoded))
+	lastBlockVersionEncoded := make([]byte, len(baseVersionEncoded) - 4)
 	copy(lastBlockVersionEncoded, baseVersionEncoded)
+
+	lastKeyBlockVersion := lastBlockVersion
+	lastKeyBlockVersion.LastKeyBlock = 234233 // 0x392f9
+	lastKeyBlockVersionEncoded := make([]byte, len(baseVersionEncoded))
+	copy(lastKeyBlockVersionEncoded, baseVersionEncoded)
 
 	tests := []struct {
 		msg  *MsgVersion // Expected message
@@ -430,6 +436,11 @@ func DNWTestVersionOptionalFields(t *testing.T) {
 		{
 			&lastBlockVersion,
 			lastBlockVersionEncoded,
+			ProtocolVersion,
+		},
+		{
+			&lastKeyBlockVersion,
+			lastKeyBlockVersionEncoded,
 			ProtocolVersion,
 		},
 	}
@@ -490,10 +501,11 @@ var baseVersionEncoded = []byte{
 	0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01, // IP 127.0.0.1
 	0x20, 0x8d, // Port 8333 in big-endian
 	0xf3, 0xe0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // Nonce
-	0x10, // Varint for user agent length
-	0x2f, 0x64, 0x63, 0x72, 0x64, 0x74, 0x65, 0x73,
-	0x74, 0x3a, 0x30, 0x2e, 0x30, 0x2e, 0x31, 0x2f, // User agent
+	0x12, // Varint for user agent length
+	0x2f, 0x68, 0x63, 0x61, 0x73, 0x68, 0x64, 0x74,
+	0x65, 0x73, 0x74, 0x3a, 0x30, 0x2e, 0x30, 0x2e, 0x31, 0x2f, // User agent
 	0xfa, 0x92, 0x03, 0x00, // Last block
+	0xf9, 0x92, 0x03, 0x00, // Last key block
 }
 
 // baseVersionBIP0037 is used in the various tests as a baseline MsgVersion for
@@ -517,6 +529,7 @@ var baseVersionBIP0037 = &MsgVersion{
 	Nonce:     123123, // 0x1e0f3
 	UserAgent: "/hcashdtest:0.0.1/",
 	LastBlock: 234234, // 0x392fa
+	LastKeyBlock: 234233, //0x392f9
 }
 
 // baseVersionBIP0037Encoded is the wire encoded bytes for baseVersionBIP0037
@@ -536,9 +549,10 @@ var baseVersionBIP0037Encoded = []byte{
 	0x00, 0x00, 0xff, 0xff, 0x7f, 0x00, 0x00, 0x01, // IP 127.0.0.1
 	0x20, 0x8d, // Port 8333 in big-endian
 	0xf3, 0xe0, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, // Nonce
-	0x10, // Varint for user agent length
-	0x2f, 0x64, 0x63, 0x72, 0x64, 0x74, 0x65, 0x73,
-	0x74, 0x3a, 0x30, 0x2e, 0x30, 0x2e, 0x31, 0x2f, // User agent
+	0x12, // Varint for user agent length
+	0x2f, 0x68, 0x63, 0x61, 0x73, 0x68, 0x64, 0x74,
+	0x65, 0x73, 0x74, 0x3a, 0x30, 0x2e, 0x30, 0x2e, 0x31, 0x2f, // User agent
 	0xfa, 0x92, 0x03, 0x00, // Last block
+	0xf9, 0x92, 0x03, 0x00, // Last key block
 	0x01, // Relay tx
 }

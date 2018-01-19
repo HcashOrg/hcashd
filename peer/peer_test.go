@@ -6,6 +6,7 @@
 package peer_test
 
 import (
+	"encoding/binary"
 	"errors"
 	"io"
 	"net"
@@ -205,7 +206,7 @@ func testPeer(t *testing.T, p *peer.Peer, s peerStats) {
 }
 
 // TestPeerConnection tests connection between inbound and outbound peers.
-func DNWTestPeerConnection(t *testing.T) {
+func TestPeerConnection(t *testing.T) {
 	verack := make(chan struct{})
 	peerCfg := &peer.Config{
 		Listeners: peer.MessageListeners{
@@ -235,8 +236,8 @@ func DNWTestPeerConnection(t *testing.T) {
 		wantLastPingNonce:   uint64(0),
 		wantLastPingMicros:  int64(0),
 		wantTimeOffset:      int64(0),
-		wantBytesSent:       158, // 134 version + 24 verack
-		wantBytesReceived:   158,
+		wantBytesSent:       164, // 140 version + 24 verack
+		wantBytesReceived:   164,
 	}
 	tests := []struct {
 		name  string
@@ -313,7 +314,7 @@ func DNWTestPeerConnection(t *testing.T) {
 }
 
 // TestPeerListeners tests that the peer listeners are called as expected.
-func DNWTestPeerListeners(t *testing.T) {
+func TestPeerListeners(t *testing.T) {
 	verack := make(chan struct{}, 1)
 	ok := make(chan wire.Message, 20)
 	peerCfg := &peer.Config{
@@ -455,14 +456,10 @@ func DNWTestPeerListeners(t *testing.T) {
 		},
 		{
 			"OnBlock",
-			// revised by sammy at 2017-10-27
-			/*
-				wire.NewMsgBlock(wire.NewBlockHeader(0, &chainhash.Hash{},
-					&chainhash.Hash{}, &chainhash.Hash{}, &chainhash.Hash{}, 1, [6]byte{},
-					1, 1, 1, 1, 1, 1, 1, 1, 1, [32]byte{},
-					binary.LittleEndian.Uint32([]byte{0xb0, 0x1d, 0xfa, 0xce}))),
-			*/
-			nil,
+			wire.NewMsgBlock(wire.NewBlockHeader(0, &chainhash.Hash{},
+				&chainhash.Hash{}, &chainhash.Hash{},  &chainhash.Hash{},1, [6]byte{},
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, [32]byte{},
+				binary.LittleEndian.Uint32([]byte{0xb0, 0x1d, 0xfa, 0xce}))),
 		},
 		{
 			"OnInv",
@@ -506,15 +503,11 @@ func DNWTestPeerListeners(t *testing.T) {
 		},
 		{
 			"OnMerkleBlock",
-			// revise by sammy at 2017-10-27
-			/*
-				wire.NewMsgMerkleBlock(wire.NewBlockHeader(0,
-					&chainhash.Hash{}, &chainhash.Hash{},
-					&chainhash.Hash{}, 1, [6]byte{},
-					1, 1, 1, 1, 1, 1, 1, 1, 1, [32]byte{},
-					binary.LittleEndian.Uint32([]byte{0xb0, 0x1d, 0xfa, 0xce}))),
-			*/
-			nil,
+			wire.NewMsgMerkleBlock(wire.NewBlockHeader(0,
+				&chainhash.Hash{}, &chainhash.Hash{}, &chainhash.Hash{},
+				&chainhash.Hash{}, 1, [6]byte{},
+				1, 1, 1, 1, 1, 1, 1, 1, 1, 1, [32]byte{},
+				binary.LittleEndian.Uint32([]byte{0xb0, 0x1d, 0xfa, 0xce}))),
 		},
 		// only one version message is allowed
 		// only one verack message is allowed
@@ -543,14 +536,11 @@ func DNWTestPeerListeners(t *testing.T) {
 }
 
 // TestOutboundPeer tests that the outbound peer works as expected.
-func DNWTestOutboundPeer(t *testing.T) {
+func TestOutboundPeer(t *testing.T) {
 	peerCfg := &peer.Config{
-		// revise by sammy at 2017-10-27
-		/*
-			NewestBlock: func() (*chainhash.Hash, int64, error) {
-				return nil, 0, errors.New("newest block not found")
-			},
-		*/
+		NewestBlock: func() (*chainhash.Hash, int64, int64, error) {
+			return nil, 0, 0, errors.New("newest block not found")
+		},
 		UserAgentName:    "peer",
 		UserAgentVersion: "1.0",
 		ChainParams:      &chaincfg.MainNetParams,
@@ -603,19 +593,17 @@ func DNWTestOutboundPeer(t *testing.T) {
 	<-done
 	p.Disconnect()
 
-	// revise by sammy at 2017-10-27
-	// Test NewestBlock
-	/*
-		var newestBlock = func() (*chainhash.Hash, int64, error) {
-			hashStr := "14a0810ac680a3eb3f82edc878cea25ec41d6b790744e5daeef"
-			hash, err := chainhash.NewHashFromStr(hashStr)
-			if err != nil {
-				return nil, 0, err
-			}
-			return hash, 234439, nil
+	//Test NewestBlock
+	var newestBlock = func() (*chainhash.Hash, int64, int64, error) {
+		hashStr := "14a0810ac680a3eb3f82edc878cea25ec41d6b790744e5daeef"
+		hash, err := chainhash.NewHashFromStr(hashStr)
+		if err != nil {
+			return nil, 0, 0, err
 		}
-	*/
-	//peerCfg.NewestBlock = newestBlock
+		return hash, 234439, 234438, nil
+	}
+
+	peerCfg.NewestBlock = newestBlock
 	peerCfg.NewestBlock = nil
 
 	r1, w1 := io.Pipe()

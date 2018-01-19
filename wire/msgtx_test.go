@@ -17,7 +17,7 @@ import (
 )
 
 // TestTx tests the MsgTx API.
-func DNWTestTx(t *testing.T) {
+func TestTx(t *testing.T) {
 	pver := ProtocolVersion
 
 	// Block 100000 hash.
@@ -37,7 +37,7 @@ func DNWTestTx(t *testing.T) {
 
 	// Ensure max payload is expected value for latest protocol version.
 	// Num addresses (varInt) + max allowed addresses.
-	wantPayload := uint32(1310720)
+	wantPayload := uint32(2048000)
 	maxPayload := msg.MaxPayloadLength(pver)
 	if maxPayload != wantPayload {
 		t.Errorf("MaxPayloadLength: wrong max payload length for "+
@@ -46,7 +46,7 @@ func DNWTestTx(t *testing.T) {
 	}
 
 	// Ensure max payload is expected value for protocol version 3.
-	wantPayload = uint32(1000000)
+	wantPayload = uint32(2048000)
 	maxPayload = msg.MaxPayloadLength(3)
 	if maxPayload != wantPayload {
 		t.Errorf("MaxPayloadLength: wrong max payload length for "+

@@ -1002,7 +1002,7 @@ func IsSSGen(tx *wire.MsgTx) (bool, error) {
 	// Ensure that the first output is the correct size.
 	if len(zeroethOutputScript) != SSGenBlockReferenceOutSize {
 		return false, stakeRuleError(ErrSSGenBadReference, "First SSGen output "+
-			"should have been 43 bytes long, but was not")
+			"should have been 47 bytes long, but was not")
 	}
 
 	// The OP_RETURN output script prefix for block referencing should

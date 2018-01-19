@@ -222,6 +222,7 @@ var helpDescsEnUS = map[string]string{
 	// GetBestBlockResult help.
 	"getbestblockresult-hash":   "Hex-encoded bytes of the best block hash",
 	"getbestblockresult-height": "Height of the best block",
+	"getbestblockresult-keyheight": "Key Height of the best block",
 
 	// GetBestBlockCmd help.
 	"getbestblock--synopsis": "Get block height and hash of best block in the main chain.",
@@ -253,7 +254,12 @@ var helpDescsEnUS = map[string]string{
 	"txrawresult-blocktime":     "Block time in seconds since the 1 Jan 1970 GMT",
 	"txrawresult-blockindex":    "Index of the containing block.",
 	"txrawresult-blockheight":   "Height of the block the transaction is part of",
+	"txrawresult-blockkeyheight":"Key height of the block the transaction is part of",
 	"txrawresult-expiry":        "The transacion expiry",
+	"txrawresult-votepassed":    "The vote result of block validateion",
+	"txrawresult-size":          "The transaction size",
+	"txrawresult-fee":           "The transaction fee",
+	"txrawresult-txtype":        "The transaciton type",
 
 	// SearchRawTransactionsResult help.
 	"searchrawtransactionsresult-hex":           "Hex-encoded transaction",
@@ -272,8 +278,10 @@ var helpDescsEnUS = map[string]string{
 	"getblockverboseresult-confirmations":     "The number of confirmations",
 	"getblockverboseresult-size":              "The size of the block",
 	"getblockverboseresult-height":            "The height of the block in the block chain",
+	"getblockverboseresult-keyheight":         "The key height of the block in the block chain",
 	"getblockverboseresult-version":           "The block version",
 	"getblockverboseresult-merkleroot":        "Root hash of the merkle tree",
+	"getblockverboseresult-iskeyblock":        "Whether the block is a key block",
 	"getblockverboseresult-tx":                "The transaction hashes (only when verbosetx=false)",
 	"getblockverboseresult-rawtx":             "The transactions as JSON objects (only when verbosetx=true)",
 	"getblockverboseresult-time":              "The block time in seconds since 1 Jan 1970 GMT",
@@ -281,6 +289,7 @@ var helpDescsEnUS = map[string]string{
 	"getblockverboseresult-bits":              "The bits which represent the block difficulty",
 	"getblockverboseresult-difficulty":        "The proof-of-work difficulty as a multiple of the minimum difficulty",
 	"getblockverboseresult-previousblockhash": "The hash of the previous block",
+	"getblockverboseresult-previouskeyblockhash": "The hash of the previous key block",
 	"getblockverboseresult-nextblockhash":     "The hash of the next block (only if there is one)",
 	"getblockverboseresult-sbits":             "The stake difficulty of theblock",
 	"getblockverboseresult-poolsize":          "The total number of valid, spendable sstx (tickets) in the chain",
@@ -307,6 +316,16 @@ var helpDescsEnUS = map[string]string{
 	"getblockhash--synopsis": "Returns hash of the block in best block chain at the given height.",
 	"getblockhash-index":     "The block height",
 	"getblockhash--result0":  "The block hash",
+
+	// GetBlockKeyHeight.
+	"getblockkeyheight--synopsis": "Returns the block key height at the given block heigh",
+	"getblockkeyheight--result0": "The key height of the block",
+	"getblockkeyheight-height": "The height of the block",
+
+	//GetKeyBlockHashCmd help.
+	"getkeyblockhash--result0": "The block hash",
+	"getkeyblockhash-keyheight":    "The block key height",
+	"getkeyblockhash--synopsis": "Returns hash of the block in best block chain at the given key height.",
 
 	// GetBlockHeaderCmd help.
 	"getblockheader--synopsis":   "Returns information about a block header given its hash.",
@@ -343,6 +362,7 @@ var helpDescsEnUS = map[string]string{
 	"getblocksubsidy--synopsis": "Returns information regarding subsidy amounts.",
 	"getblocksubsidy-height":    "The block height",
 	"getblocksubsidy-voters":    "The number of voters",
+	"getblocksubsidy-keyheight": "The block key height",
 
 	// GetBlockSubsidyResult help.
 	"getblocksubsidyresult-developer": "The developer subsidy",
@@ -490,6 +510,7 @@ var helpDescsEnUS = map[string]string{
 	"infochainresult-version":         "The version of the server",
 	"infochainresult-protocolversion": "The latest supported protocol version",
 	"infochainresult-blocks":          "The number of blocks processed",
+	"infochainresult-keyblocks":       "The key height of the newest block",
 	"infochainresult-timeoffset":      "The time offset",
 	"infochainresult-connections":     "The number of connected peers",
 	"infochainresult-proxy":           "The proxy used by the server",
@@ -497,6 +518,7 @@ var helpDescsEnUS = map[string]string{
 	"infochainresult-testnet":         "Whether or not server is using testnet",
 	"infochainresult-relayfee":        "The minimum relay fee for non-free transactions in HCASH/KB",
 	"infochainresult-errors":          "Any current errors",
+	"infochainresult-hashcount":      "Hashes needed to perform to get a new block according to current difficulty",
 
 	// InfoWalletResult help.
 	"infowalletresult-version":         "The version of the server",
@@ -581,6 +603,7 @@ var helpDescsEnUS = map[string]string{
 	"getpeerinforesult-inbound":        "Whether or not the peer is an inbound connection",
 	"getpeerinforesult-startingheight": "The latest block height the peer knew about when the connection was established",
 	"getpeerinforesult-currentheight":  "The current height of the peer",
+	"getpeerinforesult-currentrealkeyheight": "The current number of key blocks of the peer",
 	"getpeerinforesult-banscore":       "The ban score",
 	"getpeerinforesult-syncnode":       "Whether or not the peer is the sync peer",
 
@@ -856,6 +879,7 @@ var helpDescsEnUS = map[string]string{
 	"ticketvwap-start":     "The start height to begin calculating the VWAP from",
 	"ticketvwap-end":       "The end height to begin calculating the VWAP from",
 	"ticketvwap--result0":  "The volume weighted average price",
+	"ticketvwap-height":    "The height",
 
 	// TxFeeInfo help.
 	"txfeeinfo--synopsis":            "Get various information about regular transaction fees from the mempool, blocks, and difficulty windows",
@@ -908,6 +932,8 @@ var rpcResultTypes = map[string][]interface{}{
 	"getblock":              {(*string)(nil), (*hcashjson.GetBlockVerboseResult)(nil)},
 	"getblockcount":         {(*int64)(nil)},
 	"getblockhash":          {(*string)(nil)},
+	"getkeyblockhash":       {(*string)(nil)},
+	"getblockkeyheight":     {(*int64)(nil)},
 	"getblockheader":        {(*string)(nil), (*hcashjson.GetBlockHeaderVerboseResult)(nil)},
 	"getblocksubsidy":       {(*hcashjson.GetBlockSubsidyResult)(nil)},
 	"getblocktemplate":      {(*hcashjson.GetBlockTemplateResult)(nil), (*string)(nil), nil},
