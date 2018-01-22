@@ -19,7 +19,7 @@ import (
 // notifications marshal and unmarshal into valid results include handling of
 // optional fields being omitted in the marshalled command, while optional
 // fields with defaults have the default assigned on unmarshalled commands.
-func DNWTestChainSvrWsNtfns(t *testing.T) {
+func TestChainSvrWsNtfns(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -86,7 +86,7 @@ func DNWTestChainSvrWsNtfns(t *testing.T) {
 		{
 			name: "txacceptedverbose",
 			newNtfn: func() (interface{}, error) {
-				return hcashjson.NewCmd("txacceptedverbose", `{"hex":"001122","txid":"123","version":1,"locktime":4294967295,"vin":null,"vout":null,"confirmations":0}`)
+				return hcashjson.NewCmd("txacceptedverbose", `{"hex":"001122","txid":"123","version":1,"locktime":4294967295,"vin":null,"vout":null,"confirmations":0,"txtype":"regular","size":256}`)
 			},
 			staticNtfn: func() interface{} {
 				txResult := hcashjson.TxRawResult{
@@ -96,11 +96,13 @@ func DNWTestChainSvrWsNtfns(t *testing.T) {
 					LockTime:      4294967295,
 					Vin:           nil,
 					Vout:          nil,
+					TxType:        "regular",
+					Size:          256,
 					Confirmations: 0,
 				}
 				return hcashjson.NewTxAcceptedVerboseNtfn(txResult)
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"txacceptedverbose","params":[{"hex":"001122","txid":"123","version":1,"locktime":4294967295,"expiry":0,"vin":null,"vout":null,"blockheight":0}],"id":null}`,
+			marshalled: `{"jsonrpc":"1.0","method":"txacceptedverbose","params":[{"hex":"001122","txid":"123","version":1,"locktime":4294967295,"expiry":0,"vin":null,"vout":null,"blockheight":0,"blockkeyheight":0,"txtype":"regular","size":256}],"id":null}`,
 			unmarshalled: &hcashjson.TxAcceptedVerboseNtfn{
 				RawTx: hcashjson.TxRawResult{
 					Hex:           "001122",
@@ -109,6 +111,8 @@ func DNWTestChainSvrWsNtfns(t *testing.T) {
 					LockTime:      4294967295,
 					Vin:           nil,
 					Vout:          nil,
+					TxType:        "regular",
+					Size:          256,
 					Confirmations: 0,
 				},
 			},

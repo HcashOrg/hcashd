@@ -739,8 +739,7 @@ func TestIsSSRtxErrors(t *testing.T) {
 
 // --------------------------------------------------------------------------------
 // Minor function testing
-// DOESN'T WORK YET
-func DNWTestGetSSGenBlockVotedOn(t *testing.T) {
+func TestGetSSGenBlockVotedOn(t *testing.T) {
 	var ssgen = hcashutil.NewTx(ssgenMsgTx)
 	ssgen.SetTree(wire.TxTreeStake)
 	ssgen.SetIndex(0)

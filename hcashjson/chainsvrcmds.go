@@ -240,9 +240,10 @@ type GetBlockSubsidyCmd struct {
 
 // NewGetBlockSubsidyCmd returns a new instance which can be used to issue a
 // getblocksubsidy JSON-RPC command.
-func NewGetBlockSubsidyCmd(height int64, voters uint16) *GetBlockSubsidyCmd {
+func NewGetBlockSubsidyCmd(height int64, keyHeight int64, voters uint16) *GetBlockSubsidyCmd {
 	return &GetBlockSubsidyCmd{
 		Height: height,
+		KeyHeight: keyHeight,
 		Voters: voters,
 	}
 }

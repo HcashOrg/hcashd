@@ -19,7 +19,7 @@ import (
 // into valid results include handling of optional fields being omitted in the
 // marshalled command, while optional fields with defaults have the default
 // assigned on unmarshalled commands.
-func DNWTestChainSvrCmds(t *testing.T) {
+func TestChainSvrCmds(t *testing.T) {
 	t.Parallel()
 
 	testID := int(1)
@@ -237,14 +237,15 @@ func DNWTestChainSvrCmds(t *testing.T) {
 		{
 			name: "getblocksubsidy",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("getblocksubsidy", 123, 256)
+				return hcashjson.NewCmd("getblocksubsidy", 123, 122, 256)
 			},
 			staticCmd: func() interface{} {
-				return hcashjson.NewGetBlockSubsidyCmd(123, 256)
+				return hcashjson.NewGetBlockSubsidyCmd(123, 122,256)
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"getblocksubsidy","params":[123,256],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"getblocksubsidy","params":[123,122,256],"id":1}`,
 			unmarshalled: &hcashjson.GetBlockSubsidyCmd{
 				Height: 123,
+				KeyHeight:122,
 				Voters: 256,
 			},
 		},

@@ -201,7 +201,7 @@ func TestMerkleBlockWire(t *testing.T) {
 
 // TestMerkleBlockWireErrors performs negative tests against wire encode and
 // decode of MsgBlock to confirm error paths work correctly.
-func DNWTestMerkleBlockWireErrors(t *testing.T) {
+func TestMerkleBlockWireErrors(t *testing.T) {
 	// Use protocol version 70001 specifically here instead of the latest
 	// because the test data is using bytes encoded with that protocol
 	// version.
@@ -225,99 +225,109 @@ func DNWTestMerkleBlockWireErrors(t *testing.T) {
 			&testMerkleBlock, testMerkleBlockBytes, pver, 4,
 			io.ErrShortWrite, io.EOF,
 		},
-		// Force error in merkle root.  [2]
+		// Force error in prev key block hash. [2]
 		{
 			&testMerkleBlock, testMerkleBlockBytes, pver, 36,
 			io.ErrShortWrite, io.EOF,
 		},
-		// Force error in stake merkle root. [3]
+		// Force error in merkle root.  [3]
 		{
 			&testMerkleBlock, testMerkleBlockBytes, pver, 68,
 			io.ErrShortWrite, io.EOF,
 		},
-		// Force error in VoteBits. [4]
+		// Force error in stake merkle root. [4]
 		{
 			&testMerkleBlock, testMerkleBlockBytes, pver, 100,
 			io.ErrShortWrite, io.EOF,
 		},
-		// Force error in FinalState. [5]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 102,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in Voters. [6]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 108,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in FreshStake. [7]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 110,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in Revocations. [8]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 111,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in poolsize. [9]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 112,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in difficulty bits. [10]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 116,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in stake difficulty bits. [11]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 120,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in height. [12]
-		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 128,
-			io.ErrShortWrite, io.EOF,
-		},
-		// Force error in size. [13]
+		// Force error in VoteBits. [5]
 		{
 			&testMerkleBlock, testMerkleBlockBytes, pver, 132,
 			io.ErrShortWrite, io.EOF,
 		},
-		// Force error in timestamp. [14]
+		// Force error in FinalState. [6]
 		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 136,
+			&testMerkleBlock, testMerkleBlockBytes, pver, 134,
 			io.ErrShortWrite, io.EOF,
 		},
-		// Force error in header nonce. [15]
+		// Force error in Voters. [7]
 		{
 			&testMerkleBlock, testMerkleBlockBytes, pver, 140,
 			io.ErrShortWrite, io.EOF,
 		},
-		// Force error in transaction count. [16]
+		// Force error in FreshStake. [8]
 		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 180,
+			&testMerkleBlock, testMerkleBlockBytes, pver, 142,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in Revocations. [9]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 143,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in poolsize. [10]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 144,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in difficulty bits. [11]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 148,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in stake difficulty bits. [12]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 152,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in height. [13]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 160,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in height. [14]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 164,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in size. [15]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 168,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in timestamp. [16]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 172,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in header nonce. [17]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 208,
+			io.ErrShortWrite, io.EOF,
+		},
+		// Force error in transaction count. [18]
+		{
+			&testMerkleBlock, testMerkleBlockBytes, pver, 216,
 			io.ErrShortWrite, io.EOF,
 		},
 		// Force error in num hashes. [17]
 		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 184,
+			&testMerkleBlock, testMerkleBlockBytes, pver, 220,
 			io.ErrShortWrite, io.EOF,
 		},
 		// Force error in hashes. [18]
 		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 185,
+			&testMerkleBlock, testMerkleBlockBytes, pver, 221,
 			io.ErrShortWrite, io.EOF,
 		},
 		// Force error in num flag bytes. [19]
 		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 254,
+			&testMerkleBlock, testMerkleBlockBytes, pver, 290,
 			io.ErrShortWrite, io.EOF,
 		},
 		// Force error in flag bytes. [20]
 		{
-			&testMerkleBlock, testMerkleBlockBytes, pver, 255,
+			&testMerkleBlock, testMerkleBlockBytes, pver, 291,
 			io.ErrShortWrite, io.EOF,
 		},
 	}

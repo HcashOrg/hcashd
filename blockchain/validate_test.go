@@ -1960,29 +1960,28 @@ func DNWTestBlockchainSpendJournal(t *testing.T) {
 
 // TestCheckBlockSanity tests the context free block sanity checks with blocks
 // not on a chain.
-// DOESN'T WORK YET
-func DNWTestCheckBlockSanity(t *testing.T) {
-	/*
-		timeSource := blockchain.NewMedianTime()
-		block := hcashutil.NewBlock(&badBlock)
-		err := blockchain.CheckBlockSanity(block, timeSource, simNetParams)
-		if err == nil {
-			t.Fatalf("block should fail.\n")
-		}
-	*/
+func TestCheckBlockSanity(t *testing.T) {
+
+	timeSource := blockchain.NewMedianTime()
+	block := hcashutil.NewBlock(&badBlock)
+	err := blockchain.CheckBlockSanity(nil, block, timeSource, simNetParams)
+	if err == nil {
+		t.Fatalf("block should fail.\n")
+	}
+
 }
 
 // TestCheckWorklessBlockSanity tests the context free workless block sanity
 // checks with blocks not on a chain.
-func DNWTestCheckWorklessBlockSanity(t *testing.T) {
-	/*
-		timeSource := blockchain.NewMedianTime()
-		block := hcashutil.NewBlock(&badBlock)
-		err := blockchain.CheckWorklessBlockSanity(block, timeSource, simNetParams)
-		if err == nil {
-			t.Fatalf("block should fail.\n")
-		}
-	*/
+func TestCheckWorklessBlockSanity(t *testing.T) {
+
+	timeSource := blockchain.NewMedianTime()
+	block := hcashutil.NewBlock(&badBlock)
+	err := blockchain.CheckWorklessBlockSanity(nil, block, timeSource, simNetParams)
+	if err == nil {
+		t.Fatalf("block should fail.\n")
+	}
+
 }
 
 // TestCheckBlockHeaderContext tests that genesis block passes context headers

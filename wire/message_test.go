@@ -35,7 +35,7 @@ func makeHeader(hcashnet CurrencyNet, command string,
 }
 
 // TestMessage tests the Read/WriteMessage and Read/WriteMessageN API.
-func DNWTestMessage(t *testing.T) {
+func TestMessage(t *testing.T) {
 	pver := ProtocolVersion
 
 	// Create the various types of messages to test.
@@ -107,12 +107,12 @@ func DNWTestMessage(t *testing.T) {
 		hcashnet CurrencyNet // Network to use for wire encoding
 		bytes    int         // Expected num bytes read/written
 	}{
-		{msgVersion, msgVersion, pver, MainNet, 125},         // [0]
+		{msgVersion, msgVersion, pver, MainNet, 131},         // [0]
 		{msgVerack, msgVerack, pver, MainNet, 24},            // [1]
 		{msgGetAddr, msgGetAddr, pver, MainNet, 24},          // [2]
 		{msgAddr, msgAddr, pver, MainNet, 25},                // [3]
 		{msgGetBlocks, msgGetBlocks, pver, MainNet, 61},      // [4]
-		{msgBlock, msgBlock, pver, MainNet, 522},             // [5]
+		{msgBlock, msgBlock, pver, MainNet, 558},             // [5]
 		{msgInv, msgInv, pver, MainNet, 25},                  // [6]
 		{msgGetData, msgGetData, pver, MainNet, 25},          // [7]
 		{msgNotFound, msgNotFound, pver, MainNet, 25},        // [8]
@@ -126,7 +126,7 @@ func DNWTestMessage(t *testing.T) {
 		{msgFilterAdd, msgFilterAdd, pver, MainNet, 26},      // [16]
 		{msgFilterClear, msgFilterClear, pver, MainNet, 24},  // [17]
 		{msgFilterLoad, msgFilterLoad, pver, MainNet, 35},    // [18]
-		{msgMerkleBlock, msgMerkleBlock, pver, MainNet, 215}, // [19]
+		{msgMerkleBlock, msgMerkleBlock, pver, MainNet, 251}, // [19]
 		{msgReject, msgReject, pver, MainNet, 79},            // [20]
 	}
 

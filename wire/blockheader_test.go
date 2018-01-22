@@ -35,6 +35,7 @@ func TestBlockHeader(t *testing.T) {
 	poolsize := uint32(0)
 	sbits := int64(0x0000000000000000)
 	blockHeight := uint32(0)
+	blockKeyHeight := uint32(0)
 	blockSize := uint32(0)
 	stakeVersion := uint32(0xb0a710ad)
 	extraData := [32]byte{}
@@ -43,7 +44,7 @@ func TestBlockHeader(t *testing.T) {
 	bh := NewBlockHeader(
 		1, // verision
 		&hash,
-		&merkleHash,
+		&hash,
 		&merkleHash, // stakeRoot
 		&merkleHash,
 		votebits,
@@ -55,8 +56,8 @@ func TestBlockHeader(t *testing.T) {
 		bits,
 		sbits,
 		blockHeight,
+		blockKeyHeight,
 		blockSize,
-		0,
 		nonce,
 		extraData,
 		stakeVersion,
@@ -67,6 +68,11 @@ func TestBlockHeader(t *testing.T) {
 		t.Errorf("NewBlockHeader: wrong prev hash - got %v, want %v",
 			spew.Sprint(bh.PrevBlock), spew.Sprint(hash))
 	}
+	if !bh.PrevKeyBlock.IsEqual(&hash) {
+		t.Errorf("NewBlockHeader: wrong prev key hash - got %v, want %v",
+			spew.Sprint(bh.PrevBlock), spew.Sprint(hash))
+	}
+
 	if !bh.MerkleRoot.IsEqual(&merkleHash) {
 		t.Errorf("NewBlockHeader: wrong merkle root - got %v, want %v",
 			spew.Sprint(bh.MerkleRoot), spew.Sprint(merkleHash))
@@ -115,11 +121,19 @@ func TestBlockHeader(t *testing.T) {
 		t.Errorf("NewBlockHeader: wrong stakeVersion - got %v, want %v",
 			bh.StakeVersion, stakeVersion)
 	}
+	if bh.Height != blockHeight {
+		t.Errorf("NewBlockHeader: wrong height - got %v, want %v",
+			bh.Height, blockHeight)
+	}
+	if bh.KeyHeight != blockKeyHeight {
+		t.Errorf("NewBlockHeader: wrong key height - got %v, want %v",
+			bh.KeyHeight, blockKeyHeight)
+	}
 }
 
 // TestBlockHeaderWire tests the BlockHeader wire encode and decode for various
 // protocol versions.
-func DNWTestBlockHeaderWire(t *testing.T) {
+func TestBlockHeaderWire(t *testing.T) {
 	nonce := uint32(123123) // 0x1e0f3
 	pver := uint32(70001)
 
@@ -128,6 +142,7 @@ func DNWTestBlockHeaderWire(t *testing.T) {
 	baseBlockHdr := &BlockHeader{
 		Version:      1,
 		PrevBlock:    mainNetGenesisHash,
+		PrevKeyBlock: mainNetGenesisHash,
 		MerkleRoot:   mainNetGenesisMerkleRoot,
 		StakeRoot:    mainNetGenesisMerkleRoot,
 		VoteBits:     uint16(0x0000),
@@ -142,6 +157,7 @@ func DNWTestBlockHeaderWire(t *testing.T) {
 		Nonce:        nonce,
 		StakeVersion: uint32(0x0ddba110),
 		Height:       uint32(0),
+		KeyHeight:    uint32(0),
 		Size:         uint32(0),
 	}
 
@@ -152,6 +168,10 @@ func DNWTestBlockHeaderWire(t *testing.T) {
 		0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
 		0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
 		0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevBlock
+		0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,
+		0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
+		0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
+		0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevKeyBlock
 		0x3b, 0xa3, 0xed, 0xfd, 0x7a, 0x7b, 0x12, 0xb2,
 		0x7a, 0xc7, 0x2c, 0x3e, 0x67, 0x76, 0x8f, 0x61,
 		0x7f, 0xc8, 0x1b, 0xc3, 0x88, 0x8a, 0x51, 0x32,
@@ -169,13 +189,14 @@ func DNWTestBlockHeaderWire(t *testing.T) {
 		0xff, 0xff, 0x00, 0x1d, // Bits
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // SBits
 		0x00, 0x00, 0x00, 0x00, // Height
+		0x00, 0x00, 0x00, 0x00, // Key height
 		0x00, 0x00, 0x00, 0x00, // Size
 		0x29, 0xab, 0x5f, 0x49, // Timestamp
-		0xf3, 0xe0, 0x01, 0x00, // Nonce
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ExtraData
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0xf3, 0xe0, 0x01, 0x00, // Nonce
 		0x10, 0xa1, 0xdb, 0x0d, // StakeVersion
 	}
 
@@ -251,7 +272,7 @@ func DNWTestBlockHeaderWire(t *testing.T) {
 }
 
 // TestBlockHeaderSerialize tests BlockHeader serialize and deserialize.
-func DNWTestBlockHeaderSerialize(t *testing.T) {
+func TestBlockHeaderSerialize(t *testing.T) {
 	nonce := uint32(123123) // 0x1e0f3
 
 	// baseBlockHdr is used in the various tests as a baseline BlockHeader.
@@ -259,6 +280,7 @@ func DNWTestBlockHeaderSerialize(t *testing.T) {
 	baseBlockHdr := &BlockHeader{
 		Version:      1,
 		PrevBlock:    mainNetGenesisHash,
+		PrevKeyBlock: mainNetGenesisHash,
 		MerkleRoot:   mainNetGenesisMerkleRoot,
 		StakeRoot:    mainNetGenesisMerkleRoot,
 		VoteBits:     uint16(0x0000),
@@ -272,6 +294,7 @@ func DNWTestBlockHeaderSerialize(t *testing.T) {
 		Nonce:        nonce,
 		StakeVersion: uint32(0x0ddba110),
 		Height:       uint32(0),
+		KeyHeight:    uint32(0),
 		Size:         uint32(0),
 	}
 
@@ -282,6 +305,10 @@ func DNWTestBlockHeaderSerialize(t *testing.T) {
 		0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
 		0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
 		0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevBlock
+		0x6f, 0xe2, 0x8c, 0x0a, 0xb6, 0xf1, 0xb3, 0x72,
+		0xc1, 0xa6, 0xa2, 0x46, 0xae, 0x63, 0xf7, 0x4f,
+		0x93, 0x1e, 0x83, 0x65, 0xe1, 0x5a, 0x08, 0x9c,
+		0x68, 0xd6, 0x19, 0x00, 0x00, 0x00, 0x00, 0x00, // PrevKeyBlock
 		0x3b, 0xa3, 0xed, 0xfd, 0x7a, 0x7b, 0x12, 0xb2,
 		0x7a, 0xc7, 0x2c, 0x3e, 0x67, 0x76, 0x8f, 0x61,
 		0x7f, 0xc8, 0x1b, 0xc3, 0x88, 0x8a, 0x51, 0x32,
@@ -299,13 +326,14 @@ func DNWTestBlockHeaderSerialize(t *testing.T) {
 		0xff, 0xff, 0x00, 0x1d, // Bits
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // SBits
 		0x00, 0x00, 0x00, 0x00, // Height
+		0x00, 0x00, 0x00, 0x00, // KeyHeight
 		0x00, 0x00, 0x00, 0x00, // Size
 		0x29, 0xab, 0x5f, 0x49, // Timestamp
-		0xf3, 0xe0, 0x01, 0x00, // Nonce
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // ExtraData
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+		0xf3, 0xe0, 0x01, 0x00, // Nonce
 		0x10, 0xa1, 0xdb, 0x0d, // StakeVersion
 	}
 
@@ -355,15 +383,16 @@ func DNWTestBlockHeaderSerialize(t *testing.T) {
 	}
 }
 
-func DNWTestBlockHeaderHashing(t *testing.T) {
+func TestBlockHeaderHashing(t *testing.T) {
 	dummyHeader := "0000000049e0b48ade043f729d60095ed92642d96096fe6aba42f2eda" +
 		"632d461591a152267dc840ff27602ce1968a81eb30a43423517207617a0150b56c4f72" +
+		"b803e497f67dc840ff27602ce1968a81eb30a43423517207617a0150b56c4f72" +
 		"b803e497f00000000000000000000000000000000000000000000000000000000000000" +
-		"00010000000000000000000000b7000000ffff7f20204e0000000000005800000060010" +
-		"0008b990956000000000000000000000000000000000000000000000000000000000000" +
-		"0000000000000000ABCD"
+		"0001000000000000000000000000000000b7000000ffff7f20204e00000000000058000" +
+		"000600100008b9909560000000000000000000000000000000000000000000000000000" +
+		"000000000000000000000000ABCD"
 	// This hash has reversed endianness compared to what chainhash spits out.
-	hashStr := "0d40d58703482d81d711be0ffc1b313788d3c3937e1617e4876661d33a8c4c41"
+	hashStr := "53a7674d9c6a85e2aa9a5b954d9db038a9ddb1b90a242b3c015eb43fbff8fee1"
 	hashB, _ := hex.DecodeString(hashStr)
 	hash, _ := chainhash.NewHash(hashB)
 

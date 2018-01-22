@@ -18,7 +18,7 @@ import (
 // notifications marshal and unmarshal into valid results include handling of
 // optional fields being omitted in the marshalled command, while optional
 // fields with defaults have the default assigned on unmarshalled commands.
-func DNWTestHcashwalletChainSvrWsNtfns(t *testing.T) {
+func TestHcashwalletChainSvrWsNtfns(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -76,17 +76,18 @@ func DNWTestHcashwalletChainSvrWsNtfns(t *testing.T) {
 		{
 			name: "winningtickets",
 			newNtfn: func() (interface{}, error) {
-				return hcashjson.NewCmd("winningtickets", "123", 100, map[string]string{"a": "b"})
+				return hcashjson.NewCmd("winningtickets", "123", 100, 99, map[string]string{"a": "b"})
 			},
 			staticNtfn: func() interface{} {
 				// revised by sammy at 2017-10-27
 				//return hcashjson.NewWinningTicketsNtfn("123", 100, map[string]string{"a": "b"})
-				return hcashjson.NewWinningTicketsNtfn("123", 100, 100, map[string]string{"a": "b"})
+				return hcashjson.NewWinningTicketsNtfn("123", 100, 99, map[string]string{"a": "b"})
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"winningtickets","params":["123",100,{"a":"b"}],"id":null}`,
+			marshalled: `{"jsonrpc":"1.0","method":"winningtickets","params":["123",100,99,{"a":"b"}],"id":null}`,
 			unmarshalled: &hcashjson.WinningTicketsNtfn{
 				BlockHash:   "123",
 				BlockHeight: 100,
+				BlockKeyHeight: 99,
 				Tickets:     map[string]string{"a": "b"},
 			},
 		},

@@ -19,7 +19,7 @@ import (
 // unmarshal into valid results include handling of optional fields being
 // omitted in the marshalled command, while optional fields with defaults have
 // the default assigned on unmarshalled commands.
-func DNWTestWalletSvrCmds(t *testing.T) {
+func TestWalletSvrCmds(t *testing.T) {
 	t.Parallel()
 
 	testID := int(1)
@@ -807,8 +807,6 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5)
 			},
 			staticCmd: func() interface{} {
-				// revised by sammy at 2017-10-27
-				//return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, nil, nil)
 				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, nil, nil, nil)
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5],"id":1}`,
@@ -816,6 +814,7 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 				FromAccount: "from",
 				ToAddress:   "1Address",
 				Amount:      0.5,
+				NotSend:     hcashjson.Int(0),
 				MinConf:     hcashjson.Int(1),
 				Comment:     nil,
 				CommentTo:   nil,
@@ -824,18 +823,17 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendfrom optional1",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 6)
+				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 0, 6)
 			},
 			staticCmd: func() interface{} {
-				// revised by sammy at 2017-10-27
-				//return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6), nil, nil)
-				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, hcashjson.Int(6), nil, nil)
+				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(0), hcashjson.Int(6), nil, nil)
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,6],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,0,6],"id":1}`,
 			unmarshalled: &hcashjson.SendFromCmd{
 				FromAccount: "from",
 				ToAddress:   "1Address",
 				Amount:      0.5,
+				NotSend:     hcashjson.Int(0),
 				MinConf:     hcashjson.Int(6),
 				Comment:     nil,
 				CommentTo:   nil,
@@ -844,19 +842,18 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendfrom optional2",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 6, "comment")
+				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 0, 6, "comment")
 			},
 			staticCmd: func() interface{} {
-				// revised by sammy at 2017-10-27
-				//return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6),
-				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, nil, hcashjson.Int(6),
+				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(0), hcashjson.Int(6),
 					hcashjson.String("comment"), nil)
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,6,"comment"],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,0,6,"comment"],"id":1}`,
 			unmarshalled: &hcashjson.SendFromCmd{
 				FromAccount: "from",
 				ToAddress:   "1Address",
 				Amount:      0.5,
+				NotSend:     hcashjson.Int(0),
 				MinConf:     hcashjson.Int(6),
 				Comment:     hcashjson.String("comment"),
 				CommentTo:   nil,
@@ -865,20 +862,18 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendfrom optional3",
 			newCmd: func() (interface{}, error) {
-				// revised by sammy at 2017-10-27
-				//return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 6, "comment", "commentto")
-				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, nil, 6, "comment", "commentto")
+				return hcashjson.NewCmd("sendfrom", "from", "1Address", 0.5, 0, 6, "comment", "commentto")
 			},
 			staticCmd: func() interface{} {
-				// revised by sammy at 2017-10-27
-				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(6), hcashjson.Int(6),
+				return hcashjson.NewSendFromCmd("from", "1Address", 0.5, hcashjson.Int(0), hcashjson.Int(6),
 					hcashjson.String("comment"), hcashjson.String("commentto"))
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,6,"comment","commentto"],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"sendfrom","params":["from","1Address",0.5,0,6,"comment","commentto"],"id":1}`,
 			unmarshalled: &hcashjson.SendFromCmd{
 				FromAccount: "from",
 				ToAddress:   "1Address",
 				Amount:      0.5,
+				NotSend:     hcashjson.Int(0),
 				MinConf:     hcashjson.Int(6),
 				Comment:     hcashjson.String("comment"),
 				CommentTo:   hcashjson.String("commentto"),
@@ -891,12 +886,13 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 			},
 			staticCmd: func() interface{} {
 				amounts := map[string]float64{"1Address": 0.5}
-				return hcashjson.NewSendManyCmd("from", amounts, nil, nil)
+				return hcashjson.NewSendManyCmd("from", amounts, nil,nil, nil)
 			},
 			marshalled: `{"jsonrpc":"1.0","method":"sendmany","params":["from",{"1Address":0.5}],"id":1}`,
 			unmarshalled: &hcashjson.SendManyCmd{
 				FromAccount: "from",
 				Amounts:     map[string]float64{"1Address": 0.5},
+				NotSend:     hcashjson.Int(0),
 				MinConf:     hcashjson.Int(1),
 				Comment:     nil,
 			},
@@ -904,16 +900,17 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendmany optional1",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("sendmany", "from", `{"1Address":0.5}`, 6)
+				return hcashjson.NewCmd("sendmany", "from", `{"1Address":0.5}`, 0, 6)
 			},
 			staticCmd: func() interface{} {
 				amounts := map[string]float64{"1Address": 0.5}
-				return hcashjson.NewSendManyCmd("from", amounts, hcashjson.Int(6), nil)
+				return hcashjson.NewSendManyCmd("from", amounts, hcashjson.Int(0), hcashjson.Int(6), nil)
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"sendmany","params":["from",{"1Address":0.5},6],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"sendmany","params":["from",{"1Address":0.5},0,6],"id":1}`,
 			unmarshalled: &hcashjson.SendManyCmd{
 				FromAccount: "from",
 				Amounts:     map[string]float64{"1Address": 0.5},
+				NotSend:     hcashjson.Int(0),
 				MinConf:     hcashjson.Int(6),
 				Comment:     nil,
 			},
@@ -921,16 +918,17 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendmany optional2",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("sendmany", "from", `{"1Address":0.5}`, 6, "comment")
+				return hcashjson.NewCmd("sendmany", "from", `{"1Address":0.5}`, 0, 6, "comment")
 			},
 			staticCmd: func() interface{} {
 				amounts := map[string]float64{"1Address": 0.5}
-				return hcashjson.NewSendManyCmd("from", amounts, hcashjson.Int(6), hcashjson.String("comment"))
+				return hcashjson.NewSendManyCmd("from", amounts, hcashjson.Int(0), hcashjson.Int(6), hcashjson.String("comment"))
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"sendmany","params":["from",{"1Address":0.5},6,"comment"],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"sendmany","params":["from",{"1Address":0.5},0,6,"comment"],"id":1}`,
 			unmarshalled: &hcashjson.SendManyCmd{
 				FromAccount: "from",
 				Amounts:     map[string]float64{"1Address": 0.5},
+				NotSend:     hcashjson.Int(0),
 				MinConf:     hcashjson.Int(6),
 				Comment:     hcashjson.String("comment"),
 			},
@@ -938,19 +936,16 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendtoaddress",
 			newCmd: func() (interface{}, error) {
-				// revised by sammy 2017-10-27
-				//return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5)
 				return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5, 0)
 			},
 			staticCmd: func() interface{} {
-				// revised by sammy 2017-10-27
-				//return hcashjson.NewSendToAddressCmd("1Address", 0.5, nil, nil)
 				return hcashjson.NewSendToAddressCmd("1Address", 0.5, 0, nil, nil)
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"sendtoaddress","params":["1Address",0.5],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"sendtoaddress","params":["1Address",0.5,0],"id":1}`,
 			unmarshalled: &hcashjson.SendToAddressCmd{
 				Address:   "1Address",
 				Amount:    0.5,
+				NotSend:   hcashjson.Int(0),
 				Comment:   nil,
 				CommentTo: nil,
 			},
@@ -958,20 +953,17 @@ func DNWTestWalletSvrCmds(t *testing.T) {
 		{
 			name: "sendtoaddress optional1",
 			newCmd: func() (interface{}, error) {
-				// revised by sammy at 2017-10-27
-				//return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5, "comment", "commentto")
 				return hcashjson.NewCmd("sendtoaddress", "1Address", 0.5, 0, "comment", "commentto")
 			},
 			staticCmd: func() interface{} {
-				// revised by sammy at 2017-10-27
-				//return hcashjson.NewSendToAddressCmd("1Address", 0.5, hcashjson.String("comment"),
 				return hcashjson.NewSendToAddressCmd("1Address", 0.5, 0, hcashjson.String("comment"),
 					hcashjson.String("commentto"))
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"sendtoaddress","params":["1Address",0.5,"comment","commentto"],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"sendtoaddress","params":["1Address",0.5,0,"comment","commentto"],"id":1}`,
 			unmarshalled: &hcashjson.SendToAddressCmd{
 				Address:   "1Address",
 				Amount:    0.5,
+				NotSend:   hcashjson.Int(0),
 				Comment:   hcashjson.String("comment"),
 				CommentTo: hcashjson.String("commentto"),
 			},
