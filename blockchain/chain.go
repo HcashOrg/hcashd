@@ -1438,7 +1438,7 @@ func (b *BlockChain) isMajorityVersion(minVer int32, startNode *blockNode, numRe
 		// helps allow only the pieces of the chain that are needed
 		// to remain in memory.
 		var err error
-		iterNode, err = b.getPrevNodeFromNode(iterNode)
+		iterNode, err = b.getPrevKeyNodeFromNode(iterNode)
 		if err != nil {
 			break
 		}
@@ -2651,6 +2651,7 @@ func (b *BlockChain) BestSnapshot() *BestState {
 }
 
 func (b *BlockChain) BestRealKeyHeight() int64 {
+	fmt.Println("That is called")
 	b.chainLock.Lock()
 	keyHeight := b.bestNode.keyHeight
 	if b.bestNode.isKeyBlock {

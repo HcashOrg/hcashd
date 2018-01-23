@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	//	"github.com/HcashOrg/hcashd/blockchain"
 	"github.com/HcashOrg/hcashd/chaincfg"
 	"github.com/HcashOrg/hcashd/chaincfg/chainhash"
 	"github.com/HcashOrg/hcashutil"
@@ -28,6 +27,8 @@ func newFakeChain(params *chaincfg.Params) *BlockChain {
 		calcStakeVersionCache:         make(map[[chainhash.HashSize]byte]uint32),
 	}
 }
+
+
 
 // genesisBlockNode creates a fake chain of blockNodes.  It is used for testing
 // the mechanical properties of the version code.
@@ -136,8 +137,7 @@ func newFakeNode(blockVersion int32, height int64, currentNode *blockNode) *bloc
 	return node
 }
 
-// TestCalcStakeVersionCorners doesn't work yet
-func DNWTestCalcStakeVersionCorners(t *testing.T) {
+func TestCalcStakeVersionCorners(t *testing.T) {
 	params := &chaincfg.SimNetParams
 	currentNode := genesisBlockNode(params)
 
@@ -147,10 +147,18 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 	interval := params.StakeVersionInterval
 
 	height := int64(0)
+	lastKeyBlock := chainhash.Hash{}
+
 	for i := int64(1); i <= svh; i++ {
 		node := newFakeNode(0, i, currentNode)
 
 		// Don't set stake versions.
+		node.keyHeight = i - 1
+		node.header.KeyHeight = uint32(i - 1)
+		node.header.Height = uint32(i)
+		node.isKeyBlock = true
+		node.header.PrevKeyBlock = lastKeyBlock
+		lastKeyBlock = node.header.BlockHash()
 
 		currentNode = node
 		bc.bestNode = currentNode
@@ -177,6 +185,13 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 			t.Fatalf("calcStakeVersionByNode: unexpected error: %v", err)
 		}
 		node.header.StakeVersion = sv
+
+		node.keyHeight = height + i - 1
+		node.header.KeyHeight = uint32(height + i - 1)
+		node.header.Height = uint32(height + i)
+		node.isKeyBlock = true
+		node.header.PrevKeyBlock = lastKeyBlock
+		lastKeyBlock = node.header.BlockHash()
 
 		currentNode = node
 		bc.bestNode = currentNode
@@ -210,6 +225,13 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 			t.Fatalf("calcStakeVersionByNode: unexpected error: %v", err)
 		}
 		node.header.StakeVersion = sv
+
+		node.keyHeight = height + i - 1
+		node.header.KeyHeight = uint32(height + i - 1)
+		node.header.Height = uint32(height + i)
+		node.isKeyBlock = true
+		node.header.PrevKeyBlock = lastKeyBlock
+		lastKeyBlock = node.header.BlockHash()
 
 		currentNode = node
 		bc.bestNode = currentNode
@@ -245,6 +267,13 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 			t.Fatalf("calcStakeVersionByNode: unexpected error: %v", err)
 		}
 		node.header.StakeVersion = sv
+
+		node.keyHeight = height + i - 1
+		node.header.KeyHeight = uint32(height + i - 1)
+		node.header.Height = uint32(height + i)
+		node.isKeyBlock = true
+		node.header.PrevKeyBlock = lastKeyBlock
+		lastKeyBlock = node.header.BlockHash()
 
 		currentNode = node
 		bc.bestNode = currentNode
@@ -281,6 +310,13 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 			t.Fatalf("calcStakeVersionByNode: unexpected error: %v", err)
 		}
 		node.header.StakeVersion = sv
+
+		node.keyHeight = height + i - 1
+		node.header.KeyHeight = uint32(height + i - 1)
+		node.header.Height = uint32(height + i)
+		node.isKeyBlock = true
+		node.header.PrevKeyBlock = lastKeyBlock
+		lastKeyBlock = node.header.BlockHash()
 
 		currentNode = node
 		bc.bestNode = currentNode
@@ -321,6 +357,13 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 		}
 		node.header.StakeVersion = sv
 
+		node.keyHeight = height + i - 1
+		node.header.KeyHeight = uint32(height + i - 1)
+		node.header.Height = uint32(height + i)
+		node.isKeyBlock = true
+		node.header.PrevKeyBlock = lastKeyBlock
+		lastKeyBlock = node.header.BlockHash()
+
 		currentNode = node
 		bc.bestNode = currentNode
 
@@ -359,6 +402,12 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 			t.Fatalf("calcStakeVersionByNode: unexpected error: %v", err)
 		}
 		node.header.StakeVersion = sv
+		node.keyHeight = height + i - 1
+		node.header.KeyHeight = uint32(height + i - 1)
+		node.header.Height = uint32(height + i)
+		node.isKeyBlock = true
+		node.header.PrevKeyBlock = lastKeyBlock
+		lastKeyBlock = node.header.BlockHash()
 
 		currentNode = node
 		bc.bestNode = currentNode
@@ -382,8 +431,7 @@ func DNWTestCalcStakeVersionCorners(t *testing.T) {
 	}
 }
 
-// TestCalcStakeVersionByNode doesn't work yet
-func DNWTestCalcStakeVersionByNode(t *testing.T) {
+func TestCalcStakeVersionByNode(t *testing.T) {
 	params := &chaincfg.SimNetParams
 
 	tests := []struct {
@@ -394,10 +442,10 @@ func DNWTestCalcStakeVersionByNode(t *testing.T) {
 	}{
 		{
 			name:          "headerStake 2 votes 3",
-			numNodes:      params.StakeValidationHeight + params.StakeVersionInterval*3,
+			numNodes:      params.StakeValidationHeight + params.StakeVersionInterval * 3,
 			expectVersion: 3,
 			set: func(b *blockNode) {
-				if int64(b.header.Height) > params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) >= params.StakeValidationHeight {
 					// set voter versions
 					for x := 0; x < int(params.TicketsPerBlock); x++ {
 						b.votes = append(b.votes,
@@ -416,7 +464,7 @@ func DNWTestCalcStakeVersionByNode(t *testing.T) {
 			numNodes:      params.StakeValidationHeight + params.StakeVersionInterval*3,
 			expectVersion: 3,
 			set: func(b *blockNode) {
-				if int64(b.header.Height) > params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) >= params.StakeValidationHeight {
 					// set voter versions
 					for x := 0; x < int(params.TicketsPerBlock); x++ {
 						b.votes = append(b.votes,
@@ -435,23 +483,22 @@ func DNWTestCalcStakeVersionByNode(t *testing.T) {
 	for _, test := range tests {
 		bc := newFakeChain(params)
 		currentNode := genesisBlockNode(params)
-
+		lastKeyBlock := chainhash.Hash{}
 		t.Logf("running: \"%v\"\n", test.name)
 		for i := int64(1); i <= test.numNodes; i++ {
-			/*
-				// Make up a header.
-				header := &wire.BlockHeader{
-					Version: 1,
-					Height:  uint32(i),
-					Nonce:   uint32(0),
-				}
-			*/
 
-			// add by sammy at 2017-10-25
-			node := newBlockNode(FakeBlock(1, i, 0), nil, nil, nil)
+			fakeBlock := FakeBlock(1, i, 0)
+			node := newBlockNode(fakeBlock, nil, nil, nil)
 
 			//node := newBlockNode(header, nil, nil, nil)
 			node.height = i
+			node.keyHeight = i - 1
+			node.header.Height = uint32(i)
+			node.header.KeyHeight = uint32(i - 1)
+			node.header.PrevKeyBlock = lastKeyBlock
+			node.isKeyBlock = true
+			lastKeyBlock = *(fakeBlock.Hash())
+
 			node.parent = currentNode
 
 			test.set(node)
@@ -472,7 +519,6 @@ func DNWTestCalcStakeVersionByNode(t *testing.T) {
 	}
 }
 
-// TestIsStakeMajorityVersion doesn't work yet
 func TestIsStakeMajorityVersion(t *testing.T) {
 	params := &chaincfg.MainNetParams
 
@@ -879,8 +925,7 @@ func TestIsStakeMajorityVersion(t *testing.T) {
 	}
 }
 
-// TestLarge doestn't work yet
-func DNWTestLarge(t *testing.T) {
+func TestLarge(t *testing.T) {
 	params := &chaincfg.MainNetParams
 
 	numRuns := 5
@@ -924,20 +969,20 @@ func DNWTestLarge(t *testing.T) {
 		t.Logf("running: %v with %v nodes\n", test.name, test.numNodes)
 		var currentNode *blockNode
 		currentNode = genesisNode
+		lastKeyBlock := chainhash.Hash{}
 		for i := int64(1); i <= test.numNodes; i++ {
-			/*
-				// Make up a header.
-				header := &wire.BlockHeader{
-					Version:      test.blockVersion,
-					Height:       uint32(i),
-					Nonce:        uint32(0),
-					StakeVersion: test.startStakeVersion,
-				}
-				node := newBlockNode(header, nil, nil, nil)
-			*/
 
-			node := newBlockNode(FakeBlock(test.blockVersion, i, test.startStakeVersion), nil, nil, nil)
+			fakeBlock := FakeBlock(test.blockVersion, i, test.startStakeVersion)
+			node := newBlockNode(fakeBlock, nil, nil, nil)
 			node.height = i
+			node.keyHeight = i - 1
+			node.header.Height = uint32(i)
+			node.header.KeyHeight = uint32(i - 1)
+			node.isKeyBlock = true
+			node.header.PrevKeyBlock = lastKeyBlock
+			lastKeyBlock = *fakeBlock.Hash()
+
+
 			node.parent = currentNode
 
 			// Override version.

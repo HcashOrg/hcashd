@@ -12,7 +12,7 @@ import (
 	"github.com/HcashOrg/hcashd/chaincfg"
 )
 
-func DNWTestBlockSubsidy(t *testing.T) {
+func TestBlockSubsidy(t *testing.T) {
 	mainnet := &chaincfg.MainNetParams
 	subsidyCache := blockchain.NewSubsidyCache(0, mainnet)
 
@@ -51,7 +51,7 @@ func DNWTestBlockSubsidy(t *testing.T) {
 		}
 	}
 
-	if totalSubsidy != 2099999999800912 {
-		t.Errorf("Bad total subsidy; want 2099999999800912, got %v", totalSubsidy)
+	if totalSubsidy != 1556404940340013 {
+		t.Errorf("Bad total subsidy; want 1556980940340013, got %v", totalSubsidy)
 	}
 }

@@ -623,7 +623,7 @@ var MainNetParams = Params{
 	StakeDiffWindows:        20,
 	StakeVersionInterval:    144 * 2 * 7, // ~1 week
 	MaxFreshStakePerBlock:   20,          // 4*TicketsPerBlock
-	StakeEnabledHeight:      16 + 16/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
+	StakeEnabledHeight:      256 + 256/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
 	StakeValidationHeight:   1024,        // ~14 days
 	StakeBaseSigScript:      []byte{0x00, 0x00},
 	StakeMajorityMultiplier: 3,

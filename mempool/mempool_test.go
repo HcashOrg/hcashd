@@ -33,6 +33,12 @@ type fakeChain struct {
 	currentHash   chainhash.Hash
 	currentHeight int64
 }
+// FakeChain returns a chain that is usable for syntetic tests.
+func FakeChain() *blockchain.BlockChain {
+	return &blockchain.BlockChain{
+
+	}
+}
 
 // NextStakeDifficulty returns the next stake difficulty associated with the
 // fake chain instance.
@@ -274,6 +280,7 @@ func (p *poolHarness) CreateTxChain(firstOutput spendableOutput, numTxns uint32)
 			PreviousOutPoint: prevOutPoint,
 			SignatureScript:  nil,
 			Sequence:         wire.MaxTxInSequenceNum,
+			BlockHeight:      MempoolHeight,
 		})
 		tx.AddTxOut(&wire.TxOut{
 			PkScript: p.payScript,
@@ -354,6 +361,7 @@ func newPoolHarness(chainParams *chaincfg.Params) (*poolHarness, []spendableOutp
 			BlockByHash:         chain.BlockByHash,
 			BestHash:            chain.BestHash,
 			BestHeight:          chain.BestHeight,
+			BestRealKeyHeight:   chain.BestHeight,
 			SubsidyCache:        subsidyCache,
 			SigCache:            nil,
 			TimeSource:          blockchain.NewMedianTime(),
@@ -370,11 +378,11 @@ func newPoolHarness(chainParams *chaincfg.Params) (*poolHarness, []spendableOutp
 	numOutputs := uint32(1)
 	outputs := make([]spendableOutput, 0, numOutputs)
 	curHeight := harness.chain.BestHeight()
-	coinbase, err := harness.CreateCoinbaseTx(curHeight+1, numOutputs)
+	coinbase, err := harness.CreateCoinbaseTx(0, numOutputs)
 	if err != nil {
 		return nil, nil, err
 	}
-	harness.chain.utxos.AddTxOuts(coinbase, curHeight+1, wire.NullBlockIndex)
+	harness.chain.utxos.AddTxOuts(coinbase, /*curHeight+1*/0, wire.NullBlockIndex)
 	for i := uint32(0); i < numOutputs; i++ {
 		outputs = append(outputs, txOutToSpendableOut(coinbase, i))
 	}
@@ -389,10 +397,11 @@ func newPoolHarness(chainParams *chaincfg.Params) (*poolHarness, []spendableOutp
 // they are all orphans.  Finally, it adds the linking transaction and ensures
 // the entire orphan chain is moved to the transaction pool.
 // DOESN'T WORK YET
-func DNWTestSimpleOrphanChain(t *testing.T) {
+func TestSimpleOrphanChain(t *testing.T) {
 	t.Parallel()
 
 	harness, spendableOuts, err := newPoolHarness(&chaincfg.MainNetParams)
+	bc := FakeChain()
 	if err != nil {
 		t.Fatalf("unable to create test pool: %v", err)
 	}
@@ -409,7 +418,7 @@ func DNWTestSimpleOrphanChain(t *testing.T) {
 	// none are evicted).
 	for _, tx := range chainedTxns[1 : maxOrphans+1] {
 		// revised by sammy at 2017-10-27
-		acceptedTxns, err := harness.txPool.ProcessTransaction(nil, tx, true,
+		acceptedTxns, err := harness.txPool.ProcessTransaction(bc, tx, true,
 			false, true)
 		if err != nil {
 			t.Fatalf("ProcessTransaction: failed to accept valid "+
@@ -445,7 +454,8 @@ func DNWTestSimpleOrphanChain(t *testing.T) {
 	// orphans in the pool are linked.
 	// revised by sammy at 2017-10-25
 	//acceptedTxns, err := harness.txPool.ProcessTransaction(chainedTxns[0],
-	acceptedTxns, err := harness.txPool.ProcessTransaction(nil, chainedTxns[0],
+
+	acceptedTxns, err := harness.txPool.ProcessTransaction(bc, chainedTxns[0],
 		false, false, true)
 	if err != nil {
 		t.Fatalf("ProcessTransaction: failed to accept valid "+
@@ -474,14 +484,14 @@ func DNWTestSimpleOrphanChain(t *testing.T) {
 
 // TestOrphanReject ensures that orphans are properly rejected when the allow
 // orphans flag is not set on ProcessTransaction.
-func DNWTestOrphanReject(t *testing.T) {
+func TestOrphanReject(t *testing.T) {
 	t.Parallel()
 
 	harness, outputs, err := newPoolHarness(&chaincfg.MainNetParams)
 	if err != nil {
 		t.Fatalf("unable to create test pool: %v", err)
 	}
-
+	bc := FakeChain()
 	// Create a chain of transactions rooted with the first spendable output
 	// provided by the harness.
 	maxOrphans := uint32(harness.txPool.cfg.Policy.MaxOrphanTxs)
@@ -494,7 +504,7 @@ func DNWTestOrphanReject(t *testing.T) {
 	for _, tx := range chainedTxns[1:] {
 		// revised by sammy at 2017-10-27
 		//acceptedTxns, err := harness.txPool.ProcessTransaction(tx, false,
-		acceptedTxns, err := harness.txPool.ProcessTransaction(nil, tx, false,
+		acceptedTxns, err := harness.txPool.ProcessTransaction(bc, tx, false,
 			false, true)
 		if err == nil {
 			t.Fatalf("ProcessTransaction: did not fail on orphan "+
@@ -541,10 +551,11 @@ func DNWTestOrphanReject(t *testing.T) {
 
 // TestOrphanEviction ensures that exceeding the maximum number of orphans
 // evicts entries to make room for the new ones.
-func DNWTestOrphanEviction(t *testing.T) {
+func TestOrphanEviction(t *testing.T) {
 	t.Parallel()
 
 	harness, outputs, err := newPoolHarness(&chaincfg.MainNetParams)
+	bc := FakeChain()
 	if err != nil {
 		t.Fatalf("unable to create test pool: %v", err)
 	}
@@ -563,7 +574,7 @@ func DNWTestOrphanEviction(t *testing.T) {
 	for _, tx := range chainedTxns[1:] {
 		// revised by sammy at 2017-10-27
 		//acceptedTxns, err := harness.txPool.ProcessTransaction(tx, true,
-		acceptedTxns, err := harness.txPool.ProcessTransaction(nil, tx, true,
+		acceptedTxns, err := harness.txPool.ProcessTransaction(bc, tx, true,
 			false, true)
 		if err != nil {
 			t.Fatalf("ProcessTransaction: failed to accept valid "+

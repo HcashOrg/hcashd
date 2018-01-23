@@ -1580,6 +1580,9 @@ func (b *BlockChain) KeyHeightByHeight(height int64, keyHeightCache map[int64]in
 	if height == MempoolHeight{
 		return height, nil
 	}
+	if height == 0{
+		return 0, nil
+	}
 	if keyHeightCache != nil {
 		keyHeight, exists := keyHeightCache[height]
 		if exists {
