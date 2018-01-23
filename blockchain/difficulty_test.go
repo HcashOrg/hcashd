@@ -12,6 +12,7 @@ import (
 
 	"github.com/HcashOrg/hcashd/chaincfg"
 	"github.com/HcashOrg/hcashd/wire"
+	"github.com/HcashOrg/hcashutil"
 )
 
 func TestBigToCompact(t *testing.T) {
@@ -145,10 +146,10 @@ func assertStakeDiffParams(t *testing.T, params *chaincfg.Params) {
 		t.Fatalf("%s:%d -- expect params with ticket maturity of "+
 			"%d, got %d", file, line, 256, params.TicketMaturity)
 	}
-	if params.StakeValidationHeight != 4096 {
+	if params.StakeValidationHeight != 768 {
 		_, file, line, _ := runtime.Caller(1)
 		t.Fatalf("%s:%d -- expect params with stake val height of %d, "+
-			"got %d", file, line, 4096, params.StakeValidationHeight)
+			"got %d", file, line, 768, params.StakeValidationHeight)
 	}
 	if params.StakeDiffWindowSize != 144 {
 		_, file, line, _ := runtime.Caller(1)
@@ -268,7 +269,7 @@ func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
 			},
-			expectedDiff: 208418769,
+			expectedDiff: minStakeDiff,
 		},
 		{
 			// Next retarget is at 2448.
@@ -276,9 +277,9 @@ func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
 			ticketInfo: []ticketInfo{
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
-				{143, 20, 208418769},     // 2446
+				{143, 20, minStakeDiff},     // 2446
 			},
-			expectedDiff: 208418769,
+			expectedDiff: minStakeDiff,
 		},
 		{
 			// Next retarget is at 2448.
@@ -286,9 +287,9 @@ func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
 			ticketInfo: []ticketInfo{
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
-				{144, 20, 208418769},     // 2447
+				{144, 20, minStakeDiff},     // 2447
 			},
-			expectedDiff: 231326567,
+			expectedDiff: minStakeDiff,
 		},
 		{
 			// Next retarget is at 2592.
@@ -296,10 +297,10 @@ func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
 			ticketInfo: []ticketInfo{
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
-				{144, 20, 208418769},     // 2447
-				{1, 20, 231326567},       // 2448
+				{144, 20, minStakeDiff},     // 2447
+				{1, 20, minStakeDiff},       // 2448
 			},
-			expectedDiff: 231326567,
+			expectedDiff: minStakeDiff,
 		},
 		{
 			// Next retarget is at 3456.
@@ -325,12 +326,12 @@ func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
 				{144, 20, minStakeDiff}, // 2591
 				{144, 10, minStakeDiff}, // 2735
 				{144, 20, minStakeDiff}, // 2879
-				{144, 9, 201743368},     // 3023
-				{144, 20, 201093236},    // 3167
-				{144, 8, 222625877},     // 3311
-				{144, 20, 242331291},    // 3455
+				{144, 9, minStakeDiff},     // 3023
+				{144, 20, minStakeDiff},    // 3167
+				{144, 8, minStakeDiff},     // 3311
+				{144, 20, minStakeDiff},    // 3455
 			},
-			expectedDiff: 291317641,
+			expectedDiff: minStakeDiff,
 		},
 		{
 			// Next retarget is at 4176.  Post stake validation
@@ -339,21 +340,21 @@ func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
 			ticketInfo: []ticketInfo{
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
-				{144, 20, 208418769},     // 2447
-				{144, 20, 231326567},     // 2591
-				{144, 20, 272451490},     // 2735
-				{144, 20, 339388424},     // 2879
-				{144, 20, 445827839},     // 3023
-				{144, 20, 615949254},     // 3167
-				{144, 20, 892862990},     // 3311
-				{144, 20, 1354989669},    // 3455
-				{144, 20, 2148473276},    // 3599
-				{144, 20, 3552797658},    // 3743
-				{144, 20, 6116808441},    // 3887
-				{144, 20, 10947547379},   // 4031
-				{144, 20, 20338554623},   // 4175
+				{144, 20, minStakeDiff},     // 2447
+				{144, 20, minStakeDiff},     // 2591
+				{144, 20, minStakeDiff},     // 2735
+				{144, 20, minStakeDiff},     // 2879
+				{144, 20, 209102497},     // 3023
+				{144, 20, 229282030},     // 3167
+				{144, 20, 263103995},     // 3311
+				{144, 20, 315338460},    // 3455
+				{144, 20, 394034714},    // 3599
+				{144, 20, 512481534},    // 3743
+				{144, 20, 692693973},    // 3887
+				{144, 20, 971642177},   // 4031
+				{144, 20, 1412535061},   // 4175
 			},
-			expectedDiff: 22097687698,
+			expectedDiff: 2125619726,
 		},
 		{
 			// Next retarget is at 4176.  Post stake validation
@@ -372,23 +373,23 @@ func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
 			ticketInfo: []ticketInfo{
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
-				{144, 20, 208418769},     // 2447
-				{144, 20, 231326567},     // 2591
-				{144, 20, 272451490},     // 2735
-				{144, 20, 339388424},     // 2879
-				{144, 20, 445827839},     // 3023
-				{144, 20, 615949254},     // 3167
-				{144, 20, 892862990},     // 3311
-				{144, 20, 1354989669},    // 3455
-				{144, 20, 2148473276},    // 3599
-				{144, 20, 3552797658},    // 3743
-				{144, 13, 6116808441},    // 3887
-				{144, 0, 10645659768},    // 4031
-				{144, 0, 18046712136},    // 4175
-				{144, 0, 22097687698},    // 4319
-				{144, 0, 22152524112},    // 4463
+				{144, 20, minStakeDiff},     // 2447
+				{144, 20, minStakeDiff},     // 2591
+				{144, 20, minStakeDiff},     // 2735
+				{144, 20, minStakeDiff},     // 2879
+				{144, 20, 209102497},     // 3023
+				{144, 20, 229282030},     // 3167
+				{144, 20, 263103995},     // 3311
+				{144, 20, 315338460},    // 3455
+				{144, 20, 394034714},    // 3599
+				{144, 20, 512481534},    // 3743
+				{144, 13, 692693973},    // 3887
+				{144, 0, 937583551},    // 4031
+				{144, 0, 1211491094},    // 4175
+				{144, 0, 1545312000},    // 4319
+				{144, 0, 1944316332},    // 4463
 			},
-			expectedDiff: 22207360526,
+			expectedDiff: 2413208905,
 		},
 	}
 
@@ -396,7 +397,7 @@ nextTest:
 	for _, test := range tests {
 		bc := newFakeChain(params)
 		bc.bestNode = genesisBlockNode(params)
-
+		bc.index[bc.bestNode.header.BlockHash()] = bc.bestNode
 		// immatureTickets tracks which height the purchased tickets
 		// will mature and thus be eligible for admission to the live
 		// ticket pool.
@@ -412,7 +413,7 @@ nextTest:
 				continue nextTest
 			}
 			if gotDiff != ticketInfo.stakeDiff {
-				t.Errorf("calcNextRequiredStakeDifficultyV2 (%s): "+
+				t.Errorf("calcNextRequiredStakeDifficultyV2 in loop (%s): "+
 					"did not get expected stake difficulty -- got "+
 					"%d, want %d", test.name, gotDiff,
 					ticketInfo.stakeDiff)
@@ -423,18 +424,22 @@ nextTest:
 				// Make up a header.
 				nextHeight := bc.bestNode.header.Height + 1
 				header := &wire.BlockHeader{
-					Version:    4,
-					SBits:      ticketInfo.stakeDiff,
-					Height:     nextHeight,
-					FreshStake: ticketInfo.newTickets,
-					PoolSize:   poolSize,
+					Version:      4,
+					PrevBlock:    bc.bestNode.header.BlockHash(),
+					PrevKeyBlock: bc.bestNode.header.BlockHash(),
+					SBits:        ticketInfo.stakeDiff,
+					Height:       nextHeight,
+					FreshStake:   ticketInfo.newTickets,
+					PoolSize:     poolSize,
 				}
-				hash := header.BlockHash()
-				block, _ := bc.FetchBlockFromHash(&hash)
+				msgBlock := wire.NewMsgBlock(header)
+				block := hcashutil.NewBlock(msgBlock)
 				node := newBlockNode(block,
 					nil, nil, nil)
+				node.isKeyBlock = true
+				node.keyHeight = int64(nextHeight) - 1
 				node.parent = bc.bestNode
-
+				bc.index[header.BlockHash()] = node
 				// Update the pool size for the next header.
 				// Notice how tickets that mature for this block
 				// do not show up in the pool size until the
@@ -577,7 +582,7 @@ func DNWTestEstimateNextStakeDiffV2(t *testing.T) {
 				{1904, 20, minStakeDiff}, // 2160
 			},
 			useMaxTickets: true,
-			expectedDiff:  208418769,
+			expectedDiff:  minStakeDiff,
 		},
 		{
 			// Next retarget is at 2304.
@@ -587,7 +592,7 @@ func DNWTestEstimateNextStakeDiffV2(t *testing.T) {
 				{1905, 20, minStakeDiff}, // 2161
 			},
 			useMaxTickets: true,
-			expectedDiff:  208418769,
+			expectedDiff:  minStakeDiff,
 		},
 		{
 			// Next retarget is at 2304.
@@ -597,7 +602,7 @@ func DNWTestEstimateNextStakeDiffV2(t *testing.T) {
 				{2047, 20, minStakeDiff}, // 2303
 			},
 			useMaxTickets: true,
-			expectedDiff:  208418769,
+			expectedDiff:  minStakeDiff,
 		},
 		{
 			// Next retarget is at 3456.
@@ -623,13 +628,13 @@ func DNWTestEstimateNextStakeDiffV2(t *testing.T) {
 				{144, 20, minStakeDiff}, // 2591
 				{144, 10, minStakeDiff}, // 2735
 				{144, 20, minStakeDiff}, // 2879
-				{144, 9, 201743368},     // 3023
-				{144, 20, 201093236},    // 3167
-				{144, 8, 222625877},     // 3311
-				{5, 20, 242331291},      // 3316
+				{144, 9, minStakeDiff},     // 3023
+				{144, 20, minStakeDiff},    // 3167
+				{144, 8, minStakeDiff},     // 3311
+				{5, 20, minStakeDiff},      // 3316
 			},
 			useMaxTickets: true,
-			expectedDiff:  291317641,
+			expectedDiff:  minStakeDiff,
 		},
 		{
 			// Next retarget is at 4176.  Post stake validation
@@ -638,22 +643,22 @@ func DNWTestEstimateNextStakeDiffV2(t *testing.T) {
 			ticketInfo: []ticketInfo{
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
-				{144, 20, 208418769},     // 2447
-				{144, 20, 231326567},     // 2591
-				{144, 20, 272451490},     // 2735
-				{144, 20, 339388424},     // 2879
-				{144, 20, 445827839},     // 3023
-				{144, 20, 615949254},     // 3167
-				{144, 20, 892862990},     // 3311
-				{144, 20, 1354989669},    // 3455
-				{144, 20, 2148473276},    // 3599
-				{144, 20, 3552797658},    // 3743
-				{144, 20, 6116808441},    // 3887
-				{144, 20, 10947547379},   // 4031
-				{10, 20, 20338554623},    // 4041
+				{144, 20, minStakeDiff},     // 2447
+				{144, 20, minStakeDiff},     // 2591
+				{144, 20, minStakeDiff},     // 2735
+				{144, 20, minStakeDiff},     // 2879
+				{144, 20, 209102497},     // 3023
+				{144, 20, 229282030},     // 3167
+				{144, 20, 263103995},     // 3311
+				{144, 20, 315338460},    // 3455
+				{144, 20, 394034714},    // 3599
+				{144, 20, 512481534},    // 3743
+				{144, 20, 692693973},    // 3887
+				{144, 20, 971642177},   // 4031
+				{10, 20, 1412535061},    // 4041
 			},
 			useMaxTickets: true,
-			expectedDiff:  22097687698,
+			expectedDiff:  2125619726,
 		},
 		{
 			// Next retarget is at 4176.  Post stake validation
@@ -675,25 +680,25 @@ func DNWTestEstimateNextStakeDiffV2(t *testing.T) {
 			ticketInfo: []ticketInfo{
 				{256, 0, minStakeDiff},   // 256
 				{2047, 20, minStakeDiff}, // 2303
-				{144, 20, 208418769},     // 2447
-				{144, 20, 231326567},     // 2591
-				{144, 20, 272451490},     // 2735
-				{144, 20, 339388424},     // 2879
-				{144, 20, 445827839},     // 3023
-				{144, 20, 615949254},     // 3167
-				{144, 20, 892862990},     // 3311
-				{144, 20, 1354989669},    // 3455
-				{144, 20, 2148473276},    // 3599
-				{144, 20, 3552797658},    // 3743
-				{144, 13, 6116808441},    // 3887
-				{144, 0, 10645659768},    // 4031
-				{144, 0, 18046712136},    // 4175
-				{144, 0, 22097687698},    // 4319
-				{117, 0, 22152524112},    // 4436
+				{144, 20, minStakeDiff},     // 2447
+				{144, 20, minStakeDiff},     // 2591
+				{144, 20, minStakeDiff},     // 2735
+				{144, 20, minStakeDiff},     // 2879
+				{144, 20, 209102497},     // 3023
+				{144, 20, 229282030},     // 3167
+				{144, 20, 263103995},     // 3311
+				{144, 20, 315338460},    // 3455
+				{144, 20, 394034714},    // 3599
+				{144, 20, 512481534},    // 3743
+				{144, 13, 692693973},    // 3887
+				{144, 0, 937583551},    // 4031
+				{144, 0, 1211491094},    // 4175
+				{144, 0, 1545312000},    // 4319
+				{117, 0, 1944316332},    // 4436
 			},
 			useMaxTickets: false,
 			newTickets:    0,
-			expectedDiff:  22207360526,
+			expectedDiff:  2413208905,
 		},
 	}
 
@@ -701,12 +706,13 @@ nextTest:
 	for _, test := range tests {
 		bc := newFakeChain(params)
 		bc.bestNode = genesisBlockNode(params)
-
+		bc.index[bc.bestNode.header.BlockHash()] = bc.bestNode
 		// immatureTickets track which height the purchased tickets will
 		// mature and thus be eligible for admission to the live ticket
 		// pool.
 		immatureTickets := make(map[uint32]uint8)
 		var poolSize uint32
+
 		for _, ticketInfo := range test.ticketInfo {
 			// Ensure the test data isn't faking ticket purchases at
 			// an incorrect difficulty.
@@ -729,20 +735,21 @@ nextTest:
 				nextHeight := bc.bestNode.header.Height + 1
 				header := &wire.BlockHeader{
 					Version:    4,
+					PrevBlock:    bc.bestNode.header.BlockHash(),
+					PrevKeyBlock: bc.bestNode.header.BlockHash(),
 					SBits:      ticketInfo.stakeDiff,
 					Height:     nextHeight,
 					FreshStake: ticketInfo.newTickets,
 					PoolSize:   poolSize,
 				}
-
-				// add by sammy at 2017-10-25
-				hash := header.BlockHash()
-				block, _ := bc.FetchBlockFromHash(&hash)
-
+				msgBlock := wire.NewMsgBlock(header)
+				block := hcashutil.NewBlock(msgBlock)
 				node := newBlockNode(block,
 					nil, nil, nil)
 				node.parent = bc.bestNode
-
+				node.isKeyBlock = true
+				node.keyHeight = int64(nextHeight) - 1
+				bc.index[node.header.BlockHash()] = node
 				// Update the pool size for the next header.
 				// Notice how tickets that mature for this block
 				// do not show up in the pool size until the

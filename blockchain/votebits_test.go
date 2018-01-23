@@ -171,22 +171,18 @@ func DNWTestNoQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
 			Timestamp:    currentTimestamp,
 		}
-		/*
-			hash := header.BlockHash()
-			node := newBlockNode(header, nil, nil, nil)
-		*/
-
-		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
 		node.height = int64(currentHeight)
 		node.parent = currentNode
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		currentNode = node
 		bc.bestNode = currentNode
 
@@ -215,6 +211,8 @@ func DNWTestNoQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -228,7 +226,8 @@ func DNWTestNoQuorum(t *testing.T) {
 
 		node.height = int64(currentHeight)
 		node.parent = currentNode
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		// set stake versions and vote bits
 		for x := 0; x < int(params.TicketsPerBlock); x++ {
 			node.votes = append(node.votes, VoteVersionTuple{
@@ -265,18 +264,17 @@ func DNWTestNoQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
 			Timestamp:    currentTimestamp,
 		}
 		hash := header.BlockHash()
-		/*
-			node := newBlockNode(header, nil, nil, nil)
-		*/
-		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -322,6 +320,8 @@ func DNWTestNoQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -331,7 +331,8 @@ func DNWTestNoQuorum(t *testing.T) {
 		//node := newBlockNode(header, nil, nil, nil)
 		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -387,6 +388,8 @@ func DNWTestNoQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -396,7 +399,8 @@ func DNWTestNoQuorum(t *testing.T) {
 		//node := newBlockNode(header, nil, nil, nil)
 		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -463,6 +467,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -472,7 +478,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		//node := newBlockNode(header, nil, nil, nil)
 		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -503,6 +510,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -512,7 +521,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		//node := newBlockNode(header, nil, nil, nil)
 		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -552,6 +562,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -561,7 +573,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		//node := newBlockNode(header, nil, nil, nil)
 		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -607,6 +620,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -616,6 +631,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		//node := newBlockNode(header, nil, nil, nil)
 		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -671,6 +688,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		// Make up a header.
 		header := &wire.BlockHeader{
 			Version:      powVersion,
+			PrevBlock:    currentNode.hash,
+			PrevKeyBlock: currentNode.hash,
 			Height:       currentHeight,
 			Nonce:        uint32(0),
 			StakeVersion: posVersion,
@@ -680,6 +699,8 @@ func DNWTestYesQuorum(t *testing.T) {
 		//node := newBlockNode(header, nil, nil, nil)
 		// add by sammy at 2017-10-25
 		node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
+		node.isKeyBlock = true
+		node.keyHeight = int64(currentHeight) - 1
 		node.height = int64(currentHeight)
 		node.parent = currentNode
 
@@ -1878,6 +1899,8 @@ func DNWTestVoting(t *testing.T) {
 				// Make up a header.
 				header := &wire.BlockHeader{
 					Version:      test.blockVersion,
+					PrevBlock:    currentNode.hash,
+					PrevKeyBlock: currentNode.hash,
 					Height:       currentHeight,
 					Nonce:        uint32(0),
 					StakeVersion: test.startStakeVersion,
@@ -1887,7 +1910,8 @@ func DNWTestVoting(t *testing.T) {
 				//node := newBlockNode(header, nil, nil, nil)
 				// add by sammy at 2017-10-25
 				node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+				node.isKeyBlock = true
+				node.keyHeight = int64(currentHeight) - 1
 				node.height = int64(currentHeight)
 				node.parent = currentNode
 
@@ -2146,6 +2170,8 @@ func DNWTestParallelVoting(t *testing.T) {
 				// Make up a header.
 				header := &wire.BlockHeader{
 					Version:      test.blockVersion,
+					PrevBlock:    currentNode.hash,
+					PrevKeyBlock: currentNode.hash,
 					Height:       currentHeight,
 					Nonce:        uint32(0),
 					StakeVersion: test.startStakeVersion,
@@ -2155,7 +2181,8 @@ func DNWTestParallelVoting(t *testing.T) {
 				//node := newBlockNode(header, nil, nil, nil)
 				// add by sammy at 2017-10-25
 				node := newBlockNode(FakeBlockFromHeader(header), nil, nil, nil)
-
+				node.isKeyBlock = true
+				node.keyHeight = int64(currentHeight) - 1
 				node.height = int64(currentHeight)
 				node.parent = currentNode
 

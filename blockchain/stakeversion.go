@@ -271,7 +271,7 @@ func (b *BlockChain) calcVoterVersionInterval(prevNode *blockNode) (uint32, erro
 	versions := make(map[uint32]int32) // [version][count]
 	totalVotesFound := int32(0)
 	iterNode := prevNode
-	if iterNode.isKeyBlock {
+	if !iterNode.isKeyBlock {
 		iterNode, _ = b.getPrevKeyNodeFromNode(iterNode)
 	}
 	for i := int64(0); i < b.chainParams.StakeVersionInterval && iterNode != nil; i++ {

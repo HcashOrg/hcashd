@@ -19,7 +19,7 @@ import (
 // unmarshal into valid results include handling of optional fields being
 // omitted in the marshalled command, while optional fields with defaults have
 // the default assigned on unmarshalled commands.
-func DNWTestBtcWalletExtCmds(t *testing.T) {
+func TestBtcWalletExtCmds(t *testing.T) {
 	t.Parallel()
 
 	testID := int(1)
@@ -33,15 +33,15 @@ func DNWTestBtcWalletExtCmds(t *testing.T) {
 		{
 			name: "createnewaccount",
 			newCmd: func() (interface{}, error) {
-				return hcashjson.NewCmd("createnewaccount", "acct")
+				return hcashjson.NewCmd("createnewaccount", "acct", "0")
 			},
 			staticCmd: func() interface{} {
-				//return hcashjson.NewCreateNewAccountCmd("acct")
-				return nil
+				return hcashjson.NewCreateNewAccountCmd("acct", "0")
 			},
-			marshalled: `{"jsonrpc":"1.0","method":"createnewaccount","params":["acct"],"id":1}`,
+			marshalled: `{"jsonrpc":"1.0","method":"createnewaccount","params":["acct","0"],"id":1}`,
 			unmarshalled: &hcashjson.CreateNewAccountCmd{
 				Account: "acct",
+				AccountType: "0",
 			},
 		},
 		{

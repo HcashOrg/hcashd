@@ -613,9 +613,9 @@ var MainNetParams = Params{
 	MinimumStakeDiff:        2 * 1e8, // 2 Coin
 	TicketPoolSize:          8192,
 	TicketsPerBlock:         5,
-	TicketMaturity:          16/*256*/,
+	TicketMaturity:          256/*256*/,
 	TicketExpiry:            40960, // 5*TicketPoolSize
-	CoinbaseMaturity:        16/*256*/,
+	CoinbaseMaturity:        256/*256*/,
 	SStxChangeMaturity:      1,
 	TicketPoolSizeWeight:    4,
 	StakeDiffAlpha:          1, // Minimal
