@@ -289,8 +289,16 @@ func newBlissDSA() DSA {
 			if err != nil{
 				return nil, err
 			}
-			priv1 := priv.(PrivateKey)
-			sig, err := priv1.Sign(hash, entropy)
+			var sig *bliss.Signature
+			switch priv.(type){
+			case PrivateKey:
+				pv := priv.(PrivateKey)
+				sig, err = pv.Sign(hash, entropy)
+			case *PrivateKey:
+				pvptr := priv.(*PrivateKey)
+				sig, err = pvptr.Sign(hash, entropy)
+			}
+
 			if err != nil{
 				return nil, err
 			}

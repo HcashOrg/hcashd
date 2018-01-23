@@ -473,7 +473,7 @@ func DNWTestCalcStakeVersionByNode(t *testing.T) {
 }
 
 // TestIsStakeMajorityVersion doesn't work yet
-func DNWTestIsStakeMajorityVersion(t *testing.T) {
+func TestIsStakeMajorityVersion(t *testing.T) {
 	params := &chaincfg.MainNetParams
 
 	// Calculate super majority for 5 and 3 ticket maxes.
@@ -497,7 +497,7 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 	}{
 		{
 			name:                 "too shallow",
-			numNodes:             params.StakeValidationHeight + params.StakeVersionInterval - 1,
+			numNodes:             params.StakeValidationHeight + params.StakeVersionInterval ,
 			startStakeVersion:    1,
 			expectedStakeVersion: 1,
 			expectedCalcVersion:  0,
@@ -505,7 +505,7 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 		},
 		{
 			name:                 "just enough",
-			numNodes:             params.StakeValidationHeight + params.StakeVersionInterval,
+			numNodes:             params.StakeValidationHeight + params.StakeVersionInterval + 1,
 			startStakeVersion:    1,
 			expectedStakeVersion: 1,
 			expectedCalcVersion:  0,
@@ -523,7 +523,7 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "100%",
 			numNodes: params.StakeValidationHeight + params.StakeVersionInterval,
 			set: func(b *blockNode) {
-				if int64(b.header.Height) > params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) >= params.StakeValidationHeight{
 					for x := 0; x < int(params.TicketsPerBlock); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 2})
@@ -539,11 +539,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "50%",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) <= params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight{
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight + params.StakeVersionInterval{
 					for x := 0; x < int(params.TicketsPerBlock); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -572,11 +572,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "75%-1",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) < params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
 					for x := 0; x < int(params.TicketsPerBlock); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -605,11 +605,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "75%",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) <= params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
 					for x := 0; x < int(params.TicketsPerBlock); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -638,11 +638,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "100% after several non majority intervals",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 222),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) <= params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
 					for x := 0; x < int(params.TicketsPerBlock); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -664,7 +664,7 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "no majority ever",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 8),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) <= params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
@@ -682,11 +682,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "75%-1 with 3 votes",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) < params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
 					for x := 0; x < int(params.TicketsPerBlock-2); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -715,11 +715,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "75% with 3 votes",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) <= params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
 					for x := 0; x < int(params.TicketsPerBlock-2); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -748,11 +748,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "75% with 3 votes blockversion 3",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) <= params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
 					for x := 0; x < int(params.TicketsPerBlock-2); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -782,11 +782,11 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 			name:     "75%-1 with 3 votes blockversion 3",
 			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
 			set: func(b *blockNode) {
-				if int64(b.header.Height) < params.StakeValidationHeight {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.Height) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
 					for x := 0; x < int(params.TicketsPerBlock-2); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})
@@ -826,6 +826,7 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 		t.Logf("running: %v\n", test.name)
 		var currentNode *blockNode
 		currentNode = genesisNode
+		lastKeyBlock := chainhash.Hash{}
 		for i := int64(1); i <= test.numNodes; i++ {
 			/*
 				// Make up a header.
@@ -837,10 +838,15 @@ func DNWTestIsStakeMajorityVersion(t *testing.T) {
 				}
 				node := newBlockNode(header, nil, nil, nil)
 			*/
-
-			node := newBlockNode(FakeBlock(test.blockVersion, i, test.startStakeVersion), nil, nil, nil)
+			fakeBlock := FakeBlock(test.blockVersion, i, test.startStakeVersion)
+			node := newBlockNode(fakeBlock, nil, nil, nil)
 			node.height = i
+			node.keyHeight = i - 1
+			node.isKeyBlock = true
 			node.parent = currentNode
+			node.header.PrevKeyBlock = lastKeyBlock
+			node.header.KeyHeight = uint32(i - 1)
+			lastKeyBlock = *(fakeBlock.Hash())
 
 			// Override version.
 			if test.set != nil {

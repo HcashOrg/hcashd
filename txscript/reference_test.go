@@ -181,7 +181,7 @@ func createSpendingTx(sigScript, pkScript []byte) *wire.MsgTx {
 
 // TestScriptInvalidTests ensures all of the tests in script_invalid.json fail
 // as expected.
-func DNWTestScriptInvalidTests(t *testing.T) {
+func TestScriptInvalidTests(t *testing.T) {
 	file, err := ioutil.ReadFile("data/script_invalid.json")
 	if err != nil {
 		t.Errorf("TestScriptInvalidTests: %v\n", err)
@@ -249,7 +249,7 @@ func DNWTestScriptInvalidTests(t *testing.T) {
 
 // TestScriptValidTests ensures all of the tests in script_valid.json pass as
 // expected.
-func DNWTestScriptValidTests(t *testing.T) {
+func TestScriptValidTests(t *testing.T) {
 	file, err := ioutil.ReadFile("data/script_valid.json")
 	if err != nil {
 		t.Errorf("TestScriptValidTests: %v\n", err)
@@ -284,16 +284,19 @@ func DNWTestScriptValidTests(t *testing.T) {
 				t.Errorf("%s: can't parse scriptSig; %v", name, err)
 				continue
 			}
+
 			scriptPubKey, err := parseShortForm(test[1])
 			if err != nil {
 				t.Errorf("%s: can't parse scriptPubkey; %v", name, err)
 				continue
 			}
+
 			flags, err := parseScriptFlags(test[2])
 			if err != nil {
 				t.Errorf("%s: %v", name, err)
 				continue
 			}
+
 			tx := createSpendingTx(scriptSig, scriptPubKey)
 
 			var vm *Engine
@@ -309,6 +312,7 @@ func DNWTestScriptValidTests(t *testing.T) {
 				t.Errorf("%s failed to create script: %v", name, err)
 				continue
 			}
+
 			err = vm.Execute()
 			if err != nil {
 				t.Errorf("%s failed to execute: %v", name, err)
