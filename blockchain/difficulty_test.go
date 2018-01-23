@@ -165,7 +165,7 @@ func assertStakeDiffParams(t *testing.T, params *chaincfg.Params) {
 
 // TestCalcNextRequiredStakeDiffV2 ensure the stake diff calculation function
 // for the algorithm defined by DCP0001 works as expected.
-func DNWTestCalcNextRequiredStakeDiffV2(t *testing.T) {
+func TestCalcNextRequiredStakeDiffV2(t *testing.T) {
 	t.Parallel()
 
 	// ticketInfo is used to control the tests by specifying the details
@@ -480,7 +480,7 @@ nextTest:
 
 // TestEstimateNextStakeDiffV2 ensures the function that estimates the stake
 // diff calculation for the algorithm defined by DCP0001 works as expected.
-func DNWTestEstimateNextStakeDiffV2(t *testing.T) {
+func TestEstimateNextStakeDiffV2(t *testing.T) {
 	t.Parallel()
 
 	// ticketInfo is used to control the tests by specifying the details

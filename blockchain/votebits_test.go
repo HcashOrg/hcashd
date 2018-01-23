@@ -155,7 +155,7 @@ func TestSerializeDeserialize(t *testing.T) {
 	}
 }
 
-func DNWTestNoQuorum(t *testing.T) {
+func TestNoQuorum(t *testing.T) {
 	params := defaultParams(pedro)
 	bc := newFakeChain(&params)
 	genesisNode := genesisBlockNode(&params)
@@ -451,7 +451,7 @@ func DNWTestNoQuorum(t *testing.T) {
 	}
 }
 
-func DNWTestYesQuorum(t *testing.T) {
+func TestYesQuorum(t *testing.T) {
 	params := defaultParams(pedro)
 	bc := newFakeChain(&params)
 	genesisNode := genesisBlockNode(&params)
@@ -751,7 +751,7 @@ func DNWTestYesQuorum(t *testing.T) {
 	}
 }
 
-func DNWTestVoting(t *testing.T) {
+func TestVoting(t *testing.T) {
 	params := defaultParams(chaincfg.Vote{})
 	rci := params.RuleChangeActivationInterval
 	svh := uint32(params.StakeValidationHeight)
@@ -2037,7 +2037,7 @@ func defaultParallelParams() chaincfg.Params {
 	return params
 }
 
-func DNWTestParallelVoting(t *testing.T) {
+func TestParallelVoting(t *testing.T) {
 	params := defaultParallelParams()
 
 	type voteCount struct {
