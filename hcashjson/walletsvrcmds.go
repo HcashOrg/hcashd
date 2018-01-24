@@ -481,10 +481,11 @@ type SendManyCmd struct {
 //
 // The parameters which are pointers indicate they are optional.  Passing nil
 // for optional parameters will use the default value.
-func NewSendManyCmd(fromAccount string, amounts map[string]float64, minConf *int, comment *string) *SendManyCmd {
+func NewSendManyCmd(fromAccount string, amounts map[string]float64, notsend, minConf *int, comment *string) *SendManyCmd {
 	return &SendManyCmd{
 		FromAccount: fromAccount,
 		Amounts:     amounts,
+		NotSend:     notsend,
 		MinConf:     minConf,
 		Comment:     comment,
 	}
