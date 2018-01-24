@@ -1,5 +1,5 @@
 hash: 02b5fdef2023f27917fe15c8bb3c3113a8a1ed7e593f395d83d2b7ea7f28a9ce
-updated: 2018-01-12T14:25:36.0818523+08:00
+updated: 2018-01-24T11:50:30.361722582+08:00
 imports:
 - name: github.com/agl/ed25519
   version: 5312a61534124124185d41f09206b9fef1d88403
@@ -47,9 +47,9 @@ imports:
 - name: github.com/HcashOrg/bitset
   version: 3b5f0c752dfbeeda856fd6af60e997257ca399fc
 - name: github.com/HcashOrg/hcashrpcclient
-  version: 72cabf1da64ce4b1546d89abd3fd0ee8326bcb7e
+  version: ba3a18d6f9f2432068473bc8665bcb92045a3650
 - name: github.com/HcashOrg/hcashutil
-  version: d769a23685f8210d1f048b714d25751fb45c5eb2
+  version: 0f46aaecda89f2784eda4549bf09e25be2f268b5
   subpackages:
   - base58
   - bloom
@@ -77,13 +77,13 @@ imports:
   subpackages:
   - container/stack
 - name: golang.org/x/crypto
-  version: 2509b142fb2b797aa7587dad548f113b2c0f20ce
+  version: 3d37316aaa6bd9929127ac9a527abf408178ea7b
   subpackages:
   - ripemd160
   - sha3
   - ssh/terminal
 - name: golang.org/x/sys
-  version: 661970f62f5897bc0cd5fdca7e087ba8a98a8fa1
+  version: af50095a40f9041b3b38960738837185c26e9419
   subpackages:
   - unix
   - windows
