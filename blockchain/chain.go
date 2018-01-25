@@ -2651,7 +2651,6 @@ func (b *BlockChain) BestSnapshot() *BestState {
 }
 
 func (b *BlockChain) BestRealKeyHeight() int64 {
-	fmt.Println("That is called")
 	b.chainLock.Lock()
 	keyHeight := b.bestNode.keyHeight
 	if b.bestNode.isKeyBlock {
