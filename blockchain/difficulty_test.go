@@ -184,8 +184,10 @@ func TestCalcNextRequiredStakeDiffV2(t *testing.T) {
 	params := &chaincfg.MainNetParams
 	assertStakeDiffParams(t, params)
 	minStakeDiff := params.MinimumStakeDiff
-	ticketMaturity := uint32(params.TicketMaturity)
-	stakeValidationHeight := params.StakeValidationHeight
+	//ticketMaturity := uint32(params.TicketMaturity)
+	ticketMaturity := uint32(256)
+	//stakeValidationHeight := params.StakeValidationHeight
+	stakeValidationHeight := int64(1024)
 
 	tests := []struct {
 		name         string
@@ -499,9 +501,10 @@ func TestEstimateNextStakeDiffV2(t *testing.T) {
 	params := &chaincfg.MainNetParams
 	assertStakeDiffParams(t, params)
 	minStakeDiff := params.MinimumStakeDiff
-	ticketMaturity := uint32(params.TicketMaturity)
-	stakeValidationHeight := params.StakeValidationHeight
-
+	//ticketMaturity := uint32(params.TicketMaturity)
+	ticketMaturity := uint32(256)
+	//stakeValidationHeight := params.StakeValidationHeight
+	stakeValidationHeight := int64(1024)
 	tests := []struct {
 		name          string
 		ticketInfo    []ticketInfo
