@@ -826,13 +826,13 @@ func TestIsStakeMajorityVersion(t *testing.T) {
 		},
 		{
 			name:     "75%-1 with 3 votes blockversion 3",
-			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 2),
+			numNodes: params.StakeValidationHeight + (params.StakeVersionInterval * 3),
 			set: func(b *blockNode) {
 				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight {
 					return
 				}
 
-				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval {
+				if int64(b.header.KeyHeight + 1) < params.StakeValidationHeight+params.StakeVersionInterval * 2 {
 					for x := 0; x < int(params.TicketsPerBlock-2); x++ {
 						b.votes = append(b.votes,
 							VoteVersionTuple{Version: 1})

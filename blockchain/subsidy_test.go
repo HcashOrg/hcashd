@@ -51,7 +51,7 @@ func TestBlockSubsidy(t *testing.T) {
 		}
 	}
 
-	if totalSubsidy != 1556404940340013 {
-		t.Errorf("Bad total subsidy; want 1556980940340013, got %v", totalSubsidy)
+	if totalSubsidy != 1557556940340013 {
+		t.Errorf("Bad total subsidy; want 1557556940340013, got %v", totalSubsidy)
 	}
 }

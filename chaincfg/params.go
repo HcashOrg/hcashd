@@ -27,7 +27,7 @@ var (
 
 	// mainPowLimit is the highest proof of work value a Hypercash block can
 	// have for the main network.  It is the value 2^224 - 1.
-	mainPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 236), bigOne)
+	mainPowLimit = new(big.Int).Sub(new(big.Int).Lsh(bigOne, 228), bigOne)
 
 	// testNetPowLimit is the highest proof of work value a Hypercash block
 	// can have for the test network.  It is the value 2^232 - 1.
@@ -469,9 +469,9 @@ type Params struct {
 var MainNetParams = Params{
 	Name:        "testdata2",
 	Net:         wire.MainNet,
-	DefaultPort: "18008",
+	DefaultPort: "14008",
 	DNSSeeds: []string{
-		//"testnet-seeds.hcashtech.org",
+		"testnet-seeds.hcashtech.org",
 	},
 
 	// Chain parameters
@@ -480,7 +480,7 @@ var MainNetParams = Params{
 	PowLimit:                 mainPowLimit,
 	DifficultyRate:           16,
 	MaxMicroPerKey:           31,
-	PowLimitBits:             0x1e0fffff,
+	PowLimitBits:             0x1d0fffff,
 	ReduceMinDifficulty:      false,
 	MinDiffReductionTime:     0, // Does not apply since ReduceMinDifficulty false
 	GenerateSupported:        false,
@@ -506,7 +506,7 @@ var MainNetParams = Params{
 	Checkpoints: []Checkpoint{
 	//	{30,newHashFromStr("00000df9e4054bd941145c7ea9dbefc29e47ed564cc2fdb254720ab07a016938")},
 	//	{200,newHashFromStr("00000019ed43fba03c72b03cbd7a706c50b56819379b478da57184363fd90a68")},
-	//	{28952,newHashFromStr("00000005f6263ebb38395fcdc810bc462f34f063454056a4965cca9c3d280d70")},
+		{28952,newHashFromStr("00000005f6263ebb38395fcdc810bc462f34f063454056a4965cca9c3d280d70")},
 	},
 
 	// The miner confirmation window is defined as:
@@ -613,9 +613,9 @@ var MainNetParams = Params{
 	MinimumStakeDiff:        2 * 1e8, // 2 Coin
 	TicketPoolSize:          8192,
 	TicketsPerBlock:         5,
-	TicketMaturity:          256/*256*/,
+	TicketMaturity:          128/*256*/,
 	TicketExpiry:            40960, // 5*TicketPoolSize
-	CoinbaseMaturity:        256/*256*/,
+	CoinbaseMaturity:        128/*256*/,
 	SStxChangeMaturity:      1,
 	TicketPoolSizeWeight:    4,
 	StakeDiffAlpha:          1, // Minimal
@@ -623,8 +623,8 @@ var MainNetParams = Params{
 	StakeDiffWindows:        20,
 	StakeVersionInterval:    144 * 2 * 7, // ~1 week
 	MaxFreshStakePerBlock:   20,          // 4*TicketsPerBlock
-	StakeEnabledHeight:      256 + 256/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
-	StakeValidationHeight:   1024,        // ~14 days
+	StakeEnabledHeight:      128 + 128/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
+	StakeValidationHeight:   512,        // ~14 days
 	StakeBaseSigScript:      []byte{0x00, 0x00},
 	StakeMajorityMultiplier: 3,
 	StakeMajorityDivisor:    4,
