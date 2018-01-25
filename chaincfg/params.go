@@ -488,9 +488,9 @@ var MainNetParams = Params{
 	MaxTxSize:                2048000,
 	TargetTimePerBlock:       time.Minute * 5,
 	WorkDiffAlpha:            1,
-	WorkDiffWindowSize:       24,
+	WorkDiffWindowSize:       144,
 	WorkDiffWindows:          20,
-	TargetTimespan:           time.Minute * 5 * 24, // TimePerBlock * WindowSize
+	TargetTimespan:           time.Minute * 5 * 144, // TimePerBlock * WindowSize
 	RetargetAdjustmentFactor: 4,
 
 	// Subsidy parameters.
@@ -583,7 +583,7 @@ var MainNetParams = Params{
 	BlockRejectNumRequired:  950,
 	BlockUpgradeNumToCheck:  1000,
 
-	MicroBlockValidationHeight: 8,
+	MicroBlockValidationHeight: 64,
 
 	// Mempool parameters
 	RelayNonStdTxs: false,
@@ -613,9 +613,9 @@ var MainNetParams = Params{
 	MinimumStakeDiff:        2 * 1e8, // 2 Coin
 	TicketPoolSize:          8192,
 	TicketsPerBlock:         5,
-	TicketMaturity:          256/*256*/,
+	TicketMaturity:          128/*256*/,
 	TicketExpiry:            40960, // 5*TicketPoolSize
-	CoinbaseMaturity:        256/*256*/,
+	CoinbaseMaturity:        128/*256*/,
 	SStxChangeMaturity:      1,
 	TicketPoolSizeWeight:    4,
 	StakeDiffAlpha:          1, // Minimal
@@ -623,8 +623,8 @@ var MainNetParams = Params{
 	StakeDiffWindows:        20,
 	StakeVersionInterval:    144 * 2 * 7, // ~1 week
 	MaxFreshStakePerBlock:   20,          // 4*TicketsPerBlock
-	StakeEnabledHeight:      256 + 256/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
-	StakeValidationHeight:   1024,        // ~14 days
+	StakeEnabledHeight:      128 + 128/*256 + 256*/,   // CoinbaseMaturity + TicketMaturity
+	StakeValidationHeight:   512,        // ~14 days
 	StakeBaseSigScript:      []byte{0x00, 0x00},
 	StakeMajorityMultiplier: 3,
 	StakeMajorityDivisor:    4,
