@@ -141,15 +141,15 @@ func assertStakeDiffParams(t *testing.T, params *chaincfg.Params) {
 			"%d, got %d", file, line, 200000000,
 			params.MinimumStakeDiff)
 	}
-	if params.TicketMaturity != 256 {
+	if params.TicketMaturity != 128 {
 		_, file, line, _ := runtime.Caller(1)
 		t.Fatalf("%s:%d -- expect params with ticket maturity of "+
-			"%d, got %d", file, line, 256, params.TicketMaturity)
+			"%d, got %d", file, line, 128, params.TicketMaturity)
 	}
-	if params.StakeValidationHeight != 1024 {
+	if params.StakeValidationHeight != 512 {
 		_, file, line, _ := runtime.Caller(1)
 		t.Fatalf("%s:%d -- expect params with stake val height of %d, "+
-			"got %d", file, line, 1024, params.StakeValidationHeight)
+			"got %d", file, line, 512, params.StakeValidationHeight)
 	}
 	if params.StakeDiffWindowSize != 144 {
 		_, file, line, _ := runtime.Caller(1)
@@ -184,10 +184,8 @@ func TestCalcNextRequiredStakeDiffV2(t *testing.T) {
 	params := &chaincfg.MainNetParams
 	assertStakeDiffParams(t, params)
 	minStakeDiff := params.MinimumStakeDiff
-	//ticketMaturity := uint32(params.TicketMaturity)
-	ticketMaturity := uint32(256)
-	//stakeValidationHeight := params.StakeValidationHeight
-	stakeValidationHeight := int64(1024)
+	ticketMaturity := uint32(params.TicketMaturity)
+	stakeValidationHeight := params.StakeValidationHeight
 
 	tests := []struct {
 		name         string
@@ -345,18 +343,18 @@ func TestCalcNextRequiredStakeDiffV2(t *testing.T) {
 				{144, 20, minStakeDiff},     // 2447
 				{144, 20, minStakeDiff},     // 2591
 				{144, 20, minStakeDiff},     // 2735
-				{144, 20, 204948428},     // 2879
-				{144, 20, 220468910},     // 3023
-				{144, 20, 248408999},     // 3167
-				{144, 20, 292562384},     // 3311
-				{144, 20, 359491945},    // 3455
-				{144, 20, 460079725},    // 3599
-				{144, 20, 612296631},    // 3743
-				{144, 20, 846132714},    // 3887
-				{144, 20, 1212472297},   // 4031
-				{144, 20, 1799334379},   // 4175
+				{144, 20, minStakeDiff},     // 2879
+				{144, 20, 206184412},     // 3023
+				{144, 20, 223233791},     // 3167
+				{144, 20, 253252825},     // 3311
+				{144, 20, 300426357},    // 3455
+				{144, 20, 371951581},    // 3599
+				{144, 20, 479779473},    // 3743
+				{144, 20, 643732131},    // 3887
+				{144, 20, 897079435},   // 4031
+				{144, 20, 1296640457},   // 4175
 			},
-			expectedDiff: 2762139612,
+			expectedDiff: 1941394961,
 		},
 		{
 			// Next retarget is at 4176.  Post stake validation
@@ -378,20 +376,20 @@ func TestCalcNextRequiredStakeDiffV2(t *testing.T) {
 				{144, 20, minStakeDiff},     // 2447
 				{144, 20, minStakeDiff},     // 2591
 				{144, 20, minStakeDiff},     // 2735
-				{144, 20, 204948428},     // 2879
-				{144, 20, 220468910},     // 3023
-				{144, 20, 248408999},     // 3167
-				{144, 20, 292562384},     // 3311
-				{144, 20, 359491945},    // 3455
-				{144, 20, 460079725},    // 3599
-				{144, 20, 612296631},    // 3743
-				{144, 13, 846132714},    // 3887
-				{144, 0, 1170897149},    // 4031
-				{144, 0, 1548441503},    // 4175
-				{144, 0, 2022022544},    // 4319
-				{144, 0, 2605378003},    // 4463
+				{144, 20, minStakeDiff},     // 2879
+				{144, 20, 206184412},     // 3023
+				{144, 20, 223233791},     // 3167
+				{144, 20, 253252825},     // 3311
+				{144, 20, 300426357},    // 3455
+				{144, 20, 371951581},    // 3599
+				{144, 20, 479779473},    // 3743
+				{144, 13, 643732131},    // 3887
+				{144, 0, 865140046},    // 4031
+				{144, 0, 1108858606},    // 4175
+				{144, 0, 1401709149},    // 4319
+				{144, 0, 1747645799},    // 4463
 			},
-			expectedDiff: 3312629698,
+			expectedDiff: 2148716218,
 		},
 	}
 
@@ -498,13 +496,12 @@ func TestEstimateNextStakeDiffV2(t *testing.T) {
 	// used by the tests are the expected ones.  All of the test values will
 	// need to be updated if these parameters change since they are manually
 	// calculated based on them.
-	params := &chaincfg.MainNetParams
-	assertStakeDiffParams(t, params)
+	params := &chaincfg.TestNet2Params
+	//assertStakeDiffParams(t, params)
 	minStakeDiff := params.MinimumStakeDiff
-	//ticketMaturity := uint32(params.TicketMaturity)
-	ticketMaturity := uint32(256)
-	//stakeValidationHeight := params.StakeValidationHeight
-	stakeValidationHeight := int64(1024)
+	ticketMaturity := uint32(params.TicketMaturity)
+	stakeValidationHeight := params.StakeValidationHeight
+
 	tests := []struct {
 		name          string
 		ticketInfo    []ticketInfo
@@ -661,7 +658,7 @@ func TestEstimateNextStakeDiffV2(t *testing.T) {
 				{10, 20, 1799334379},    // 4041
 			},
 			useMaxTickets: true,
-			expectedDiff:  2762139612,
+			expectedDiff:  2536923013,
 		},
 		{
 			// Next retarget is at 4176.  Post stake validation
@@ -701,7 +698,7 @@ func TestEstimateNextStakeDiffV2(t *testing.T) {
 			},
 			useMaxTickets: false,
 			newTickets:    0,
-			expectedDiff:  3312629698,
+			expectedDiff:  2710959547,
 		},
 	}
 
