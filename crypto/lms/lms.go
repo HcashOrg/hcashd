@@ -133,12 +133,10 @@ func newLMSDSA() DSA {
 
 			lmsPrv := priv.(PrivateKey).MerkleAgent
 			_, sig, err := lms.Sign(&lmsPrv, messageHash[:])
-			if err != nil{
-				return nil, err
-			}
+
 			return &Signature{
 				MerkleSig: *sig,
-			}, nil
+			}, err
 		},
 
 		verify: func(pub hcashcrypto.PublicKey, hash []byte, sig hcashcrypto.Signature) bool {
