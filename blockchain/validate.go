@@ -2486,7 +2486,6 @@ func (b *BlockChain) checkTransactionsAndConnect(subsidyCache *SubsidyCache, inp
 		subsidyWithoutFees := expAtomOut - totalFees
 		//fmt.Printf("expAtomOut: %v, totalFees: %v, subsidyWithoutFees: %v \n",
 		//	expAtomOut, totalFees, subsidyWithoutFees)
-
 		if (coinbaseIn.ValueIn != subsidyWithoutFees) &&
 			(node.height > 0) {
 			errStr := fmt.Sprintf("bad coinbase subsidy in input;"+

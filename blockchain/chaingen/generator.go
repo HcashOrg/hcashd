@@ -345,7 +345,7 @@ func standardCoinbaseOpReturnScript(blockHeight uint32) []byte {
 // - Second output is a standard provably prunable data-only coinbase output
 // - Third and subsequent outputs pay the pow subsidy portion to the generic
 //   OP_TRUE p2sh script hash
-func (g *Generator) addCoinbaseTxOutputs(tx *wire.MsgTx, blockHeight uint32, devSubsidy, powSubsidy hcashutil.Amount) {
+func (g *Generator) addExtraCoinbaseTxOutputs(tx *wire.MsgTx, blockHeight uint32, devSubsidy, powSubsidy hcashutil.Amount) {
 	// First output is the developer subsidy.
 	tx.AddTxOut(&wire.TxOut{
 		Value:    int64(devSubsidy),
@@ -371,18 +371,60 @@ func (g *Generator) addCoinbaseTxOutputs(tx *wire.MsgTx, blockHeight uint32, dev
 	}
 }
 
+// addExtraCoinbaseTxOutputs adds the following outputs to the provided transaction
+func (g *Generator) addCoinbaseTxOutputs(tx *wire.MsgTx, opReturnPkScript []byte) {
+	// First output is the developer subsidy.
+	tx.AddTxOut(&wire.TxOut{
+		Value:    int64(0),
+		Version:  g.params.OrganizationPkScriptVersion,
+		PkScript: opReturnPkScript,
+	})
+
+	// Second output is a provably prunable data-only output that is used
+	// to ensure the coinbase is unique.
+
+	tx.AddTxOut(wire.NewTxOut(int64(0), g.p2shOpTrueScript))
+}
+
 // CreateCoinbaseTx returns a coinbase transaction paying an appropriate
 // subsidy based on the passed block height and number of votes to the dev org
 // and proof-of-work miner.
 //
 // See the addCoinbaseTxOutputs documentation for a breakdown of the outputs
 // the transaction contains.
-func (g *Generator) CreateCoinbaseTx(blockHeight uint32, numVotes uint16) *wire.MsgTx {
+func (g *Generator) CreateCoinbaseTx(opReturnPkScript []byte) *wire.MsgTx {
 	// Calculate the subsidy proportions based on the block height and the
 	// number of votes the block will include.
-	fullSubsidy := g.calcFullSubsidy(blockHeight)
-	devSubsidy := g.calcDevSubsidy(fullSubsidy, blockHeight, numVotes)
-	powSubsidy := g.calcPoWSubsidy(fullSubsidy, blockHeight, numVotes)
+
+	tx := wire.NewMsgTx()
+	tx.AddTxIn(&wire.TxIn{
+		// Coinbase transactions have no inputs, so previous outpoint is
+		// zero hash and max index.
+		PreviousOutPoint: *wire.NewOutPoint(&chainhash.Hash{},
+			wire.MaxPrevOutIndex, wire.TxTreeRegular),
+		Sequence:        wire.MaxTxInSequenceNum,
+		ValueIn:         int64(0),
+		BlockHeight:     wire.NullBlockHeight,
+		BlockIndex:      wire.NullBlockIndex,
+		SignatureScript: coinbaseSigScript,
+	})
+
+	g.addCoinbaseTxOutputs(tx, opReturnPkScript)
+
+	return tx
+}
+
+// CreateExtraCoinbaseTx returns a extracoinbase transaction paying an appropriate
+func (g *Generator) CreateExtraCoinbaseTx(blockHeight uint32, numVotes uint16) *wire.MsgTx {
+	// Calculate the subsidy proportions based on the block height and the
+	// number of votes the block will include.
+	height := blockHeight
+	if blockHeight >= 0 {
+		height = height - 1
+	}
+	fullSubsidy := g.calcFullSubsidy(height)
+	devSubsidy := g.calcDevSubsidy(fullSubsidy, height, numVotes)
+	powSubsidy := g.calcPoWSubsidy(fullSubsidy, height, numVotes)
 
 	tx := wire.NewMsgTx()
 	tx.AddTxIn(&wire.TxIn{
@@ -397,7 +439,7 @@ func (g *Generator) CreateCoinbaseTx(blockHeight uint32, numVotes uint16) *wire.
 		SignatureScript: coinbaseSigScript,
 	})
 
-	g.addCoinbaseTxOutputs(tx, blockHeight, devSubsidy, powSubsidy)
+	g.addExtraCoinbaseTxOutputs(tx, blockHeight, devSubsidy, powSubsidy)
 
 	return tx
 }
@@ -1268,7 +1310,20 @@ func (g *Generator) ReplaceWithNVotes(numVotes uint16) func(*wire.MsgBlock) {
 		cbTx := b.Transactions[0]
 		cbTx.TxIn[0].ValueIn = int64(devSubsidy + powSubsidy)
 		cbTx.TxOut = nil
-		g.addCoinbaseTxOutputs(cbTx, height, devSubsidy, powSubsidy)
+		g.addExtraCoinbaseTxOutputs(cbTx, height, devSubsidy, powSubsidy)
+
+
+		enData := make([]byte, 36)
+		txHash := cbTx.TxHash()
+		binary.LittleEndian.PutUint32(enData[0:4], height)
+		for i := 0; i < len(txHash); i ++ {
+			enData[i + 4] = txHash[i]
+		}
+		extraHashScript, _ := txscript.GenerateProvablyPruneableOut(enData)
+		cbTx2 := b.Transactions[1]
+		cbTx2.TxIn[0].ValueIn = int64(0)
+		cbTx2.TxOut = nil
+		g.addCoinbaseTxOutputs(cbTx2, extraHashScript)
 	}
 }
 
@@ -1726,12 +1781,23 @@ func (g *Generator) NextBlock(blockName string, spend *SpendableOut, ticketSpend
 	{
 		// Create coinbase transaction for the block with no additional
 		// dev or pow subsidy.
-		coinbaseTx := g.CreateCoinbaseTx(nextHeight, numVotes)
-		regularTxns = []*wire.MsgTx{coinbaseTx}
+		extraCoinbaseTx := g.CreateExtraCoinbaseTx(nextHeight, numVotes)
+
+		enData := make([]byte, 36)
+		txHash := extraCoinbaseTx.TxHash()
+		binary.LittleEndian.PutUint32(enData[0:4], nextHeight)
+		for i := 0; i < len(txHash); i ++ {
+			enData[i + 4] = txHash[i]
+		}
+		extraHashScript, _ := txscript.GenerateProvablyPruneableOut(enData)
+
+
+		coinbaseTx := g.CreateCoinbaseTx(extraHashScript)
+		regularTxns = []*wire.MsgTx{extraCoinbaseTx, coinbaseTx}
 
 		// Increase the PoW subsidy to account for any fees in the stake
 		// tree.
-		coinbaseTx.TxOut[2].Value += int64(stakeTreeFees)
+		extraCoinbaseTx.TxOut[3].Value += int64(stakeTreeFees)
 
 		// Create a transaction to spend the provided utxo if needed.
 		if spend != nil {
@@ -1779,6 +1845,7 @@ func (g *Generator) NextBlock(blockName string, spend *SpendableOut, ticketSpend
 		Header: wire.BlockHeader{
 			Version:      1,
 			PrevBlock:    prevHash,
+			PrevKeyBlock: prevHash,
 			MerkleRoot:   calcMerkleRoot(regularTxns),
 			StakeRoot:    calcMerkleRoot(stakeTxns),
 			VoteBits:     1,
@@ -1790,6 +1857,7 @@ func (g *Generator) NextBlock(blockName string, spend *SpendableOut, ticketSpend
 			Bits:         g.calcNextRequiredDifficulty(),
 			SBits:        int64(ticketPrice),
 			Height:       nextHeight,
+			KeyHeight:	  nextHeight - 1,
 			Size:         0, // Filled in below.
 			Timestamp:    ts,
 			Nonce:        0, // To be solved.
@@ -1799,6 +1867,12 @@ func (g *Generator) NextBlock(blockName string, spend *SpendableOut, ticketSpend
 		Transactions:  regularTxns,
 		STransactions: stakeTxns,
 	}
+
+	if nextHeight == 1 {
+		var zeroHash chainhash.Hash
+		block.Header.PrevKeyBlock = zeroHash
+	}
+
 	block.Header.Size = uint32(block.SerializeSize())
 
 	// Perform any block munging just before solving.  Only recalculate the
@@ -1862,9 +1936,21 @@ func (g *Generator) CreatePremineBlock(blockName string, additionalAmount hcashu
 		SignatureScript: coinbaseSigScript,
 	})
 
+	extraCoinbaseTx := wire.NewMsgTx()
+	extraCoinbaseTx.AddTxIn(&wire.TxIn{
+		PreviousOutPoint: *wire.NewOutPoint(&chainhash.Hash{},
+			wire.MaxPrevOutIndex, wire.TxTreeRegular),
+		Sequence:        wire.MaxTxInSequenceNum,
+		ValueIn:         0, // Updated below.
+		BlockHeight:     wire.NullBlockHeight,
+		BlockIndex:      wire.NullBlockIndex,
+		SignatureScript: coinbaseSigScript,
+	})
+
 	// Add each required output and tally the total payouts for the coinbase
 	// in order to set the input value appropriately.
 	var totalSubsidy hcashutil.Amount
+
 	for _, payout := range g.params.BlockOneLedger {
 		payoutAddr, err := hcashutil.DecodeAddress(payout.Address)
 		if err != nil {
@@ -1874,7 +1960,7 @@ func (g *Generator) CreatePremineBlock(blockName string, additionalAmount hcashu
 		if err != nil {
 			panic(err)
 		}
-		coinbaseTx.AddTxOut(&wire.TxOut{
+		extraCoinbaseTx.AddTxOut(&wire.TxOut{
 			Value:    payout.Amount + int64(additionalAmount),
 			Version:  0,
 			PkScript: pkScript,
@@ -1882,11 +1968,29 @@ func (g *Generator) CreatePremineBlock(blockName string, additionalAmount hcashu
 
 		totalSubsidy += hcashutil.Amount(payout.Amount)
 	}
-	coinbaseTx.TxIn[0].ValueIn = int64(totalSubsidy)
+	extraCoinbaseTx.TxIn[0].ValueIn = int64(totalSubsidy)
+
+	enData := make([]byte, 36)
+	txHash := extraCoinbaseTx.TxHash()
+	binary.LittleEndian.PutUint32(enData[0:4], g.Tip().Header.Height + 1)
+	for i := 0; i < len(txHash); i ++ {
+		enData[i + 4] = txHash[i]
+	}
+	extraHashScript, _ := txscript.GenerateProvablyPruneableOut(enData)
+
+	coinbaseTx.AddTxOut(&wire.TxOut{
+		Value:    0,
+		PkScript: extraHashScript,
+	})
+	coinbaseTx.AddTxOut(&wire.TxOut{
+		Value:    int64(0),
+		Version:  0,
+		PkScript: g.p2shOpTrueScript,
+	})
 
 	// Generate the block with the specially created regular transactions.
 	return g.NextBlock(blockName, nil, nil, func(b *wire.MsgBlock) {
-		b.Transactions = []*wire.MsgTx{coinbaseTx}
+		b.Transactions = []*wire.MsgTx{extraCoinbaseTx, coinbaseTx}
 	})
 }
 

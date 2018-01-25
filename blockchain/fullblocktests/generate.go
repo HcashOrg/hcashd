@@ -1481,7 +1481,18 @@ func Generate(includeLargeReorg bool) (tests [][]TestInstance, err error) {
 	//   ... -> b46(14)
 	//                 \-> b53(15)
 	g.SetTip("b46")
-	coinbaseTx := g.CreateCoinbaseTx(g.Tip().Header.Height+1, ticketsPerBlock)
+	extraCoinbaseTx := g.CreateExtraCoinbaseTx(g.Tip().Header.Height+1, ticketsPerBlock)
+	additionalPoWTx(extraCoinbaseTx)
+
+	enData := make([]byte, 36)
+	txHash := extraCoinbaseTx.TxHash()
+	binary.LittleEndian.PutUint32(enData[0:4], g.Tip().Header.Height + 1)
+	for i := 0; i < len(txHash); i ++ {
+		enData[i + 4]  = txHash[i]
+	}
+	extraHashScript, _ := txscript.GenerateProvablyPruneableOut(enData)
+
+	coinbaseTx := g.CreateCoinbaseTx(extraHashScript)
 	g.NextBlock("b53", outs[15], ticketOuts[15], additionalPoWTx(coinbaseTx))
 	rejected(blockchain.ErrMultipleCoinbases)
 
