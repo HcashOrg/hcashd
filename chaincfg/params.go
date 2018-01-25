@@ -802,7 +802,7 @@ var SimNetParams = Params{
 	MinDiffReductionTime:     0, // Does not apply since ReduceMinDifficulty false
 	GenerateSupported:        true,
 	MaximumBlockSizes:        []int{2048000},
-	MaxTxSize:                1000000,
+	MaxTxSize:                2048000,
 	TargetTimePerBlock:       time.Second,
 	WorkDiffAlpha:            1,
 	WorkDiffWindowSize:       8,

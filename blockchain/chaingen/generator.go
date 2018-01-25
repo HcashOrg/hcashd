@@ -1805,8 +1805,7 @@ func (g *Generator) NextBlock(blockName string, spend *SpendableOut, ticketSpend
 			// Create the transaction with a fee of 1 atom for the
 			// miner and increase the PoW subsidy accordingly.
 			fee := hcashutil.Amount(1)
-			coinbaseTx.TxOut[2].Value += int64(fee)
-
+			extraCoinbaseTx.TxOut[2].Value += 1 * 6 / 10
 			// Create a transaction that spends from the provided
 			// spendable output and includes an additional unique
 			// OP_RETURN output to ensure the transaction ends up
