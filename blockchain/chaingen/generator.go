@@ -290,7 +290,7 @@ func (g *Generator) calcPoWSubsidy(fullSubsidy hcashutil.Amount, blockHeight uin
 // good tests which exercise that code, so it wouldn't make sense to use the
 // same code to generate them.
 func (g *Generator) calcPoSSubsidy(heightVotedOn uint32) hcashutil.Amount {
-	if int64(heightVotedOn+1) < g.params.StakeValidationHeight {
+	if int64(heightVotedOn+2) < g.params.StakeValidationHeight {
 		return 0
 	}
 
@@ -580,10 +580,11 @@ func isRevocationTx(tx *wire.MsgTx) bool {
 // voteBlockScript returns a standard provably-pruneable OP_RETURN script
 // suitable for use in a vote tx (ssgen) given the block to vote on.
 func voteBlockScript(parentBlock *wire.MsgBlock) []byte {
-	var data [36]byte
+	var data [40]byte
 	parentHash := parentBlock.BlockHash()
 	copy(data[:], parentHash[:])
 	binary.LittleEndian.PutUint32(data[32:], parentBlock.Header.Height)
+	binary.LittleEndian.PutUint32(data[36:], parentBlock.Header.KeyHeight)
 	script, err := txscript.NewScriptBuilder().AddOp(txscript.OP_RETURN).
 		AddData(data[:]).Script()
 	if err != nil {
@@ -622,7 +623,7 @@ func voteBitsScript(bits uint16, voteVersion uint32) []byte {
 func (g *Generator) createVoteTx(parentBlock *wire.MsgBlock, ticket *stakeTicket) *wire.MsgTx {
 	// Calculate the proof-of-stake subsidy proportion based on the block
 	// height.
-	posSubsidy := g.calcPoSSubsidy(parentBlock.Header.Height)
+	posSubsidy := g.calcPoSSubsidy(parentBlock.Header.KeyHeight)
 	voteSubsidy := posSubsidy / hcashutil.Amount(g.params.TicketsPerBlock)
 	ticketPrice := hcashutil.Amount(ticket.tx.TxOut[0].Value)
 

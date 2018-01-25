@@ -118,7 +118,7 @@ var (
 // TestThresholdState ensures that the threshold state function progresses
 // through the states correctly.
 // !!!DOESN'T WORK YET
-func DNWTestThresholdState(t *testing.T) {
+func TestThresholdState(t *testing.T) {
 	// Create chain params based on simnet params, but add a specific test
 	// dummy deployment and set the proof-of-work difficulty readjustment
 	// size to a really large number so that the test chain can be generated
