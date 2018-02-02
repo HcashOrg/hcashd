@@ -6086,7 +6086,6 @@ func handleVerifyBlissMessage(s *rpcServer, cmd interface{}, closeChan <-chan st
 	messageHash := chainhash.HashB(buf.Bytes())
 
 	sig, err := base64.StdEncoding.DecodeString(icmd.Signature)
-	fmt.Println("sign : " , sig)
 	if err != nil {
 		return nil, err
 	}
