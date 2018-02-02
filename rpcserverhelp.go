@@ -754,7 +754,7 @@ var helpDescsEnUS = map[string]string{
 
 	// VerifyBlissMessageCmd help.
 	"verifyblissmessage--synopsis": "Verify a signed message.",
-	"verifyblissmessage-pubKey":    "The hypercash bliss public key to use for the signature",
+	"verifyblissmessage-pubkey":    "The hypercash bliss public key to use for the signature",
 	"verifyblissmessage-signature": "The base-64 encoded signature provided by the signer",
 	"verifyblissmessage-message":   "The signed message",
 	"verifyblissmessage--result0":  "Whether or not the signature verified",
