@@ -48,6 +48,7 @@ import (
 	"github.com/HcashOrg/hcashd/txscript"
 	"github.com/HcashOrg/hcashd/wire"
 	"github.com/HcashOrg/hcashutil"
+	"github.com/HcashOrg/hcashd/crypto/bliss"
 )
 
 // API version constants
@@ -245,6 +246,7 @@ var rpcHandlersBeforeInit = map[string]commandHandler{
 	"validateaddress":       handleValidateAddress,
 	"verifychain":           handleVerifyChain,
 	"verifymessage":         handleVerifyMessage,
+	"verifyblissmessage":    handleVerifyBlissMessage,
 	"version":               handleVersion,
 }
 
@@ -345,6 +347,7 @@ var rpcLimited = map[string]struct{}{
 	"submitblock":           {},
 	"validateaddress":       {},
 	"verifymessage":         {},
+	"verifyblissmessage":    {},
 	"version":               {},
 }
 
@@ -6061,6 +6064,39 @@ func handleVerifyMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{
 
 	// Return boolean if addresses match.
 	return address.EncodeAddress() == c.Address, nil
+}
+
+func handleVerifyBlissMessage(s *rpcServer, cmd interface{}, closeChan <-chan struct{}) (interface{}, error) {
+
+	icmd := cmd.(*hcashjson.VerifyBlissMessageCmd)
+	var valid bool
+
+	pubkey,err := hex.DecodeString(icmd.PubKey)
+	if err != nil {
+		return nil, err
+	}
+	key,err := bliss.Bliss.ParsePubKey(pubkey)
+	if err != nil {
+		return  nil, err
+	}
+
+	var buf bytes.Buffer
+	wire.WriteVarString(&buf, 0, "Hypercash Signed Message:\n")
+	wire.WriteVarString(&buf, 0, icmd.Message)
+	messageHash := chainhash.HashB(buf.Bytes())
+
+	sig, err := base64.StdEncoding.DecodeString(icmd.Signature)
+	fmt.Println("sign : " , sig)
+	if err != nil {
+		return nil, err
+	}
+
+	valid, err = bliss.VerifyCompact(key,messageHash,sig)
+	if err != nil {
+		return  nil, err
+	}
+
+	return valid, nil
 }
 
 // handleVersion implements the version command.

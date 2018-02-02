@@ -752,6 +752,13 @@ var helpDescsEnUS = map[string]string{
 	"verifymessage-message":   "The signed message",
 	"verifymessage--result0":  "Whether or not the signature verified",
 
+	// VerifyBlissMessageCmd help.
+	"verifyblissmessage--synopsis": "Verify a signed message.",
+	"verifyblissmessage-pubKey":    "The hypercash bliss public key to use for the signature",
+	"verifyblissmessage-signature": "The base-64 encoded signature provided by the signer",
+	"verifyblissmessage-message":   "The signed message",
+	"verifyblissmessage--result0":  "Whether or not the signature verified",
+
 	// -------- Websocket-specific help --------
 
 	// Session help.
@@ -978,6 +985,7 @@ var rpcResultTypes = map[string][]interface{}{
 	"validateaddress":       {(*hcashjson.ValidateAddressChainResult)(nil)},
 	"verifychain":           {(*bool)(nil)},
 	"verifymessage":         {(*bool)(nil)},
+	"verifyblissmessage":    {(*bool)(nil)},
 	"version":               {(*map[string]hcashjson.VersionResult)(nil)},
 
 	// Websocket commands.
